@@ -106,7 +106,7 @@ Softwares de nutrição atuais são visualmente datados, sobrecarregados de info
 - [x] Inicializar projeto Next.js 16.1 com TypeScript e Turbopack
 - [x] Configurar Tailwind CSS v4 e Shadcn/ui (Tema: Neutral)
 - [x] Configurar Supabase Client e Middleware de Autenticação
-- [ ] Implementar Layout Base (Sidebar Nutri / Bottom Nav Patient)
+- [x] Implementar Layout Base (Sidebar Nutri / Bottom Nav Patient)
 
 ### Phase 2: Core Infrastructure
 

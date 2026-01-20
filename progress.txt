@@ -40,3 +40,18 @@
   - Protected routes redirect to /auth/login when unauthenticated
   - Public routes: /, /patient/* for magic link access
   - Typecheck and lint passing
+
+### Task 4: Implementar Layout Base (Sidebar Nutri / Bottom Nav Patient)
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T13:45:00Z
+- **Notes**:
+  - Added Shadcn components: sidebar, separator, avatar, tooltip, sheet, scroll-area, skeleton
+  - Created NutriSidebar component with collapsible navigation
+  - Navigation items: Dashboard, Pacientes, Planos, Agenda, Alimentos, Configurações
+  - Created PatientBottomNav component for mobile-first patient interface
+  - Patient navigation: Início, Plano, Progresso, Perfil
+  - Created (nutri) route group with dashboard and patients pages
+  - Created /patient routes with layout wrapper
+  - Created /auth/login page placeholder
+  - Fixed SidebarMenuSkeleton lint error (Math.random usage)
+  - Typecheck and lint passing
