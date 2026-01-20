@@ -13,3 +13,15 @@
   - Path alias @/* configured
   - Updated metadata for NutriFlow branding
   - Typecheck and lint passing
+
+### Task 2: Configurar Tailwind CSS v4 e Shadcn/ui (Tema: Neutral)
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T13:30:00Z
+- **Notes**:
+  - Initialized Shadcn/ui with new-york style and neutral base color
+  - CSS variables configured for light and dark themes (oklch color space)
+  - Added base components: Button, Card, Input, Label
+  - Lucide icons configured as icon library
+  - Component aliases set up (@/components, @/lib, @/hooks)
+  - Sidebar CSS variables included for future layout
+  - Typecheck and lint passing
