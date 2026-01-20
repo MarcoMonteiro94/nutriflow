@@ -118,3 +118,20 @@
   - Added CommandMenu to root layout (src/app/layout.tsx)
   - Changed HTML lang from "en" to "pt-BR"
   - Typecheck, lint, and build passing
+
+## Phase 3: Nutritionist Workspace
+
+### Task 3.1: Dashboard with appointment summary and quick stats
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T14:45:00Z
+- **Notes**:
+  - Enhanced dashboard page at src/app/(nutri)/dashboard/page.tsx
+  - Added server-side data fetching with getDashboardStats() function
+  - Stats cards now fetch real data: total patients, active plans, today's appointments
+  - Added "Próximos Atendimentos" section showing next 5 appointments with patient names and dates
+  - Added empty state with illustration when no appointments
+  - Added "Ações Rápidas" card with: Novo Paciente, Criar Plano, Agendar Consulta, Ver Pacientes
+  - Added header action buttons: Novo Paciente, Novo Plano
+  - Responsive grid layout (4 columns on large screens, 2 on medium, 1 on small)
+  - Graceful handling when user not authenticated (returns zeros)
+  - Typecheck, lint, and build passing

@@ -151,7 +151,7 @@ git log --oneline -10
     },
     {
       "name": "Phase 3: Nutritionist Workspace",
-      "status": "pending",
+      "status": "in_progress",
       "features": [
         {
           "id": "3.1",
@@ -164,7 +164,7 @@ git log --oneline -10
             "Add quick action cards for common tasks",
             "Verify data renders correctly from Supabase"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "3.2",
