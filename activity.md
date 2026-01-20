@@ -80,3 +80,25 @@
 - Nested substitution expansion
 - Touch-friendly interactions
 - Responsive for 320px-428px viewports
+
+### Task 5.2: Magic Link authentication for patients
+
+**Changes Made:**
+- Created `src/lib/patient-token.ts` - Token generation, validation, and cookie management
+- Created `src/app/patient/access/page.tsx` - Token verification landing page
+- Created `src/app/(nutri)/patients/[id]/_components/share-plan-button.tsx` - Share dialog with WhatsApp
+- Created `src/app/patient/plan/_components/patient-meal-plan-view.tsx` - Client meal plan view component
+- Updated `src/app/(nutri)/patients/[id]/page.tsx` - Added share button and token generation action
+- Updated `src/app/patient/plan/page.tsx` - Real data fetching with token authentication
+
+**Commands Run:**
+- `npx tsc --noEmit` - TypeScript check passed
+- `npm run lint` - No errors
+- `npm run build` - Build passed successfully
+
+**Verified:**
+- Token generation and storage in database
+- Cookie-based session management
+- Token expiration handling (30 days)
+- WhatsApp share functionality
+- Patient plan page fetches real data when authenticated

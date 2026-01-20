@@ -15,6 +15,8 @@ import {
   Activity
 } from "lucide-react";
 import { DeletePatientButton } from "../_components/delete-patient-button";
+import { SharePlanButton } from "./_components/share-plan-button";
+import { createPatientToken } from "@/lib/patient-token";
 import type { Patient } from "@/types/database";
 
 interface PageProps {
@@ -71,6 +73,11 @@ export default async function PatientDetailPage({ params }: PageProps) {
   }
 
   const stats = await getPatientStats(id);
+
+  async function generateToken() {
+    "use server";
+    return await createPatientToken(id);
+  }
 
   const initials = patient.full_name
     .split(" ")
@@ -262,6 +269,11 @@ export default async function PatientDetailPage({ params }: PageProps) {
               Registrar Medidas
             </Link>
           </Button>
+          <SharePlanButton
+            patientId={id}
+            patientName={patient.full_name}
+            generateToken={generateToken}
+          />
         </CardContent>
       </Card>
     </div>

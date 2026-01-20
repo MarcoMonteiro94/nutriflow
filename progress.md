@@ -375,3 +375,32 @@
     - Foods with name, amount, calories, and substitutions
   - Note: Will integrate with real data via magic link token in Feature 5.2
   - Typecheck, lint, and build passing
+
+### Task 5.2: Magic Link authentication for patients
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T20:50:00Z
+- **Notes**:
+  - Created patient-token library (src/lib/patient-token.ts)
+    - Token generation with crypto.randomBytes (32 bytes hex)
+    - Token validation with expiration check
+    - Cookie management (set, get, clear)
+    - 30-day token expiry
+  - Created patient access page (src/app/patient/access/page.tsx)
+    - Validates token from URL query parameter
+    - Shows error for invalid/expired tokens
+    - Sets cookie and redirects to /patient/plan on success
+  - Created SharePlanButton component for nutritionists
+    - Generates magic link via server action
+    - Copy to clipboard functionality
+    - WhatsApp share with pre-filled message
+    - Visual feedback for copy action
+  - Updated patient plan page with real data fetching
+    - Fetches patient ID from token cookie
+    - Queries active meal plan with meals and contents
+    - Shows appropriate messages for unauthenticated or no plan
+  - Created PatientMealPlanView component
+    - Receives typed data from server component
+    - Same mobile-optimized UI from 5.1
+    - Works with real database data
+  - Added SharePlanButton to patient detail page quick actions
+  - Typecheck, lint, and build passing
