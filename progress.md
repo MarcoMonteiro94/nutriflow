@@ -231,3 +231,35 @@
   - Patient detail page already has links to measurements
   - Note: Photo upload to Supabase Storage deferred to future enhancement
   - Typecheck and lint passing
+
+## Phase 4: Smart Timeline
+
+### Task 4.1: Vertical timeline editor for meal plans
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T18:10:00Z
+- **Notes**:
+  - Created meal plans list page (src/app/(nutri)/plans/page.tsx)
+    - Grid layout showing all meal plans
+    - Status badges (Ativo/Arquivado)
+    - Patient name and date range
+    - Quick actions: Ver Plano, Editar
+  - Created new meal plan page (src/app/(nutri)/plans/new/page.tsx)
+    - Patient selection dropdown
+    - Title, description, status fields
+    - Start/end date pickers
+    - Redirects to editor after creation
+  - Created MealPlanForm component for create/edit
+  - Created meal plan editor page (src/app/(nutri)/plans/[id]/edit/page.tsx)
+    - Vertical timeline layout for meals
+    - Summary panel with daily macros (calories, protein, carbs, fat)
+    - Plan status and date information
+  - Created MealTimeline component with:
+    - Vertical timeline visualization with time markers
+    - Expandable meal cards showing contents
+    - Add meal dialog with predefined meal types
+    - Time picker for custom meal times
+    - Delete meal functionality
+    - Calorie calculation per meal
+  - Predefined meal types: Café da Manhã, Lanche da Manhã, Almoço, Lanche da Tarde, Jantar, Ceia, Personalizado
+  - Note: Drag-and-drop reordering deferred to future enhancement (meals sort by time)
+  - Typecheck and lint passing
