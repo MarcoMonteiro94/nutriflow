@@ -159,3 +159,30 @@
 - Card hover micro-interactions (lift, shadow)
 - Stats cards with staggered entrance animations
 - Smooth 60fps animations using hardware-accelerated transforms
+
+### Task 6.2: Empty states and loading skeletons
+
+**Changes Made:**
+- Created `src/components/skeletons/dashboard-skeleton.tsx` - Dashboard loading skeleton
+- Created `src/components/skeletons/patients-skeleton.tsx` - Patients list/card skeletons
+- Created `src/components/skeletons/patient-detail-skeleton.tsx` - Patient detail skeleton
+- Created `src/components/skeletons/plans-skeleton.tsx` - Plans list/card skeletons
+- Created `src/components/skeletons/schedule-skeleton.tsx` - Schedule page skeleton
+- Created `src/components/skeletons/index.ts` - Exports for skeleton components
+- Created `src/components/empty-state.tsx` - Animated empty state component
+- Created `src/app/(nutri)/dashboard/loading.tsx` - Dashboard Suspense boundary
+- Created `src/app/(nutri)/patients/loading.tsx` - Patients list Suspense boundary
+- Created `src/app/(nutri)/patients/[id]/loading.tsx` - Patient detail Suspense boundary
+- Created `src/app/(nutri)/plans/loading.tsx` - Plans list Suspense boundary
+- Created `src/app/(nutri)/schedule/loading.tsx` - Schedule Suspense boundary
+
+**Commands Run:**
+- `npx tsc --noEmit` - TypeScript check passed
+- `npm run lint` - No errors
+- `npm run build` - Build passed successfully
+
+**Verified:**
+- Skeleton components match page layouts to prevent CLS
+- Loading states show while data is being fetched
+- Empty state component with animated entrance
+- All pages have appropriate loading.tsx files for Suspense

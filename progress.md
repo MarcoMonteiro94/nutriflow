@@ -485,3 +485,28 @@
     - Hardware-accelerated transforms (y, scale, opacity)
     - Short durations (200-400ms) for smooth 60fps
   - Typecheck, lint, and build passing
+
+### Task 6.2: Empty states and loading skeletons
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T23:00:00Z
+- **Notes**:
+  - Created skeleton components library at src/components/skeletons/
+    - DashboardSkeleton: Stats cards and appointment list placeholders
+    - PatientsListSkeleton/PatientCardSkeleton: Patient list and card loading states
+    - PatientDetailSkeleton: Patient profile page loading state
+    - PlansListSkeleton/PlanCardSkeleton: Plans list and card loading states
+    - ScheduleSkeleton/AppointmentItemSkeleton: Calendar and appointments loading states
+  - Created EmptyState component (src/components/empty-state.tsx)
+    - Animated empty state with motion effects
+    - Configurable icon, title, description, and action button
+    - Uses Framer Motion for entrance animations
+  - Added loading.tsx files for Suspense boundaries:
+    - /dashboard/loading.tsx - Dashboard skeleton
+    - /patients/loading.tsx - Patients list skeleton
+    - /patients/[id]/loading.tsx - Patient detail skeleton
+    - /plans/loading.tsx - Plans list skeleton
+    - /schedule/loading.tsx - Schedule page skeleton
+  - Skeletons match page layouts to prevent CLS (Cumulative Layout Shift)
+    - Same grid layouts and card structures
+    - Consistent sizing for skeleton elements
+  - Typecheck, lint, and build passing
