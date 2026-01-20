@@ -290,3 +290,31 @@
     - RemoveFoodButton: Delete food with loading state
   - Fixed Supabase relationship joins to use food_id column correctly
   - Typecheck, lint, and build passing
+
+### Task 4.3: Food substitution system with expandable cards
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T20:00:00Z
+- **Notes**:
+  - Created Collapsible component (src/components/ui/collapsible.tsx)
+    - Radix UI wrapper for expandable content
+  - Created FoodItemCard component (src/app/(nutri)/plans/[id]/meals/[mealId]/_components/food-item-card.tsx)
+    - Expandable card showing food item with macros
+    - Collapsible section for substitutions
+    - Badge showing number of substitutions
+    - Add/remove substitution functionality
+  - Created SubstitutionSearch component (src/app/(nutri)/plans/[id]/meals/[mealId]/_components/substitution-search.tsx)
+    - Automatic suggestions from same food category
+    - Debounced search for finding alternative foods
+    - Automatic caloric equivalence calculation
+    - Comparison display showing original vs substitution macros
+  - Created FoodItemCardWrapper for server action integration
+  - Updated meal page with substitution server actions:
+    - addSubstitution: Creates meal_content with is_substitution=true and parent_content_id
+    - removeSubstitution: Deletes substitution entry
+    - removeFoodFromMeal: Cascades deletion to child substitutions
+  - Data model supports substitutions via:
+    - is_substitution boolean field on meal_contents
+    - parent_content_id to link substitutions to parent food
+  - Patient view will display substitutions when Phase 5 is implemented
+  - Installed @radix-ui/react-collapsible package
+  - Typecheck, lint, and build passing

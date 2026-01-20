@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { AddFoodFormClient } from "./_components/add-food-form";
-import { RemoveFoodButton } from "./_components/remove-food-button";
+import { FoodItemCardWrapper } from "./_components/food-item-card-wrapper";
 import type { FoodItem, Meal, MealContent } from "@/types/database";
 
 interface MealPageProps {
@@ -16,10 +16,12 @@ interface MealPageProps {
   }>;
 }
 
+type MealContentWithFood = MealContent & {
+  food_items: FoodItem | null;
+};
+
 type MealWithContents = Meal & {
-  meal_contents: (MealContent & {
-    food_items: FoodItem | null;
-  })[];
+  meal_contents: MealContentWithFood[];
 };
 
 export default async function MealPage({ params }: MealPageProps) {
@@ -59,24 +61,37 @@ export default async function MealPage({ params }: MealPageProps) {
 
   const mealContents = meal.meal_contents || [];
 
-  // Calculate total macros for current meal
-  const totalMacros = mealContents
-    .filter((c) => !c.is_substitution)
-    .reduce(
-      (acc, content) => {
-        if (content.food_items) {
-          const factor = Number(content.amount) / 100;
-          return {
-            calories: acc.calories + Math.round(content.food_items.calories * factor),
-            protein: acc.protein + content.food_items.protein * factor,
-            carbs: acc.carbs + content.food_items.carbs * factor,
-            fat: acc.fat + content.food_items.fat * factor,
-          };
-        }
-        return acc;
-      },
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    );
+  // Separate main foods from substitutions
+  const mainFoods = mealContents.filter((c) => !c.is_substitution);
+  const substitutionsMap = new Map<string, MealContentWithFood[]>();
+
+  // Group substitutions by parent content
+  mealContents
+    .filter((c) => c.is_substitution && c.parent_content_id)
+    .forEach((sub) => {
+      const parentId = sub.parent_content_id!;
+      if (!substitutionsMap.has(parentId)) {
+        substitutionsMap.set(parentId, []);
+      }
+      substitutionsMap.get(parentId)!.push(sub);
+    });
+
+  // Calculate total macros for current meal (main foods only)
+  const totalMacros = mainFoods.reduce(
+    (acc, content) => {
+      if (content.food_items) {
+        const factor = Number(content.amount) / 100;
+        return {
+          calories: acc.calories + Math.round(content.food_items.calories * factor),
+          protein: acc.protein + content.food_items.protein * factor,
+          carbs: acc.carbs + content.food_items.carbs * factor,
+          fat: acc.fat + content.food_items.fat * factor,
+        };
+      }
+      return acc;
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
 
   async function addFoodToMeal(foodId: string, amount: number) {
     "use server";
@@ -103,6 +118,13 @@ export default async function MealPage({ params }: MealPageProps) {
 
     const supabase = await createClient();
 
+    // Delete any substitutions for this food first
+    await supabase
+      .from("meal_contents")
+      .delete()
+      .eq("parent_content_id", contentId);
+
+    // Then delete the main food
     const { error } = await supabase
       .from("meal_contents")
       .delete()
@@ -111,6 +133,45 @@ export default async function MealPage({ params }: MealPageProps) {
     if (error) {
       console.error("Error removing food:", error);
       throw new Error("Failed to remove food from meal");
+    }
+
+    revalidatePath(`/plans/${planId}/meals/${mealId}`);
+  }
+
+  async function addSubstitution(foodId: string, amount: number, parentContentId: string) {
+    "use server";
+
+    const supabase = await createClient();
+
+    const { error } = await supabase.from("meal_contents").insert({
+      meal_id: mealId,
+      food_id: foodId,
+      amount,
+      is_substitution: true,
+      parent_content_id: parentContentId,
+    });
+
+    if (error) {
+      console.error("Error adding substitution:", error);
+      throw new Error("Failed to add substitution");
+    }
+
+    revalidatePath(`/plans/${planId}/meals/${mealId}`);
+  }
+
+  async function removeSubstitution(contentId: string) {
+    "use server";
+
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from("meal_contents")
+      .delete()
+      .eq("id", contentId);
+
+    if (error) {
+      console.error("Error removing substitution:", error);
+      throw new Error("Failed to remove substitution");
     }
 
     revalidatePath(`/plans/${planId}/meals/${mealId}`);
@@ -189,48 +250,26 @@ export default async function MealPage({ params }: MealPageProps) {
         <CardHeader>
           <CardTitle>Alimentos na Refeição</CardTitle>
           <CardDescription>
-            {mealContents.filter((c) => !c.is_substitution).length} alimento(s) adicionado(s)
+            {mainFoods.length} alimento(s) adicionado(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {mealContents.filter((c) => !c.is_substitution).length === 0 ? (
+          {mainFoods.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               Nenhum alimento adicionado ainda.
             </p>
           ) : (
             <div className="space-y-3">
-              {mealContents
-                .filter((c) => !c.is_substitution)
-                .map((content) => {
-                  const food = content.food_items;
-                  if (!food) return null;
-
-                  const factor = Number(content.amount) / 100;
-                  const macros = {
-                    calories: Math.round(food.calories * factor),
-                    protein: Math.round(food.protein * factor * 10) / 10,
-                    carbs: Math.round(food.carbs * factor * 10) / 10,
-                    fat: Math.round(food.fat * factor * 10) / 10,
-                  };
-
-                  return (
-                    <div
-                      key={content.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium">{food.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {content.amount}g &bull; {macros.calories} kcal &bull; P: {macros.protein}g &bull; C: {macros.carbs}g &bull; G: {macros.fat}g
-                        </p>
-                      </div>
-                      <RemoveFoodButton
-                        contentId={content.id}
-                        removeFoodFromMeal={removeFoodFromMeal}
-                      />
-                    </div>
-                  );
-                })}
+              {mainFoods.map((content) => (
+                <FoodItemCardWrapper
+                  key={content.id}
+                  content={content}
+                  substitutions={substitutionsMap.get(content.id) || []}
+                  onRemove={removeFoodFromMeal}
+                  onAddSubstitution={addSubstitution}
+                  onRemoveSubstitution={removeSubstitution}
+                />
+              ))}
             </div>
           )}
         </CardContent>

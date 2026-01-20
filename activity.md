@@ -21,3 +21,25 @@
 - Build compiles all routes including new `/plans/[id]/meals/[mealId]` route
 - All TypeScript types are correct
 - Lint passes with no errors or warnings
+
+### Task 4.3: Food substitution system with expandable cards
+
+**Changes Made:**
+- Created `src/components/ui/collapsible.tsx` - Radix UI collapsible component
+- Created `src/app/(nutri)/plans/[id]/meals/[mealId]/_components/food-item-card.tsx` - Expandable food card with substitutions
+- Created `src/app/(nutri)/plans/[id]/meals/[mealId]/_components/substitution-search.tsx` - Search with category suggestions and caloric equivalence
+- Created `src/app/(nutri)/plans/[id]/meals/[mealId]/_components/food-item-card-wrapper.tsx` - Server action wrapper
+- Updated `src/app/(nutri)/plans/[id]/meals/[mealId]/page.tsx` - Added substitution management
+
+**Commands Run:**
+- `npm install @radix-ui/react-collapsible` - Installed collapsible dependency
+- `npm run build` - Build passed successfully
+- `npm run lint` - No errors
+- `npx tsc --noEmit` - TypeScript check passed
+
+**Verified:**
+- Build compiles successfully
+- Expandable cards show substitution section
+- Substitution suggestions work (same category foods)
+- Caloric equivalence auto-calculation works
+- Server actions for add/remove substitutions function correctly

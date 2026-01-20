@@ -248,7 +248,7 @@ git log --oneline -10
             "Allow adding multiple substitution options",
             "Verify substitutions display in patient view"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "4.4",
