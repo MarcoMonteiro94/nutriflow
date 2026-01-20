@@ -25,3 +25,18 @@
   - Component aliases set up (@/components, @/lib, @/hooks)
   - Sidebar CSS variables included for future layout
   - Typecheck and lint passing
+
+### Task 3: Configurar Supabase Client e Middleware de Autenticação
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T13:35:00Z
+- **Notes**:
+  - Installed @supabase/supabase-js and @supabase/ssr packages
+  - Created browser client (src/lib/supabase/client.ts)
+  - Created server client with cookie handling (src/lib/supabase/server.ts)
+  - Created middleware helper for session management (src/lib/supabase/middleware.ts)
+  - Implemented Next.js middleware with route protection
+  - Added database TypeScript types (src/types/database.ts)
+  - Created .env.local.example template for Supabase configuration
+  - Protected routes redirect to /auth/login when unauthenticated
+  - Public routes: /, /patient/* for magic link access
+  - Typecheck and lint passing

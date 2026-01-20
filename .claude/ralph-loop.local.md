@@ -3,7 +3,7 @@ active: true
 iteration: 1
 max_iterations: 30
 completion_promise: "COMPLETE"
-started_at: "2026-01-20T16:29:59Z"
+started_at: "2026-01-20T16:32:28Z"
 ---
 
 You are building this project based on the PRD.
@@ -18,5 +18,5 @@ WORKFLOW:
 5. Commit and update BOTH files:
    - PRD.md: Change [ ] to [x] for the completed task
    - progress.txt: Add task number, timestamp, and notes
-
+6. Follow to the next task until finish all
 If ALL tasks complete, output: <promise>COMPLETE</promise>
