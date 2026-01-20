@@ -89,3 +89,16 @@
   - Patient Tokens: nutris can create/delete for their patients
   - Magic link access will use service role to bypass RLS
   - Typecheck and lint passing
+
+### Task 2.3: Import food database from TACO/IBGE via seed
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T14:25:00Z
+- **Notes**:
+  - Created seed migration: supabase/migrations/20250120000003_seed_taco_foods.sql
+  - Source: TACO (Tabela Brasileira de Composição de Alimentos) 4ª Edição - NEPA/UNICAMP
+  - Total of 115 common Brazilian foods seeded
+  - Categories: Cereais (10), Verduras/Hortaliças (20), Frutas (20), Gorduras/Óleos (5), Pescados (7), Carnes (16), Laticínios (11), Leguminosas (7), Nozes/Sementes (6), Ovos (4), Bebidas (5)
+  - All nutritional values per 100g portion (calories, protein, carbs, fat, fiber, sodium)
+  - Also created backup seed file at supabase/seed/taco_foods.sql
+  - Full-text search index already created in migration 1 for Portuguese text
+  - Typecheck and lint passing
