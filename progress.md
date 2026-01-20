@@ -163,3 +163,40 @@
   - All CRUD operations use Supabase client
   - Type safety with Patient type from database.ts
   - Typecheck, lint, and build passing
+
+### Task 3.3: Interactive calendar for appointment scheduling
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T17:35:00Z
+- **Notes**:
+  - Installed react-day-picker (v9.13.0) and date-fns for calendar functionality
+  - Created Calendar component (src/components/ui/calendar.tsx) with pt-BR locale
+  - Created Schedule page (src/app/(nutri)/schedule/page.tsx)
+    - Interactive calendar sidebar showing month view
+    - Days with appointments are highlighted (bold + underline)
+    - Appointments list for selected day
+    - Server-side data fetching with date filtering
+  - Created ScheduleCalendar component (src/app/(nutri)/schedule/_components/schedule-calendar.tsx)
+    - Single day selection mode
+    - URL-based date state management
+    - Custom modifiers for days with appointments
+  - Created AppointmentsList component (src/app/(nutri)/schedule/_components/appointments-list.tsx)
+    - Displays appointments with time, patient name, duration, status
+    - Status badges: Agendado (blue), Realizado (green), Cancelado (red)
+    - Actions dropdown: Edit, Cancel
+    - Empty state with call-to-action
+  - Created supporting UI components:
+    - DropdownMenu (src/components/ui/dropdown-menu.tsx)
+    - Select (src/components/ui/select.tsx)
+    - Popover (src/components/ui/popover.tsx)
+    - Textarea (src/components/ui/textarea.tsx)
+  - Created new appointment page (src/app/(nutri)/schedule/new/page.tsx)
+  - Created AppointmentForm component (src/app/(nutri)/schedule/_components/appointment-form.tsx)
+    - Patient selection dropdown
+    - Date picker with calendar popover
+    - Time slot selection (30-minute intervals)
+    - Duration selection (30min - 2h)
+    - Notes textarea
+    - Create/Edit modes supported
+    - Error handling and loading states
+  - Installed Radix packages: @radix-ui/react-dropdown-menu, @radix-ui/react-popover, @radix-ui/react-select
+  - Typecheck and lint passing
