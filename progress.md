@@ -263,3 +263,30 @@
   - Predefined meal types: Café da Manhã, Lanche da Manhã, Almoço, Lanche da Tarde, Jantar, Ceia, Personalizado
   - Note: Drag-and-drop reordering deferred to future enhancement (meals sort by time)
   - Typecheck and lint passing
+
+### Task 4.2: Food search with dynamic macro calculation
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T19:30:00Z
+- **Notes**:
+  - Created Command component (src/components/ui/command.tsx)
+    - Shadcn/ui wrapper for cmdk library
+    - Exports: Command, CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut, CommandSeparator
+  - Created meal page (src/app/(nutri)/plans/[id]/meals/[mealId]/page.tsx)
+    - Server-side data fetching for meal with contents
+    - Total macro calculation display (calories, protein, carbs, fat)
+    - Server actions for adding/removing foods
+    - List of current meal contents with per-item macros
+  - Created FoodSearch component (src/app/(nutri)/plans/[id]/meals/[mealId]/_components/food-search.tsx)
+    - Combobox with popover for food selection
+    - Debounced search (300ms) against food_items table
+    - Searches by name and category using ilike
+    - Shows food macros per 100g in dropdown
+  - Created portion size input with gram units
+    - Real-time macro calculation as amount changes
+    - Factor-based calculation (amount / 100) for accuracy
+    - Displays calculated values for selected portion
+  - Created client components:
+    - AddFoodFormClient: Wraps FoodSearch with server action integration
+    - RemoveFoodButton: Delete food with loading state
+  - Fixed Supabase relationship joins to use food_id column correctly
+  - Typecheck, lint, and build passing

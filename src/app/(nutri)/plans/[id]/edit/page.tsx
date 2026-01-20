@@ -40,7 +40,7 @@ async function getMealPlan(id: string): Promise<MealPlanWithDetails | null> {
         *,
         meal_contents (
           *,
-          food_items (*)
+          food_items:food_id (*)
         )
       )
     `)
