@@ -1,0 +1,15 @@
+# NutriFlow Progress Log
+
+## Phase 1: Project Setup
+
+### Task 1: Inicializar projeto Next.js 16.1 com TypeScript e Turbopack
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T13:27:00Z
+- **Notes**:
+  - Initialized Next.js 16.1.4 with TypeScript 5
+  - Configured Turbopack for development (--turbopack flag)
+  - Set up Tailwind CSS v4 and ESLint
+  - App Router with src directory structure
+  - Path alias @/* configured
+  - Updated metadata for NutriFlow branding
+  - Typecheck and lint passing
