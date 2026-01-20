@@ -177,7 +177,7 @@ git log --oneline -10
             "Implement edit and soft-delete functionality",
             "Verify all CRUD operations persist to database"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "3.3",

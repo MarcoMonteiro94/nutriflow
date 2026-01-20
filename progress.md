@@ -135,3 +135,31 @@
   - Responsive grid layout (4 columns on large screens, 2 on medium, 1 on small)
   - Graceful handling when user not authenticated (returns zeros)
   - Typecheck, lint, and build passing
+
+### Task 3.2: Patient CRUD with profile view
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T15:00:00Z
+- **Notes**:
+  - Enhanced patients list page (src/app/(nutri)/patients/page.tsx)
+    - Server-side data fetching with search filtering
+    - Search by name or email with URL query params
+    - Grid layout with PatientCard components
+    - Empty states for no patients and no search results
+  - Created PatientCard component (src/app/(nutri)/patients/_components/patient-card.tsx)
+    - Avatar with initials, age calculation, contact info, goal
+    - Quick actions: Ver Perfil, Ver Plano
+  - Created patient form (src/app/(nutri)/patients/_components/patient-form.tsx)
+    - Client component with form validation
+    - Fields: name, email, phone, birth_date, gender, goal, notes
+    - Works for both create and edit modes
+    - Error handling and loading states
+  - Created new patient page (src/app/(nutri)/patients/new/page.tsx)
+  - Created patient detail page (src/app/(nutri)/patients/[id]/page.tsx)
+    - Full profile view with avatar, contact info, dates
+    - Stats cards: meal plans count, appointments count, measurements count
+    - Quick actions: Create Plan, Schedule Appointment, Record Measurements
+  - Created edit patient page (src/app/(nutri)/patients/[id]/edit/page.tsx)
+  - Created DeletePatientButton with confirmation dialog
+  - All CRUD operations use Supabase client
+  - Type safety with Patient type from database.ts
+  - Typecheck, lint, and build passing
