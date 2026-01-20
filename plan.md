@@ -120,7 +120,7 @@ git log --oneline -10
             "Create policy: food_items visible to all, custom only to creator",
             "Test queries respect user isolation"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "2.3",

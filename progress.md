@@ -72,3 +72,20 @@
   - Added helper type aliases: Profile, Patient, FoodItem, MealPlan, Meal, MealContent, Appointment, Measurement, PatientToken
   - Note: Migration needs to be applied via Supabase Dashboard SQL Editor (CLI requires login)
   - Typecheck and lint passing
+
+### Task 2.2: Configure Row Level Security (RLS) for data isolation
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T14:15:00Z
+- **Notes**:
+  - Created migration file: supabase/migrations/20250120000002_rls_policies.sql
+  - Enabled RLS on all 9 tables
+  - Profiles: users can view/update own profile
+  - Patients: nutris can CRUD their own patients, patients can view their own data
+  - Food Items: official items visible to all, custom items only to creator
+  - Meal Plans: nutris can manage plans for their patients, patients can view their own plans
+  - Meals/Meal Contents: access follows meal plan ownership
+  - Appointments: nutris can manage, patients can view their own
+  - Measurements: nutris can manage for their patients, patients can view their own
+  - Patient Tokens: nutris can create/delete for their patients
+  - Magic link access will use service role to bypass RLS
+  - Typecheck and lint passing
