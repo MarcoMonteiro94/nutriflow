@@ -348,3 +348,30 @@
     - Console logging for debugging
     - Graceful handling of Supabase errors
   - Typecheck, lint, and build passing
+
+## Phase 5: Patient Portal & PWA
+
+### Task 5.1: Mobile-first meal plan view for patients
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T20:30:00Z
+- **Notes**:
+  - Updated patient meal plan page (src/app/patient/plan/page.tsx)
+    - Mobile-optimized card-based timeline view
+    - Expandable meal cards with tap interactions
+    - Food items with substitution indicators
+    - Quick stats bar showing meals, calories, and substitution options
+  - Mobile UX features:
+    - Touch-friendly card expansion (active:bg-muted/50 feedback)
+    - Nested expansion for substitutions
+    - Visual indicators for foods with substitutions (dashed border, RefreshCw icon)
+    - Tip card explaining substitution feature
+  - Responsive design considerations:
+    - Full-width cards for 320px-428px viewports
+    - Proper padding (p-4) and spacing (space-y-3/4)
+    - Bottom padding (pb-20) to avoid bottom nav overlap
+    - Truncate text for long food names
+  - Mock data structure prepared for Feature 5.2 integration
+    - Meals with time, title, and foods array
+    - Foods with name, amount, calories, and substitutions
+  - Note: Will integrate with real data via magic link token in Feature 5.2
+  - Typecheck, lint, and build passing
