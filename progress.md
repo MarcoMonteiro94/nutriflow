@@ -200,3 +200,34 @@
     - Error handling and loading states
   - Installed Radix packages: @radix-ui/react-dropdown-menu, @radix-ui/react-popover, @radix-ui/react-select
   - Typecheck and lint passing
+
+### Task 3.4: Anthropometry module with evolution charts
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T17:50:00Z
+- **Notes**:
+  - Installed Recharts for charting functionality
+  - Created measurements page (src/app/(nutri)/patients/[id]/measurements/page.tsx)
+    - Stats cards showing latest values: weight, body fat %, muscle mass, waist
+    - Change indicators showing trend from previous measurement
+    - Interactive chart for evolution visualization
+    - Measurements history list
+  - Created MeasurementsChart component using Recharts
+    - LineChart with multiple metrics
+    - Toggleable metric visibility (weight, body fat, muscle mass, waist)
+    - Custom tooltip with Portuguese date formatting
+    - Color-coded lines and buttons for each metric
+  - Created MeasurementsList component
+    - Chronological display with date headers
+    - Grid layout for measurement values
+    - Edit/Delete actions dropdown
+    - Empty state with call-to-action
+  - Created MeasurementForm component
+    - Date picker with calendar
+    - Input fields: weight, height, body fat %, muscle mass, waist, hip
+    - Notes textarea
+    - Validation requiring at least one measurement
+    - Create/Edit modes supported
+  - Created new measurement page (src/app/(nutri)/patients/[id]/measurements/new/page.tsx)
+  - Patient detail page already has links to measurements
+  - Note: Photo upload to Supabase Storage deferred to future enhancement
+  - Typecheck and lint passing
