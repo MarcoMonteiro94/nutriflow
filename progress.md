@@ -102,3 +102,19 @@
   - Also created backup seed file at supabase/seed/taco_foods.sql
   - Full-text search index already created in migration 1 for Portuguese text
   - Typecheck and lint passing
+
+### Task 2.4: Implement global search with Cmd+K shortcut
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T14:35:00Z
+- **Notes**:
+  - Installed cmdk package for command palette
+  - Installed @radix-ui/react-dialog for modal
+  - Created Dialog component (src/components/ui/dialog.tsx)
+  - Created CommandMenu component (src/components/command-menu.tsx)
+  - Registered Cmd+K (Mac) / Ctrl+K (Windows/Linux) keyboard shortcut
+  - Navigation items: Dashboard, Pacientes, Planos, Agenda, Alimentos, Configurações
+  - Quick actions: Novo Paciente (⌘N), Novo Plano (⌘P)
+  - Dynamic search: When typing, shows search options for patients and foods
+  - Added CommandMenu to root layout (src/app/layout.tsx)
+  - Changed HTML lang from "en" to "pt-BR"
+  - Typecheck, lint, and build passing
