@@ -318,3 +318,33 @@
   - Patient view will display substitutions when Phase 5 is implemented
   - Installed @radix-ui/react-collapsible package
   - Typecheck, lint, and build passing
+
+### Task 4.4: Auto-save meal plans with optimistic updates
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T20:15:00Z
+- **Notes**:
+  - Created useAutoSave hook (src/hooks/use-auto-save.ts)
+    - Debounced auto-save with configurable delay (default 1000ms)
+    - Status tracking: idle, saving, saved, error
+    - JSON comparison to detect actual data changes
+    - Cleanup on unmount to prevent memory leaks
+    - Error handling with proper error state management
+  - Created SaveStatusIndicator component (src/components/save-status-indicator.tsx)
+    - Visual feedback: Loader for saving, Check for saved, CloudOff for errors
+    - Smooth opacity transitions for status changes
+    - Portuguese localization: "Salvando...", "Salvo", "Erro ao salvar"
+  - Updated MealTimeline component with optimistic updates
+    - Implemented useOptimistic hook for immediate UI feedback
+    - MealAction type: add, delete, update operations
+    - Meals automatically re-sort by time after updates
+    - Edit mode for meal title and time with inline editing
+    - SaveStatusIndicator integrated for save status feedback
+  - Auto-save integration for meal edits
+    - Debounced save (800ms) when editing meal title/time
+    - Optimistic updates reflect changes immediately
+    - router.refresh() called after successful saves
+  - Error handling and offline states
+    - Error status displayed via SaveStatusIndicator
+    - Console logging for debugging
+    - Graceful handling of Supabase errors
+  - Typecheck, lint, and build passing

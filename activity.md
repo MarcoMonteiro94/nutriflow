@@ -43,3 +43,23 @@
 - Substitution suggestions work (same category foods)
 - Caloric equivalence auto-calculation works
 - Server actions for add/remove substitutions function correctly
+
+### Task 4.4: Auto-save meal plans with optimistic updates
+
+**Changes Made:**
+- Created `src/hooks/use-auto-save.ts` - Custom hook for debounced auto-saving
+- Created `src/components/save-status-indicator.tsx` - Visual save status feedback component
+- Updated `src/app/(nutri)/plans/[id]/edit/_components/meal-timeline.tsx` - Added optimistic updates and auto-save
+
+**Commands Run:**
+- `npx tsc --noEmit` - TypeScript check passed
+- `npm run lint` - No errors
+- `npm run build` - Build passed successfully
+
+**Verified:**
+- useAutoSave hook properly debounces saves
+- SaveStatusIndicator shows saving/saved/error states
+- useOptimistic provides immediate UI feedback
+- Meal edits (title, time) trigger auto-save
+- Changes persist after page refresh via router.refresh()
+- Phase 4 complete - all features passing

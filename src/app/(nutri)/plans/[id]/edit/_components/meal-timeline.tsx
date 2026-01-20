@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Clock, Plus, ChevronDown, ChevronUp, Trash2, Loader2, UtensilsCrossed } from "lucide-react";
+import { Clock, Plus, ChevronDown, ChevronUp, Trash2, Loader2, UtensilsCrossed, Pencil } from "lucide-react";
+import { SaveStatusIndicator } from "@/components/save-status-indicator";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import type { Meal, MealContent, FoodItem } from "@/types/database";
 
 type MealWithContents = Meal & {
@@ -46,15 +48,68 @@ const MEAL_TYPES = [
   { value: "custom", label: "Personalizado", time: "12:00" },
 ];
 
+type MealAction =
+  | { type: "add"; meal: MealWithContents }
+  | { type: "delete"; mealId: string }
+  | { type: "update"; mealId: string; updates: Partial<Meal> };
+
 export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
   const router = useRouter();
-  const [meals, setMeals] = useState<MealWithContents[]>(initialMeals);
+  const [isPending, startTransition] = useTransition();
+
+  // Optimistic state for immediate UI updates
+  const [optimisticMeals, updateOptimisticMeals] = useOptimistic(
+    initialMeals,
+    (state: MealWithContents[], action: MealAction) => {
+      switch (action.type) {
+        case "add":
+          return [...state, action.meal].sort((a, b) => a.time.localeCompare(b.time));
+        case "delete":
+          return state.filter((m) => m.id !== action.mealId);
+        case "update":
+          return state.map((m) =>
+            m.id === action.mealId ? { ...m, ...action.updates } : m
+          ).sort((a, b) => a.time.localeCompare(b.time));
+        default:
+          return state;
+      }
+    }
+  );
+
   const [isAddingMeal, setIsAddingMeal] = useState(false);
   const [newMealType, setNewMealType] = useState("cafe");
   const [newMealTitle, setNewMealTitle] = useState("");
   const [newMealTime, setNewMealTime] = useState("07:00");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set(meals.map((m) => m.id)));
+  const [expandedMeals, setExpandedMeals] = useState<Set<string>>(
+    new Set(initialMeals.map((m) => m.id))
+  );
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [editingMealData, setEditingMealData] = useState<{ title: string; time: string } | null>(null);
+
+  // Auto-save for meal edits
+  const saveMealUpdate = useCallback(async (data: { mealId: string; title: string; time: string } | null) => {
+    if (!data) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("meals")
+      .update({ title: data.title, time: data.time })
+      .eq("id", data.mealId);
+
+    if (error) throw error;
+  }, []);
+
+  const { status: saveStatus, error: saveError } = useAutoSave({
+    data: editingMealData && editingMealId ? { mealId: editingMealId, ...editingMealData } : null,
+    onSave: async (data) => {
+      if (data) {
+        await saveMealUpdate(data);
+        router.refresh();
+      }
+    },
+    debounceMs: 800,
+    enabled: !!editingMealData && !!editingMealId,
+  });
 
   const handleMealTypeChange = (value: string) => {
     setNewMealType(value);
@@ -68,57 +123,90 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
   const addMeal = async () => {
     setIsSubmitting(true);
 
-    try {
-      const supabase = createClient();
+    const tempId = `temp-${Date.now()}`;
+    const newMeal: MealWithContents = {
+      id: tempId,
+      meal_plan_id: planId,
+      title: newMealTitle || MEAL_TYPES.find((t) => t.value === newMealType)?.label || "Refeição",
+      time: newMealTime,
+      notes: null,
+      sort_order: optimisticMeals.length,
+      created_at: new Date().toISOString(),
+      meal_contents: [],
+    };
 
-      const { data, error } = await supabase
-        .from("meals")
-        .insert({
-          meal_plan_id: planId,
-          title: newMealTitle || MEAL_TYPES.find((t) => t.value === newMealType)?.label || "Refeição",
-          time: newMealTime,
-          sort_order: meals.length,
-        })
-        .select()
-        .single();
+    startTransition(async () => {
+      updateOptimisticMeals({ type: "add", meal: newMeal });
 
-      if (error || !data) throw error || new Error("Failed to create meal");
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("meals")
+          .insert({
+            meal_plan_id: planId,
+            title: newMeal.title,
+            time: newMealTime,
+            sort_order: optimisticMeals.length,
+          })
+          .select()
+          .single();
 
-      const newMeal: MealWithContents = {
-        ...(data as Meal),
-        meal_contents: [],
-      };
+        if (error) throw error;
+        if (!data) throw new Error("Failed to create meal");
 
-      setMeals((prev) => [...prev, newMeal].sort((a, b) => a.time.localeCompare(b.time)));
-      setExpandedMeals((prev) => new Set([...prev, newMeal.id]));
-      setIsAddingMeal(false);
-      setNewMealTitle("");
-      setNewMealType("cafe");
-      setNewMealTime("07:00");
-      router.refresh();
-    } catch (err) {
-      console.error("Error adding meal:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
+        const createdMeal = data as Meal;
+        setExpandedMeals((prev) => new Set([...prev, createdMeal.id]));
+        setIsAddingMeal(false);
+        setNewMealTitle("");
+        setNewMealType("cafe");
+        setNewMealTime("07:00");
+        router.refresh();
+      } catch (err) {
+        console.error("Error adding meal:", err);
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   const deleteMeal = async (mealId: string) => {
-    try {
-      const supabase = createClient();
+    startTransition(async () => {
+      updateOptimisticMeals({ type: "delete", mealId });
 
-      const { error } = await supabase
-        .from("meals")
-        .delete()
-        .eq("id", mealId);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("meals").delete().eq("id", mealId);
 
-      if (error) throw error;
+        if (error) throw error;
+        router.refresh();
+      } catch (err) {
+        console.error("Error deleting meal:", err);
+      }
+    });
+  };
 
-      setMeals((prev) => prev.filter((m) => m.id !== mealId));
-      router.refresh();
-    } catch (err) {
-      console.error("Error deleting meal:", err);
-    }
+  const startEditingMeal = (meal: MealWithContents) => {
+    setEditingMealId(meal.id);
+    setEditingMealData({ title: meal.title, time: meal.time });
+  };
+
+  const handleMealTitleChange = (mealId: string, title: string) => {
+    setEditingMealData((prev) => prev ? { ...prev, title } : null);
+    startTransition(() => {
+      updateOptimisticMeals({ type: "update", mealId, updates: { title } });
+    });
+  };
+
+  const handleMealTimeChange = (mealId: string, time: string) => {
+    setEditingMealData((prev) => prev ? { ...prev, time } : null);
+    startTransition(() => {
+      updateOptimisticMeals({ type: "update", mealId, updates: { time } });
+    });
+  };
+
+  const stopEditingMeal = () => {
+    setEditingMealId(null);
+    setEditingMealData(null);
   };
 
   const toggleMealExpanded = (mealId: string) => {
@@ -151,28 +239,32 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
 
   return (
     <div className="space-y-4">
+      {/* Save Status Indicator */}
+      <div className="flex justify-end">
+        <SaveStatusIndicator status={saveStatus} error={saveError} />
+      </div>
+
       {/* Timeline */}
       <div className="relative">
         {/* Vertical line */}
-        {meals.length > 0 && (
+        {optimisticMeals.length > 0 && (
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-muted" />
         )}
 
-        {meals.length === 0 ? (
+        {optimisticMeals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <UtensilsCrossed className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold">
-              Nenhuma refeição
-            </h3>
+            <h3 className="mt-4 text-lg font-semibold">Nenhuma refeição</h3>
             <p className="mt-2 text-sm text-muted-foreground">
               Adicione a primeira refeição ao plano.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {meals.map((meal) => {
+            {optimisticMeals.map((meal) => {
               const isExpanded = expandedMeals.has(meal.id);
               const mealCalories = calculateMealCalories(meal);
+              const isEditing = editingMealId === meal.id;
 
               return (
                 <div key={meal.id} className="relative flex gap-4">
@@ -187,16 +279,59 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
                   <div className="flex-1 rounded-lg border bg-card">
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer"
-                      onClick={() => toggleMealExpanded(meal.id)}
+                      onClick={() => !isEditing && toggleMealExpanded(meal.id)}
                     >
-                      <div>
-                        <h4 className="font-medium">{meal.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {meal.meal_contents.filter((c) => !c.is_substitution).length} alimento{meal.meal_contents.filter((c) => !c.is_substitution).length !== 1 ? "s" : ""}
-                          {mealCalories > 0 && ` • ${mealCalories} kcal`}
-                        </p>
+                      <div className="flex-1">
+                        {isEditing ? (
+                          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              value={editingMealData?.title ?? meal.title}
+                              onChange={(e) => handleMealTitleChange(meal.id, e.target.value)}
+                              className="h-8 font-medium"
+                              autoFocus
+                            />
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <Input
+                                type="time"
+                                value={editingMealData?.time ?? meal.time}
+                                onChange={(e) => handleMealTimeChange(meal.id, e.target.value)}
+                                className="h-8 w-28"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={stopEditingMeal}
+                              >
+                                Fechar
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <h4 className="font-medium">{meal.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {meal.meal_contents.filter((c) => !c.is_substitution).length} alimento
+                              {meal.meal_contents.filter((c) => !c.is_substitution).length !== 1 ? "s" : ""}
+                              {mealCalories > 0 && ` • ${mealCalories} kcal`}
+                            </p>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
+                        {!isEditing && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditingMeal(meal);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -205,18 +340,21 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
                             e.stopPropagation();
                             deleteMeal(meal.id);
                           }}
+                          disabled={isPending}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        {!isEditing && (
+                          isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )
                         )}
                       </div>
                     </div>
 
-                    {isExpanded && (
+                    {isExpanded && !isEditing && (
                       <div className="border-t p-4 space-y-3">
                         {meal.meal_contents.filter((c) => !c.is_substitution).length === 0 ? (
                           <p className="text-sm text-muted-foreground text-center py-4">
@@ -231,22 +369,13 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
                                   key={content.id}
                                   className="flex items-center justify-between text-sm"
                                 >
-                                  <span>
-                                    {content.food_items?.name ?? "Alimento"}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {content.amount}g
-                                  </span>
+                                  <span>{content.food_items?.name ?? "Alimento"}</span>
+                                  <span className="text-muted-foreground">{content.amount}g</span>
                                 </li>
                               ))}
                           </ul>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          asChild
-                        >
+                        <Button variant="outline" size="sm" className="w-full" asChild>
                           <a href={`/plans/${planId}/meals/${meal.id}`}>
                             <Plus className="mr-2 h-4 w-4" />
                             Adicionar Alimento
