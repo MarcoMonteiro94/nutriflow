@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CommandMenu } from "@/components/command-menu";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +14,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#171717",
+};
+
 export const metadata: Metadata = {
   title: "NutriFlow",
   description: "Plataforma SaaS para nutricionistas com Timeline Inteligente",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "NutriFlow",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +47,7 @@ export default function RootLayout({
       >
         {children}
         <CommandMenu />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

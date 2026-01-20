@@ -404,3 +404,35 @@
     - Works with real database data
   - Added SharePlanButton to patient detail page quick actions
   - Typecheck, lint, and build passing
+
+### Task 5.3: PWA manifest and Service Workers for offline support
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T21:10:00Z
+- **Notes**:
+  - Installed @serwist/next and serwist packages
+  - Created service worker (src/sw.ts)
+    - NetworkFirst strategy for patient pages (7-day cache)
+    - NetworkFirst strategy for API responses (1-day cache)
+    - CacheFirst strategy for images (30-day cache)
+    - CacheFirst strategy for fonts (1-year cache)
+    - Default caching from @serwist/next/worker
+  - Created web manifest (public/manifest.json)
+    - App name, icons (72-512px), theme colors
+    - Standalone display mode, portrait orientation
+    - Portuguese language, health/lifestyle/food categories
+  - Updated next.config.ts for Serwist integration
+    - Disabled in development, enabled in production
+    - Added turbopack: {} for Next.js 16 compatibility
+  - Created PWAInstallPrompt component
+    - beforeinstallprompt event handling
+    - Dismissible with localStorage persistence
+    - Install button with native prompt
+    - Positioned above bottom nav on mobile
+  - Created ServiceWorkerRegister component
+    - Production-only SW registration
+    - Console logging for registration status
+  - Updated root layout with metadata
+    - Manifest link, theme color, apple-web-app settings
+    - Separate viewport export per Next.js 14+ standards
+  - Added PWAInstallPrompt to patient layout
+  - Typecheck, lint, and build passing

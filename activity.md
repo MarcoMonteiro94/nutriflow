@@ -102,3 +102,26 @@
 - Token expiration handling (30 days)
 - WhatsApp share functionality
 - Patient plan page fetches real data when authenticated
+
+### Task 5.3: PWA manifest and Service Workers for offline support
+
+**Changes Made:**
+- Created `src/sw.ts` - Service worker with caching strategies
+- Created `public/manifest.json` - PWA web manifest
+- Created `src/components/pwa-install-prompt.tsx` - Install prompt component
+- Created `src/components/sw-register.tsx` - Service worker registration
+- Updated `next.config.ts` - Serwist integration with turbopack compatibility
+- Updated `src/app/layout.tsx` - PWA metadata and viewport
+- Updated `src/app/patient/layout.tsx` - Added install prompt
+
+**Commands Run:**
+- `npm install @serwist/next serwist` - Installed PWA packages
+- `npx tsc --noEmit` - TypeScript check passed
+- `npm run lint` - No errors
+- `npm run build` - Build passed successfully
+
+**Verified:**
+- Service worker caching strategies configured
+- Web manifest with app metadata
+- Install prompt for mobile users
+- Service worker registration in production
