@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { PatientCard } from "./_components/patient-card";
+import { PatientsList } from "./_components/patients-list";
 import type { Patient } from "@/types/database";
 
 interface SearchParams {
@@ -75,36 +74,7 @@ export default async function PatientsPage({
         </form>
       </div>
 
-      {/* Patient List */}
-      {patients.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold">
-              {params.q ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"}
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground text-center max-w-sm">
-              {params.q
-                ? `Não encontramos pacientes com "${params.q}". Tente outro termo.`
-                : "Comece cadastrando seu primeiro paciente para gerenciar seus atendimentos."}
-            </p>
-            {!params.q && (
-              <Button asChild className="mt-4">
-                <Link href="/patients/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Cadastrar Paciente
-                </Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
-        </div>
-      )}
+      <PatientsList patients={patients} searchQuery={params.q} />
     </div>
   );
 }

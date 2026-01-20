@@ -450,3 +450,38 @@
     - Copy-to-clipboard with visual feedback
     - Pre-filled message with patient name and link expiry info
   - Phase 5 complete - all Patient Portal & PWA features passing
+
+## Phase 6: Polishing
+
+### Task 6.1: Smooth animations with Framer Motion
+- **Status**: Completed
+- **Timestamp**: 2026-01-20T22:30:00Z
+- **Notes**:
+  - Installed framer-motion package (v12.x)
+  - Created motion components library at src/components/motion/
+    - PageTransition: Fade and slide page enter/exit animations
+    - StaggerList/StaggerItem: Staggered list item animations with scale and fade
+    - FadeIn: Directional fade-in animations with configurable direction and delay
+    - MotionCard: Interactive card with hover lift and tap feedback
+    - MotionStatsCard: Stats cards with staggered entrance animations
+  - Updated Dashboard page with animated content:
+    - Stats cards animate in with stagger effect
+    - Page transitions with fade and slide
+    - Upcoming appointments list with stagger animations
+    - Cards sections with delayed fade-in
+  - Updated Patients page with animated list:
+    - PatientsList client component with StaggerList
+    - AnimatedPatientCard with hover micro-interactions
+    - Empty state with fade-in animation
+  - Updated Plans page with animated list:
+    - PlansList client component with StaggerList
+    - MotionCard for interactive plan cards
+  - Updated Appointments list with animations:
+    - Staggered list animations for appointment items
+    - Hover state transitions on appointment cards
+    - Empty state with fade-in animation
+  - Animation performance optimizations:
+    - CSS custom easing curves [0.25, 0.1, 0.25, 1]
+    - Hardware-accelerated transforms (y, scale, opacity)
+    - Short durations (200-400ms) for smooth 60fps
+  - Typecheck, lint, and build passing

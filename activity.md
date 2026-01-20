@@ -125,3 +125,37 @@
 - Web manifest with app metadata
 - Install prompt for mobile users
 - Service worker registration in production
+
+---
+
+## 2026-01-20 (Phase 6 - Polishing)
+
+### Task 6.1: Smooth animations with Framer Motion
+
+**Changes Made:**
+- Created `src/components/motion/page-transition.tsx` - Page enter/exit animations
+- Created `src/components/motion/stagger-list.tsx` - Staggered list animations
+- Created `src/components/motion/fade-in.tsx` - Directional fade-in animations
+- Created `src/components/motion/motion-card.tsx` - Interactive card with hover effects
+- Created `src/components/motion/index.ts` - Exports for motion components
+- Created `src/app/(nutri)/dashboard/_components/dashboard-content.tsx` - Animated dashboard
+- Created `src/app/(nutri)/patients/_components/animated-patient-card.tsx` - Animated patient card
+- Created `src/app/(nutri)/patients/_components/patients-list.tsx` - Animated patients list
+- Created `src/app/(nutri)/plans/_components/plans-list.tsx` - Animated plans list
+- Updated `src/app/(nutri)/dashboard/page.tsx` - Uses DashboardContent component
+- Updated `src/app/(nutri)/patients/page.tsx` - Uses PatientsList component
+- Updated `src/app/(nutri)/plans/page.tsx` - Uses PlansList component
+- Updated `src/app/(nutri)/schedule/_components/appointments-list.tsx` - Added stagger animations
+
+**Commands Run:**
+- `npm install framer-motion` - Installed Framer Motion package
+- `npx tsc --noEmit` - TypeScript check passed
+- `npm run lint` - No errors
+- `npm run build` - Build passed successfully
+
+**Verified:**
+- Page transitions with fade and slide effects
+- List item stagger animations on patients, plans, and appointments
+- Card hover micro-interactions (lift, shadow)
+- Stats cards with staggered entrance animations
+- Smooth 60fps animations using hardware-accelerated transforms
