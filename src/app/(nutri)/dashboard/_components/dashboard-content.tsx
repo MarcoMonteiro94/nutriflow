@@ -29,21 +29,21 @@ interface DashboardContentProps {
 export function DashboardContent({ stats }: DashboardContentProps) {
   return (
     <PageTransition className="space-y-6">
-      <FadeIn direction="down" className="flex items-center justify-between">
+      <FadeIn direction="down" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
             Bem-vindo ao NutriFlow. Veja o resumo dos seus atendimentos.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/patients/new">
               <Plus className="mr-2 h-4 w-4" />
               Novo Paciente
             </Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/plans/new">
               <UtensilsCrossed className="mr-2 h-4 w-4" />
               Novo Plano
