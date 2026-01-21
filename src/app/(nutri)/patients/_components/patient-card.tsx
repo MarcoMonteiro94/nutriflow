@@ -26,44 +26,44 @@ export function PatientCard({ patient }: PatientCardProps) {
 
   return (
     <Card className="hover:shadow-soft-lg transition-all">
-      <CardHeader className="flex flex-row items-center gap-4 pb-2">
-        <Avatar className="h-12 w-12 rounded-xl">
-          <AvatarFallback className="bg-primary/15 text-primary rounded-xl font-semibold">
+      <CardHeader className="flex flex-row items-center gap-3 p-4 pb-2 sm:gap-4 sm:p-6 sm:pb-2">
+        <Avatar className="h-10 w-10 rounded-lg sm:h-12 sm:w-12 sm:rounded-xl">
+          <AvatarFallback className="bg-primary/15 text-primary rounded-lg sm:rounded-xl text-sm font-semibold sm:text-base">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 space-y-1">
+        <div className="min-w-0 flex-1 space-y-0.5 sm:space-y-1">
           <Link
             href={`/patients/${patient.id}`}
-            className="font-semibold hover:underline"
+            className="block truncate font-semibold text-sm sm:text-base hover:underline"
           >
             {patient.full_name}
           </Link>
           {age !== null && (
-            <p className="text-sm text-muted-foreground">{age} anos</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{age} anos</p>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 p-4 pt-0 sm:space-y-3 sm:p-6 sm:pt-0">
         {patient.email && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Mail className="h-4 w-4" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Mail className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
             <span className="truncate">{patient.email}</span>
           </div>
         )}
         {patient.phone && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="h-4 w-4" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Phone className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
             <span>{patient.phone}</span>
           </div>
         )}
         {patient.goal && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Target className="h-4 w-4" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Target className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
             <span className="truncate">{patient.goal}</span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3 w-3" />
           <span>
             Cadastrado em{" "}
@@ -71,12 +71,12 @@ export function PatientCard({ patient }: PatientCardProps) {
           </span>
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/patients/${patient.id}`}>Ver Perfil</Link>
+        <div className="flex gap-2 pt-1 sm:pt-2">
+          <Button asChild variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
+            <Link href={`/patients/${patient.id}`}>Perfil</Link>
           </Button>
-          <Button asChild size="sm" className="flex-1">
-            <Link href={`/patients/${patient.id}/plan`}>Ver Plano</Link>
+          <Button asChild size="sm" className="flex-1 text-xs sm:text-sm">
+            <Link href={`/patients/${patient.id}/plan`}>Plano</Link>
           </Button>
         </div>
       </CardContent>

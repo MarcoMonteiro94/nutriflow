@@ -182,25 +182,25 @@ export function DashboardContent({ stats }: DashboardContentProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
-              <Button asChild variant="outline" className="justify-start">
+              <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/patients/new">
                   <Users className="mr-2 h-4 w-4" />
                   Cadastrar Novo Paciente
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="justify-start">
+              <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/plans/new">
                   <UtensilsCrossed className="mr-2 h-4 w-4" />
                   Criar Plano Alimentar
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="justify-start">
+              <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/schedule/new">
                   <CalendarDays className="mr-2 h-4 w-4" />
                   Agendar Consulta
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="justify-start">
+              <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/patients">
                   <ArrowRight className="mr-2 h-4 w-4" />
                   Ver Todos os Pacientes
