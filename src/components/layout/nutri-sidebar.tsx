@@ -99,7 +99,7 @@ export function NutriSidebar({ children, user }: NutriSidebarProps) {
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
                     >
                       <Link href={item.href}>
                         <item.icon className="h-4 w-4" />
@@ -121,7 +121,7 @@ export function NutriSidebar({ children, user }: NutriSidebarProps) {
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={pathname.startsWith(item.href)}
                     >
                       <Link href={item.href}>
                         <item.icon className="h-4 w-4" />
