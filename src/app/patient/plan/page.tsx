@@ -1,66 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentPatientId } from "@/lib/patient-token";
+import { getPatientTokenCookie, getPatientPlanByToken } from "@/lib/patient-token";
 import { PatientMealPlanView } from "./_components/patient-meal-plan-view";
 import { UtensilsCrossed, Lock } from "lucide-react";
 import Link from "next/link";
-import type { Meal, MealContent, FoodItem, MealPlan } from "@/types/database";
-
-type MealContentWithFood = MealContent & {
-  food_items: FoodItem | null;
-};
-
-type MealWithContents = Meal & {
-  meal_contents: MealContentWithFood[];
-};
-
-type MealPlanWithMeals = MealPlan & {
-  meals: MealWithContents[];
-};
-
-async function getPatientActivePlan(
-  patientId: string
-): Promise<MealPlanWithMeals | null> {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("meal_plans")
-    .select(
-      `
-      *,
-      meals (
-        *,
-        meal_contents (
-          *,
-          food_items:food_id (*)
-        )
-      )
-    `
-    )
-    .eq("patient_id", patientId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (!data) {
-    return null;
-  }
-
-  // Sort meals by time
-  const meals = (data.meals || []) as MealWithContents[];
-  const sortedMeals = meals.sort((a, b) => a.time.localeCompare(b.time));
-
-  return {
-    ...data,
-    meals: sortedMeals,
-  } as MealPlanWithMeals;
-}
 
 export default async function PatientPlanPage() {
-  const patientId = await getCurrentPatientId();
+  const token = await getPatientTokenCookie();
 
   // Not authenticated - show message to request link
-  if (!patientId) {
+  if (!token) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
         <div className="rounded-full bg-muted p-4 mb-4">
@@ -81,7 +28,30 @@ export default async function PatientPlanPage() {
     );
   }
 
-  const plan = await getPatientActivePlan(patientId);
+  // Get plan data using RPC function (bypasses RLS)
+  const result = await getPatientPlanByToken(token);
+
+  if (result.error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
+        <div className="rounded-full bg-destructive/10 p-4 mb-4">
+          <Lock className="h-8 w-8 text-destructive" />
+        </div>
+        <h1 className="text-xl font-semibold">Erro ao carregar</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xs">
+          {result.error}
+        </p>
+        <Link
+          href="/patient"
+          className="mt-4 text-sm text-primary hover:underline"
+        >
+          Voltar ao início
+        </Link>
+      </div>
+    );
+  }
+
+  const plan = result.plan;
 
   // No active plan found
   if (!plan) {
@@ -109,19 +79,19 @@ export default async function PatientPlanPage() {
         )
         .map((sub) => ({
           id: sub.id,
-          name: sub.food_items?.name ?? "Alimento",
+          name: sub.food_item?.name ?? "Alimento",
           amount: sub.amount,
-          calories: sub.food_items
-            ? Math.round((sub.amount / 100) * sub.food_items.calories)
+          calories: sub.food_item
+            ? Math.round((sub.amount / 100) * sub.food_item.calories)
             : 0,
         }));
 
       return {
         id: content.id,
-        name: content.food_items?.name ?? "Alimento",
+        name: content.food_item?.name ?? "Alimento",
         amount: content.amount,
-        calories: content.food_items
-          ? Math.round((content.amount / 100) * content.food_items.calories)
+        calories: content.food_item
+          ? Math.round((content.amount / 100) * content.food_item.calories)
           : 0,
         substitutions,
       };

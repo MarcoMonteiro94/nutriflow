@@ -124,6 +124,89 @@ export async function getCurrentPatientId(): Promise<string | null> {
 }
 
 /**
+ * Get patient plan data using the RPC function (bypasses RLS)
+ */
+export async function getPatientPlanByToken(token: string): Promise<{
+  error?: string;
+  patient_id?: string;
+  plan?: {
+    id: string;
+    title: string | null;
+    description: string | null;
+    starts_at: string | null;
+    ends_at: string | null;
+    meals: Array<{
+      id: string;
+      title: string;
+      time: string;
+      notes: string | null;
+      meal_contents: Array<{
+        id: string;
+        amount: number;
+        is_substitution: boolean;
+        parent_content_id: string | null;
+        food_item: {
+          id: string;
+          name: string;
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          portion_size: number;
+          portion_unit: string;
+        };
+      }>;
+    }>;
+  } | null;
+}> {
+  const supabase = await createClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)("get_patient_plan_by_token", {
+    p_token: token,
+  });
+
+  if (error) {
+    console.error("RPC error:", error);
+    return { error: "Erro ao carregar plano" };
+  }
+
+  return data as {
+    error?: string;
+    patient_id?: string;
+    plan?: {
+      id: string;
+      title: string | null;
+      description: string | null;
+      starts_at: string | null;
+      ends_at: string | null;
+      meals: Array<{
+        id: string;
+        title: string;
+        time: string;
+        notes: string | null;
+        meal_contents: Array<{
+          id: string;
+          amount: number;
+          is_substitution: boolean;
+          parent_content_id: string | null;
+          food_item: {
+            id: string;
+            name: string;
+            calories: number;
+            protein: number;
+            carbs: number;
+            fat: number;
+            portion_size: number;
+            portion_unit: string;
+          };
+        }>;
+      }>;
+    } | null;
+  };
+}
+
+/**
  * Generate the magic link URL for a patient
  */
 export function generateMagicLinkUrl(token: string, baseUrl: string): string {
