@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { TimeSlotRow } from "./time-slot-row";
 import type { NutriAvailability } from "@/types/database";
 
@@ -102,20 +103,10 @@ function groupByDay(availability: NutriAvailability[]): WeekScheduleState {
 
 export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
   const router = useRouter();
-  const errorRef = useRef<HTMLDivElement>(null);
   const [schedule, setSchedule] = useState<WeekScheduleState>(() =>
     groupByDay(initialAvailability)
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Scroll to error when it appears
-  useEffect(() => {
-    if (error && errorRef.current) {
-      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [error]);
 
   function addSlot(dayOfWeek: number) {
     setSchedule((prev) => ({
@@ -167,18 +158,12 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
   }
 
   async function handleSave() {
-    setError(null);
-    setSuccessMessage(null);
-
     // Validate for overlapping slots before saving
     const overlapError = checkForOverlaps(schedule, DAYS_OF_WEEK);
     if (overlapError) {
-      setError(
-        `Horários sobrepostos em ${overlapError.dayLabel}: ` +
-        `${overlapError.slot1.start}-${overlapError.slot1.end} e ` +
-        `${overlapError.slot2.start}-${overlapError.slot2.end}. ` +
-        `Por favor, ajuste os horários para não se sobreporem.`
-      );
+      toast.error("Horários sobrepostos", {
+        description: `${overlapError.dayLabel}: ${overlapError.slot1.start}-${overlapError.slot1.end} e ${overlapError.slot2.start}-${overlapError.slot2.end}`,
+      });
       return;
     }
 
@@ -191,7 +176,7 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setError("Usuário não autenticado");
+        toast.error("Usuário não autenticado");
         return;
       }
 
@@ -278,15 +263,13 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
         }
       }
 
-      setSuccessMessage("Disponibilidade salva com sucesso!");
+      toast.success("Disponibilidade salva com sucesso!");
       router.refresh();
     } catch (err) {
       console.error("Error saving availability:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Erro ao salvar disponibilidade. Tente novamente."
-      );
+      toast.error("Erro ao salvar", {
+        description: err instanceof Error ? err.message : "Tente novamente.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -294,21 +277,6 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
 
   return (
     <div className="space-y-6">
-      {error && (
-        <div
-          ref={errorRef}
-          className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
-        >
-          {error}
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="rounded-xl bg-green-500/10 p-4 text-sm text-green-700 dark:text-green-400">
-          {successMessage}
-        </div>
-      )}
-
       <div className="space-y-6">
         {DAYS_OF_WEEK.map((day) => {
           const daySlots = schedule[day.value];

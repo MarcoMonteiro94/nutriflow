@@ -19,6 +19,7 @@ import {
 import { Calendar, Trash2, Loader2, Briefcase, Palmtree, PartyPopper, MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 import type { NutriTimeBlock, BlockType } from "@/types/database";
 
 interface TimeBlockListProps {
@@ -51,9 +52,11 @@ export function TimeBlockList({ timeBlocks }: TimeBlockListProps) {
 
       if (error) throw error;
 
+      toast.success("Bloqueio removido");
       router.refresh();
     } catch (err) {
       console.error("Error deleting time block:", err);
+      toast.error("Erro ao remover bloqueio");
     } finally {
       setDeletingId(null);
     }

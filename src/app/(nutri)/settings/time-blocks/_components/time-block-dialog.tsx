@@ -34,6 +34,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { BlockType } from "@/types/database";
 
 interface TimeBlockDialogProps {
@@ -147,10 +148,13 @@ export function TimeBlockDialog({ children }: TimeBlockDialogProps) {
 
       setOpen(false);
       resetForm();
+      toast.success("Bloqueio criado com sucesso!");
       router.refresh();
     } catch (err) {
       console.error("Error creating time block:", err);
-      setError("Erro ao criar bloqueio. Tente novamente.");
+      toast.error("Erro ao criar bloqueio", {
+        description: "Tente novamente.",
+      });
     } finally {
       setIsSubmitting(false);
     }
