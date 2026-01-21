@@ -24,8 +24,7 @@ WORKFLOW:
 7. When the task is confirmed, update that task Status in plan.md from failing to passing.
 8. Make one git commit for that task only with a clear single line message. Do not run git init, do not change git remotes, and do not push.
 9. Repeat until all tasks are passing.
-10. When all tasks are marked passing, output exactly COMPLETE."
---max-iterations 20 --completion-promise "COMPLETE")
+10. When all tasks are marked passing, output exactly COMPLETE.")
 
   echo "$result"
 
