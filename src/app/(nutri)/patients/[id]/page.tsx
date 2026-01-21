@@ -96,25 +96,27 @@ export default async function PatientDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/patients">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Perfil do Paciente
-          </h1>
-          <p className="text-muted-foreground">
-            Visualize e gerencie as informações do paciente.
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Button asChild variant="ghost" size="icon" className="shrink-0">
+            <Link href="/patients">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Perfil do Paciente
+            </h1>
+            <p className="text-sm text-muted-foreground sm:text-base">
+              Visualize e gerencie as informações.
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+        <div className="flex gap-2 sm:ml-auto">
+          <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none sm:size-default">
             <Link href={`/patients/${id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
+              <Edit className="h-4 w-4 sm:mr-2" />
+              <span className="sm:inline">Editar</span>
             </Link>
           </Button>
           <DeletePatientButton patientId={id} patientName={patient.full_name} />
@@ -250,8 +252,8 @@ export default async function PatientDetailPage({ params }: PageProps) {
             Acesse rapidamente as funções relacionadas a este paciente.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button asChild>
+        <CardContent className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          <Button asChild className="col-span-2 sm:col-span-1">
             <Link href={`/patients/${id}/plan/new`}>
               <UtensilsCrossed className="mr-2 h-4 w-4" />
               Criar Novo Plano
@@ -259,14 +261,16 @@ export default async function PatientDetailPage({ params }: PageProps) {
           </Button>
           <Button asChild variant="outline">
             <Link href={`/schedule/new?patient=${id}`}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Agendar Consulta
+              <Calendar className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Agendar Consulta</span>
+              <span className="sm:hidden">Agendar</span>
             </Link>
           </Button>
           <Button asChild variant="outline">
             <Link href={`/patients/${id}/measurements/new`}>
-              <Activity className="mr-2 h-4 w-4" />
-              Registrar Medidas
+              <Activity className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Registrar Medidas</span>
+              <span className="sm:hidden">Medidas</span>
             </Link>
           </Button>
           <SharePlanButton
