@@ -4,7 +4,7 @@ import { SchedulePage } from '../fixtures/page-objects/schedule.page';
 
 test.describe('Appointment CRUD Operations', () => {
   test.describe('Schedule Page', () => {
-    test('should display schedule page', async ({ authenticatedPage }) => {
+    test('displays schedule page', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 
@@ -12,7 +12,7 @@ test.describe('Appointment CRUD Operations', () => {
       await schedulePage.expectLoaded();
     });
 
-    test('should have new appointment button', async ({ authenticatedPage }) => {
+    test('has new appointment button', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 
@@ -22,7 +22,7 @@ test.describe('Appointment CRUD Operations', () => {
       await expect(newButton).toBeVisible();
     });
 
-    test('should display calendar', async ({ authenticatedPage }) => {
+    test('displays calendar', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 
@@ -33,7 +33,7 @@ test.describe('Appointment CRUD Operations', () => {
       await expect(calendar).toBeVisible();
     });
 
-    test('should display appointments list section', async ({ authenticatedPage }) => {
+    test('displays appointments list section', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 
@@ -46,7 +46,7 @@ test.describe('Appointment CRUD Operations', () => {
   });
 
   test.describe('Calendar Interaction', () => {
-    test('should allow clicking on calendar dates', async ({ authenticatedPage }) => {
+    test('allows clicking on calendar dates', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 
@@ -66,7 +66,7 @@ test.describe('Appointment CRUD Operations', () => {
   });
 
   test.describe('Appointment List', () => {
-    test('should show appointment items when available', async ({ authenticatedPage }) => {
+    test('shows appointment items when available', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 
@@ -80,7 +80,7 @@ test.describe('Appointment CRUD Operations', () => {
       expect(hasAppointments || hasEmptyState || true).toBeTruthy();
     });
 
-    test('should show patient name in appointment', async ({ authenticatedPage }) => {
+    test('shows patient name in appointment', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const schedulePage = new SchedulePage(page);
 

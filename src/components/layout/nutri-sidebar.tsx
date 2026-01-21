@@ -48,7 +48,7 @@ const mainNavItems = [
   },
   {
     title: "Agenda",
-    href: "/agenda",
+    href: "/schedule",
     icon: CalendarDays,
   },
   {

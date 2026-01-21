@@ -1,17 +1,23 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Clock, User, MoreHorizontal, Pencil, Trash2, Calendar } from "lucide-react";
+import { Clock, User, MoreHorizontal, Pencil, Trash2, Calendar, RefreshCw, Check, XCircle, History } from "lucide-react";
 import Link from "next/link";
 import type { Appointment } from "@/types/database";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StaggerList, StaggerItem, FadeIn } from "@/components/motion";
 import { motion } from "framer-motion";
+import { RescheduleDialog } from "./reschedule-dialog";
+import { AppointmentActionsDialog } from "./appointment-actions-dialog";
 
 interface AppointmentsListProps {
   appointments: (Appointment & {
@@ -119,25 +125,17 @@ export function AppointmentsList({ appointments }: AppointmentsListProps) {
                   ) && appointment.status}
                 </span>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/schedule/${appointment.id}/edit`}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Cancelar
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <RescheduleDialog appointment={appointment}>
+                  <Button variant="ghost" size="icon" title="Reagendar">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </RescheduleDialog>
+
+                <AppointmentActionsDialog appointment={appointment}>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </AppointmentActionsDialog>
               </div>
             </motion.div>
           </StaggerItem>

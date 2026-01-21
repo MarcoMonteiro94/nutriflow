@@ -316,6 +316,11 @@ export type Database = {
           duration_minutes: number;
           status: string;
           notes: string | null;
+          rescheduled_from: string | null;
+          rescheduled_at: string | null;
+          rescheduled_reason: string | null;
+          cancellation_reason: string | null;
+          cancelled_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -327,6 +332,11 @@ export type Database = {
           duration_minutes?: number;
           status?: string;
           notes?: string | null;
+          rescheduled_from?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_reason?: string | null;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -338,6 +348,11 @@ export type Database = {
           duration_minutes?: number;
           status?: string;
           notes?: string | null;
+          rescheduled_from?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_reason?: string | null;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -354,6 +369,161 @@ export type Database = {
             columns: ["patient_id"];
             isOneToOne: false;
             referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_rescheduled_from_fkey";
+            columns: ["rescheduled_from"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      nutri_availability: {
+        Row: {
+          id: string;
+          nutri_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nutri_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nutri_id?: string;
+          day_of_week?: number;
+          start_time?: string;
+          end_time?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "nutri_availability_nutri_id_fkey";
+            columns: ["nutri_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      nutri_time_blocks: {
+        Row: {
+          id: string;
+          nutri_id: string;
+          title: string;
+          start_datetime: string;
+          end_datetime: string;
+          block_type: "personal" | "holiday" | "vacation" | "other";
+          is_recurring: boolean;
+          recurrence_rule: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nutri_id: string;
+          title: string;
+          start_datetime: string;
+          end_datetime: string;
+          block_type?: "personal" | "holiday" | "vacation" | "other";
+          is_recurring?: boolean;
+          recurrence_rule?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nutri_id?: string;
+          title?: string;
+          start_datetime?: string;
+          end_datetime?: string;
+          block_type?: "personal" | "holiday" | "vacation" | "other";
+          is_recurring?: boolean;
+          recurrence_rule?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "nutri_time_blocks_nutri_id_fkey";
+            columns: ["nutri_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      appointment_history: {
+        Row: {
+          id: string;
+          appointment_id: string;
+          action: "created" | "rescheduled" | "cancelled" | "completed" | "no_show";
+          old_datetime: string | null;
+          new_datetime: string | null;
+          old_status: string | null;
+          new_status: string | null;
+          changed_by: string | null;
+          reason: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          appointment_id: string;
+          action: "created" | "rescheduled" | "cancelled" | "completed" | "no_show";
+          old_datetime?: string | null;
+          new_datetime?: string | null;
+          old_status?: string | null;
+          new_status?: string | null;
+          changed_by?: string | null;
+          reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          appointment_id?: string;
+          action?: "created" | "rescheduled" | "cancelled" | "completed" | "no_show";
+          old_datetime?: string | null;
+          new_datetime?: string | null;
+          old_status?: string | null;
+          new_status?: string | null;
+          changed_by?: string | null;
+          reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_history_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointment_history_changed_by_fkey";
+            columns: ["changed_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           }
         ];
@@ -447,6 +617,8 @@ export type Database = {
       user_role: "nutri" | "patient";
       food_source: "official" | "custom";
       plan_status: "active" | "archived";
+      block_type: "personal" | "holiday" | "vacation" | "other";
+      appointment_action: "created" | "rescheduled" | "cancelled" | "completed" | "no_show";
     };
   };
 };
@@ -469,3 +641,10 @@ export type MealContent = Tables<"meal_contents">;
 export type Appointment = Tables<"appointments">;
 export type Measurement = Tables<"measurements">;
 export type PatientToken = Tables<"patient_tokens">;
+export type NutriAvailability = Tables<"nutri_availability">;
+export type NutriTimeBlock = Tables<"nutri_time_blocks">;
+export type AppointmentHistory = Tables<"appointment_history">;
+
+// Enum types
+export type BlockType = Database["public"]["Enums"]["block_type"];
+export type AppointmentAction = Database["public"]["Enums"]["appointment_action"];

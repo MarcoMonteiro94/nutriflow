@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Calendar as CalendarIcon } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { ScheduleCalendar } from "./_components/schedule-calendar";
 import { AppointmentsList } from "./_components/appointments-list";
-import type { Appointment } from "@/types/database";
+import type { Appointment, NutriTimeBlock } from "@/types/database";
 
 interface SearchParams {
   date?: string;
@@ -88,6 +88,72 @@ async function getAppointmentDates(): Promise<Date[]> {
   return data.map((a) => new Date(a.scheduled_at));
 }
 
+async function getBlockedDates(): Promise<Date[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  // Get time blocks for the next 90 days
+  const now = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 90);
+
+  const { data } = await supabase
+    .from("nutri_time_blocks")
+    .select("*")
+    .eq("nutri_id", user.id)
+    .gte("end_datetime", now.toISOString())
+    .lte("start_datetime", futureDate.toISOString());
+
+  const blocks = (data ?? []) as NutriTimeBlock[];
+
+  // Generate all dates that fall within time blocks
+  const blockedDates: Date[] = [];
+
+  for (const block of blocks) {
+    const blockStart = new Date(block.start_datetime);
+    const blockEnd = new Date(block.end_datetime);
+
+    // Iterate through each day in the block range
+    const currentDate = new Date(blockStart);
+    currentDate.setHours(0, 0, 0, 0);
+
+    while (currentDate <= blockEnd) {
+      blockedDates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  }
+
+  return blockedDates;
+}
+
+async function getTimeBlocksForDate(dateStr: string): Promise<NutriTimeBlock[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+
+  const { data } = await supabase
+    .from("nutri_time_blocks")
+    .select("*")
+    .eq("nutri_id", user.id)
+    .lte("start_datetime", endOfDay.toISOString())
+    .gte("end_datetime", startOfDay.toISOString());
+
+  return (data ?? []) as NutriTimeBlock[];
+}
+
 export default async function SchedulePage({
   searchParams,
 }: {
@@ -96,8 +162,12 @@ export default async function SchedulePage({
   const params = await searchParams;
   const selectedDate = params.date || formatLocalDate(new Date());
 
-  const appointments = await getAppointments(selectedDate);
-  const appointmentDates = await getAppointmentDates();
+  const [appointments, appointmentDates, blockedDates, timeBlocksForDay] = await Promise.all([
+    getAppointments(selectedDate),
+    getAppointmentDates(),
+    getBlockedDates(),
+    getTimeBlocksForDate(selectedDate),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -132,6 +202,7 @@ export default async function SchedulePage({
             <ScheduleCalendar
               selectedDate={parseLocalDate(selectedDate)}
               appointmentDates={appointmentDates}
+              blockedDates={blockedDates}
             />
           </CardContent>
         </Card>
@@ -153,7 +224,33 @@ export default async function SchedulePage({
                 : `${appointments.length} atendimento${appointments.length > 1 ? "s" : ""} agendado${appointments.length > 1 ? "s" : ""}`}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {timeBlocksForDay.length > 0 && (
+              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-yellow-700 dark:text-yellow-400">
+                      Bloqueios neste dia:
+                    </p>
+                    <ul className="mt-1 space-y-1 text-yellow-600 dark:text-yellow-500">
+                      {timeBlocksForDay.map((block) => (
+                        <li key={block.id}>
+                          {block.title}
+                          {block.block_type !== "other" && (
+                            <span className="text-xs ml-1">
+                              ({block.block_type === "personal" ? "Pessoal" :
+                                block.block_type === "holiday" ? "Feriado" :
+                                block.block_type === "vacation" ? "Férias" : block.block_type})
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
             <AppointmentsList appointments={appointments} />
           </CardContent>
         </Card>

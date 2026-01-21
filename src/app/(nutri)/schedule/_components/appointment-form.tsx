@@ -20,11 +20,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import type { Patient } from "@/types/database";
+import type { Patient, NutriAvailability, NutriTimeBlock, Appointment } from "@/types/database";
+import { TimeSlotPicker } from "./time-slot-picker";
 
 interface AppointmentFormProps {
   patients: Patient[];
@@ -47,14 +48,6 @@ const DURATION_OPTIONS = [
   { value: "120", label: "2 horas" },
 ];
 
-const TIME_SLOTS = Array.from({ length: 24 }, (_, hour) =>
-  Array.from({ length: 2 }, (_, halfHour) => {
-    const h = hour.toString().padStart(2, "0");
-    const m = (halfHour * 30).toString().padStart(2, "0");
-    return `${h}:${m}`;
-  })
-).flat();
-
 export function AppointmentForm({
   patients,
   defaultPatientId,
@@ -65,6 +58,7 @@ export function AppointmentForm({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const defaultDateObj = defaultDate ? new Date(defaultDate) : new Date();
   const initialDateObj = initialData
@@ -78,7 +72,7 @@ export function AppointmentForm({
   const [time, setTime] = useState(
     initialData
       ? format(new Date(initialData.scheduled_at), "HH:mm")
-      : "09:00"
+      : ""
   );
   const [duration, setDuration] = useState(
     initialData?.duration_minutes?.toString() || "60"
@@ -87,9 +81,121 @@ export function AppointmentForm({
 
   const isEditing = !!appointmentId;
 
+  async function validateSlot(): Promise<boolean> {
+    if (!date || !time) return false;
+
+    setValidationError(null);
+
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setValidationError("Usuário não autenticado");
+        return false;
+      }
+
+      const [hours, minutes] = time.split(":").map(Number);
+      const slotStart = new Date(date);
+      slotStart.setHours(hours, minutes, 0, 0);
+      const slotEnd = new Date(slotStart.getTime() + parseInt(duration) * 60 * 1000);
+
+      // Check if in the past
+      if (slotStart < new Date()) {
+        setValidationError("Não é possível agendar no passado");
+        return false;
+      }
+
+      // Check availability
+      const dayOfWeek = date.getDay();
+      const startTimeStr = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
+      const endTimeStr = `${slotEnd.getHours().toString().padStart(2, "0")}:${slotEnd.getMinutes().toString().padStart(2, "0")}:00`;
+
+      const { data: availabilityData } = await supabase
+        .from("nutri_availability")
+        .select("*")
+        .eq("nutri_id", user.id)
+        .eq("day_of_week", dayOfWeek)
+        .eq("is_active", true);
+
+      const availability = (availabilityData ?? []) as NutriAvailability[];
+
+      if (availability.length === 0) {
+        setValidationError("Você não atende neste dia da semana");
+        return false;
+      }
+
+      const isWithinAvailability = availability.some((avail) => {
+        return startTimeStr >= avail.start_time && endTimeStr <= avail.end_time;
+      });
+
+      if (!isWithinAvailability) {
+        setValidationError("Horário fora da sua disponibilidade configurada");
+        return false;
+      }
+
+      // Check for time blocks
+      const { data: blocksData } = await supabase
+        .from("nutri_time_blocks")
+        .select("*")
+        .eq("nutri_id", user.id)
+        .lte("start_datetime", slotEnd.toISOString())
+        .gte("end_datetime", slotStart.toISOString());
+
+      const blocks = (blocksData ?? []) as NutriTimeBlock[];
+
+      if (blocks.length > 0) {
+        setValidationError(`Horário bloqueado: ${blocks[0].title}`);
+        return false;
+      }
+
+      // Check for existing appointments
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      let appointmentQuery = supabase
+        .from("appointments")
+        .select("*")
+        .eq("nutri_id", user.id)
+        .neq("status", "cancelled")
+        .gte("scheduled_at", startOfDay.toISOString())
+        .lte("scheduled_at", endOfDay.toISOString());
+
+      if (appointmentId) {
+        appointmentQuery = appointmentQuery.neq("id", appointmentId);
+      }
+
+      const { data: appointmentsData } = await appointmentQuery;
+      const appointments = (appointmentsData ?? []) as Appointment[];
+
+      for (const appointment of appointments) {
+        const appointmentStart = new Date(appointment.scheduled_at);
+        const appointmentEnd = new Date(
+          appointmentStart.getTime() + appointment.duration_minutes * 60 * 1000
+        );
+
+        if (slotStart < appointmentEnd && slotEnd > appointmentStart) {
+          setValidationError("Já existe uma consulta neste horário");
+          return false;
+        }
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Validation error:", err);
+      setValidationError("Erro ao validar horário");
+      return false;
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setValidationError(null);
 
     if (!patientId) {
       setError("Selecione um paciente.");
@@ -98,6 +204,17 @@ export function AppointmentForm({
 
     if (!date) {
       setError("Selecione uma data.");
+      return;
+    }
+
+    if (!time) {
+      setError("Selecione um horário.");
+      return;
+    }
+
+    // Validate the slot before submitting
+    const isValid = await validateSlot();
+    if (!isValid) {
       return;
     }
 
@@ -169,6 +286,13 @@ export function AppointmentForm({
         </div>
       )}
 
+      {validationError && (
+        <div className="rounded-md bg-yellow-500/10 border border-yellow-500/50 p-3 text-sm text-yellow-700 dark:text-yellow-400 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <span>{validationError}</span>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="patient">Paciente *</Label>
         <Select value={patientId} onValueChange={setPatientId}>
@@ -218,7 +342,12 @@ export function AppointmentForm({
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={(newDate) => {
+                  setDate(newDate);
+                  setTime(""); // Reset time when date changes
+                  setValidationError(null);
+                }}
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                 initialFocus
               />
             </PopoverContent>
@@ -226,15 +355,21 @@ export function AppointmentForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="time">Horário *</Label>
-          <Select value={time} onValueChange={setTime}>
-            <SelectTrigger id="time">
-              <SelectValue placeholder="Selecione um horário" />
+          <Label htmlFor="duration">Duração *</Label>
+          <Select
+            value={duration}
+            onValueChange={(value) => {
+              setDuration(value);
+              setValidationError(null);
+            }}
+          >
+            <SelectTrigger id="duration">
+              <SelectValue placeholder="Selecione a duração" />
             </SelectTrigger>
             <SelectContent>
-              {TIME_SLOTS.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
+              {DURATION_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -242,21 +377,16 @@ export function AppointmentForm({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="duration">Duração *</Label>
-        <Select value={duration} onValueChange={setDuration}>
-          <SelectTrigger id="duration">
-            <SelectValue placeholder="Selecione a duração" />
-          </SelectTrigger>
-          <SelectContent>
-            {DURATION_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <TimeSlotPicker
+        date={date}
+        duration={parseInt(duration)}
+        selectedTime={time}
+        onTimeSelect={(newTime) => {
+          setTime(newTime);
+          setValidationError(null);
+        }}
+        excludeAppointmentId={appointmentId}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="notes">Observações</Label>
@@ -278,7 +408,7 @@ export function AppointmentForm({
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting || patients.length === 0}>
+        <Button type="submit" disabled={isSubmitting || patients.length === 0 || !time}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEditing ? "Salvar Alterações" : "Agendar Consulta"}
         </Button>
