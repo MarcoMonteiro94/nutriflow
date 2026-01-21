@@ -82,11 +82,11 @@ export function NutriSidebar({ children, user }: NutriSidebarProps) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="border-b border-sidebar-border">
-          <div className="flex items-center gap-2 px-4 py-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <UtensilsCrossed className="h-4 w-4" />
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
+              <UtensilsCrossed className="h-5 w-5" />
             </div>
-            <span className="font-semibold text-lg">NutriFlow</span>
+            <span className="font-bold text-lg text-foreground">NutriFlow</span>
           </div>
         </SidebarHeader>
 
@@ -157,9 +157,9 @@ export function NutriSidebar({ children, user }: NutriSidebarProps) {
               <button
                 type="submit"
                 className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-md",
+                  "inline-flex h-8 w-8 items-center justify-center rounded-xl",
                   "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  "transition-colors"
+                  "transition-all hover:shadow-soft"
                 )}
               >
                 <LogOut className="h-4 w-4" />

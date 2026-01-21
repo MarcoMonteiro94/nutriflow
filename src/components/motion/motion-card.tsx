@@ -15,15 +15,15 @@ export const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
       <motion.div
         ref={ref}
         className={cn(
-          "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+          "bg-card text-card-foreground flex flex-col gap-6 rounded-2xl py-6 shadow-soft",
           className
         )}
         whileHover={
           interactive
             ? {
-                y: -2,
+                y: -4,
                 boxShadow:
-                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+                  "0 8px 20px -4px oklch(0.3 0.02 30 / 0.12), 0 16px 40px -8px oklch(0.3 0.02 30 / 0.18)",
                 transition: { duration: 0.2, ease: "easeOut" },
               }
             : undefined
@@ -31,7 +31,7 @@ export const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
         whileTap={
           interactive
             ? {
-                scale: 0.99,
+                scale: 0.98,
                 transition: { duration: 0.1 },
               }
             : undefined
@@ -57,7 +57,7 @@ export const MotionStatsCard = forwardRef<HTMLDivElement, MotionStatsCardProps>(
       <motion.div
         ref={ref}
         className={cn(
-          "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+          "bg-card text-card-foreground flex flex-col gap-6 rounded-2xl py-6 shadow-soft",
           className
         )}
         initial={{ opacity: 0, y: 20 }}
@@ -70,7 +70,7 @@ export const MotionStatsCard = forwardRef<HTMLDivElement, MotionStatsCardProps>(
         whileHover={{
           y: -4,
           boxShadow:
-            "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+            "0 8px 20px -4px oklch(0.3 0.02 30 / 0.12), 0 16px 40px -8px oklch(0.3 0.02 30 / 0.18)",
           transition: { duration: 0.2, ease: "easeOut" },
         }}
         {...props}

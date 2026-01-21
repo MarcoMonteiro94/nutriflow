@@ -21,7 +21,7 @@ export function PatientDetailSkeleton() {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center gap-4">
-            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="h-16 w-16 rounded-xl" />
             <div className="space-y-2">
               <Skeleton className="h-6 w-40" />
               <Skeleton className="h-4 w-28" />

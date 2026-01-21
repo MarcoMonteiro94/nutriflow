@@ -28,12 +28,21 @@ export function PatientForm({ patient }: PatientFormProps) {
     const supabase = createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
+    console.log("User:", user);
 
     if (!user) {
       setError("Você precisa estar logado para cadastrar pacientes.");
       setIsLoading(false);
       return;
     }
+
+    // Debug: Check if profile exists
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    console.log("Profile:", profile, "Error:", profileError);
 
     const patientData = {
       full_name: formData.get("full_name") as string,
@@ -83,7 +92,7 @@ export function PatientForm({ patient }: PatientFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -138,7 +147,7 @@ export function PatientForm({ patient }: PatientFormProps) {
             id="gender"
             name="gender"
             defaultValue={patient?.gender ?? ""}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex h-10 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <option value="">Selecione...</option>
             <option value="masculino">Masculino</option>
@@ -165,7 +174,7 @@ export function PatientForm({ patient }: PatientFormProps) {
             rows={3}
             defaultValue={patient?.notes ?? ""}
             placeholder="Anotações sobre o paciente, restrições alimentares, etc."
-            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex min-h-[80px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           />
         </div>
       </div>

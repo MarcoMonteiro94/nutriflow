@@ -1,8 +1,7 @@
 -- NutriFlow Initial Schema Migration
 -- Creates all core tables for the meal planning application
 
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
+-- gen_random_uuid() is built into PostgreSQL 13+
 
 -- Create custom enums
 create type user_role as enum ('nutri', 'patient');
@@ -21,7 +20,7 @@ create table profiles (
 
 -- Patients table (links patient profiles to nutritionists)
 create table patients (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   nutri_id uuid not null references profiles(id) on delete cascade,
   profile_id uuid references profiles(id) on delete set null,
   full_name text not null,
@@ -37,7 +36,7 @@ create table patients (
 
 -- Food items table (TACO database + custom foods)
 create table food_items (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   calories numeric(8,2) not null default 0,
   protein numeric(8,2) not null default 0,
@@ -55,7 +54,7 @@ create table food_items (
 
 -- Meal plans table (one active plan per patient)
 create table meal_plans (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id) on delete cascade,
   nutri_id uuid not null references profiles(id) on delete cascade,
   title text,
@@ -69,7 +68,7 @@ create table meal_plans (
 
 -- Meals table (individual meals within a plan)
 create table meals (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   meal_plan_id uuid not null references meal_plans(id) on delete cascade,
   time time not null,
   title text not null,
@@ -80,7 +79,7 @@ create table meals (
 
 -- Meal contents table (foods within a meal)
 create table meal_contents (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   meal_id uuid not null references meals(id) on delete cascade,
   food_id uuid not null references food_items(id) on delete restrict,
   amount numeric(8,2) not null,
@@ -91,7 +90,7 @@ create table meal_contents (
 
 -- Appointments table (for scheduling)
 create table appointments (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   nutri_id uuid not null references profiles(id) on delete cascade,
   patient_id uuid not null references patients(id) on delete cascade,
   scheduled_at timestamptz not null,
@@ -104,7 +103,7 @@ create table appointments (
 
 -- Measurements table (anthropometry data)
 create table measurements (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id) on delete cascade,
   measured_at timestamptz not null default now(),
   weight numeric(5,2),
@@ -119,7 +118,7 @@ create table measurements (
 
 -- Patient access tokens (for magic links)
 create table patient_tokens (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id) on delete cascade,
   token text not null unique,
   expires_at timestamptz not null,

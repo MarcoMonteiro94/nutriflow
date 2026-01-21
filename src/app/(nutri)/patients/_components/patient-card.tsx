@@ -25,10 +25,10 @@ export function PatientCard({ patient }: PatientCardProps) {
     : null;
 
   return (
-    <Card className="hover:border-primary/50 transition-colors">
+    <Card className="hover:shadow-soft-lg transition-all">
       <CardHeader className="flex flex-row items-center gap-4 pb-2">
-        <Avatar className="h-12 w-12">
-          <AvatarFallback className="bg-primary/10 text-primary">
+        <Avatar className="h-12 w-12 rounded-xl">
+          <AvatarFallback className="bg-primary/15 text-primary rounded-xl font-semibold">
             {initials}
           </AvatarFallback>
         </Avatar>

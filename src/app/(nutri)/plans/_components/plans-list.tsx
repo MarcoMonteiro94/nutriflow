@@ -66,7 +66,7 @@ export function PlansList({ mealPlans }: PlansListProps) {
                     <CardTitle className="line-clamp-1">
                       {plan.title || "Plano sem título"}
                     </CardTitle>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
+                    <span className={`inline-flex items-center rounded-xl px-3 py-1 text-xs font-medium ${status.color}`}>
                       {status.label}
                     </span>
                   </div>

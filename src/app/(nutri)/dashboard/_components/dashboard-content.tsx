@@ -2,9 +2,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StatsCard } from "@/components/ui/stats-card";
 import { CalendarDays, Plus, TrendingUp, Users, UtensilsCrossed, Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { PageTransition, StaggerList, StaggerItem, FadeIn, MotionStatsCard } from "@/components/motion";
+import { PageTransition, StaggerList, StaggerItem, FadeIn } from "@/components/motion";
 
 interface Appointment {
   id: string;
@@ -53,63 +54,38 @@ export function DashboardContent({ stats }: DashboardContentProps) {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MotionStatsCard index={0}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Pacientes
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPatients}</div>
-            <p className="text-xs text-muted-foreground">
-              Pacientes cadastrados
-            </p>
-          </CardContent>
-        </MotionStatsCard>
-
-        <MotionStatsCard index={1}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Planos Ativos</CardTitle>
-            <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activePlans}</div>
-            <p className="text-xs text-muted-foreground">
-              Planos alimentares em andamento
-            </p>
-          </CardContent>
-        </MotionStatsCard>
-
-        <MotionStatsCard index={2}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Consultas Hoje
-            </CardTitle>
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.todayAppointments}</div>
-            <p className="text-xs text-muted-foreground">
-              Atendimentos agendados
-            </p>
-          </CardContent>
-        </MotionStatsCard>
-
-        <MotionStatsCard index={3}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Taxa de Adesão
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">--%</div>
-            <p className="text-xs text-muted-foreground">
-              Média dos pacientes
-            </p>
-          </CardContent>
-        </MotionStatsCard>
+        <StatsCard
+          title="Total Pacientes"
+          value={stats.totalPatients}
+          description="Pacientes cadastrados"
+          icon={Users}
+          iconColor="blue"
+          index={0}
+        />
+        <StatsCard
+          title="Planos Ativos"
+          value={stats.activePlans}
+          description="Planos em andamento"
+          icon={UtensilsCrossed}
+          iconColor="primary"
+          index={1}
+        />
+        <StatsCard
+          title="Consultas Hoje"
+          value={stats.todayAppointments}
+          description="Atendimentos agendados"
+          icon={CalendarDays}
+          iconColor="green"
+          index={2}
+        />
+        <StatsCard
+          title="Taxa de Adesão"
+          value="--%"
+          description="Média dos pacientes"
+          icon={TrendingUp}
+          iconColor="purple"
+          index={3}
+        />
       </div>
 
       {/* Main Content Grid */}
@@ -157,10 +133,10 @@ export function DashboardContent({ stats }: DashboardContentProps) {
                     return (
                       <StaggerItem
                         key={appointment.id}
-                        className="flex items-center justify-between rounded-lg border p-4"
+                        className="flex items-center justify-between rounded-xl bg-accent/30 p-4 transition-colors hover:bg-accent/50"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
                             <Clock className="h-5 w-5 text-primary" />
                           </div>
                           <div>

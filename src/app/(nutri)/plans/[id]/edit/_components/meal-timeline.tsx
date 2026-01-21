@@ -270,13 +270,13 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
                 <div key={meal.id} className="relative flex gap-4">
                   {/* Time marker */}
                   <div className="flex flex-col items-center">
-                    <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium text-sm">
+                    <div className="z-10 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-soft">
                       {formatTime(meal.time)}
                     </div>
                   </div>
 
                   {/* Meal card */}
-                  <div className="flex-1 rounded-lg border bg-card">
+                  <div className="flex-1 rounded-2xl bg-card shadow-soft">
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer"
                       onClick={() => !isEditing && toggleMealExpanded(meal.id)}
