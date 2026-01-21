@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -102,12 +102,20 @@ function groupByDay(availability: NutriAvailability[]): WeekScheduleState {
 
 export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
   const router = useRouter();
+  const errorRef = useRef<HTMLDivElement>(null);
   const [schedule, setSchedule] = useState<WeekScheduleState>(() =>
     groupByDay(initialAvailability)
   );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Scroll to error when it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   function addSlot(dayOfWeek: number) {
     setSchedule((prev) => ({
@@ -287,7 +295,10 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
+        <div
+          ref={errorRef}
+          className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
+        >
           {error}
         </div>
       )}
