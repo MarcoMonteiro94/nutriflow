@@ -133,17 +133,17 @@ export function DashboardContent({ stats }: DashboardContentProps) {
                     return (
                       <StaggerItem
                         key={appointment.id}
-                        className="flex items-center justify-between rounded-xl bg-accent/30 p-4 transition-colors hover:bg-accent/50"
+                        className="flex items-center justify-between gap-3 rounded-xl bg-accent/30 p-4 transition-colors hover:bg-accent/50"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
                             <Clock className="h-5 w-5 text-primary" />
                           </div>
-                          <div>
-                            <p className="font-medium">
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">
                               {patient?.full_name ?? "Paciente"}
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="truncate text-sm text-muted-foreground">
                               {scheduledAt.toLocaleDateString("pt-BR", {
                                 weekday: "short",
                                 day: "numeric",
@@ -157,9 +157,10 @@ export function DashboardContent({ stats }: DashboardContentProps) {
                             </p>
                           </div>
                         </div>
-                        <Button asChild variant="outline" size="sm">
+                        <Button asChild variant="outline" size="sm" className="shrink-0">
                           <Link href={`/patients/${patient?.id}`}>
-                            Ver paciente
+                            <span className="hidden sm:inline">Ver paciente</span>
+                            <ArrowRight className="h-4 w-4 sm:hidden" />
                           </Link>
                         </Button>
                       </StaggerItem>
