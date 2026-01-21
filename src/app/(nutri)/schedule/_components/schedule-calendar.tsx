@@ -47,7 +47,7 @@ export function ScheduleCalendar({
   });
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col items-center space-y-3">
       <Calendar
         mode="single"
         selected={selectedDate}
@@ -56,22 +56,15 @@ export function ScheduleCalendar({
           hasAppointment: daysWithAppointments,
           blocked: daysBlocked,
         }}
-        modifiersStyles={{
-          hasAppointment: {
-            fontWeight: "bold",
-            textDecoration: "underline",
-            textDecorationColor: "var(--primary)",
-          },
-          blocked: {
-            backgroundColor: "hsl(var(--destructive) / 0.1)",
-            color: "hsl(var(--destructive))",
-          },
+        modifiersClassNames={{
+          hasAppointment: "font-bold underline decoration-primary",
+          blocked: "bg-destructive/10 text-destructive aria-selected:ring-2 aria-selected:ring-primary aria-selected:ring-offset-1",
         }}
         className="rounded-md border"
       />
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground px-1">
+      <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground px-1">
         <div className="flex items-center gap-1.5">
           <span className="font-bold underline">15</span>
           <span>Com consultas</span>
