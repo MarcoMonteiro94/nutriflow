@@ -34,6 +34,53 @@ interface DaySlot {
 
 type WeekScheduleState = Record<number, DaySlot[]>;
 
+interface OverlapError {
+  dayOfWeek: number;
+  dayLabel: string;
+  slot1: { start: string; end: string };
+  slot2: { start: string; end: string };
+}
+
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function checkForOverlaps(
+  schedule: WeekScheduleState,
+  daysOfWeek: readonly { value: number; label: string }[]
+): OverlapError | null {
+  for (const day of daysOfWeek) {
+    const slots = schedule[day.value];
+    if (slots.length < 2) continue;
+
+    // Sort slots by start time for easier comparison
+    const sortedSlots = [...slots].sort(
+      (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+    );
+
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const current = sortedSlots[i];
+      const next = sortedSlots[i + 1];
+
+      const currentEnd = timeToMinutes(current.endTime);
+      const nextStart = timeToMinutes(next.startTime);
+
+      // Overlap occurs if current slot ends after next slot starts
+      if (currentEnd > nextStart) {
+        return {
+          dayOfWeek: day.value,
+          dayLabel: day.label,
+          slot1: { start: current.startTime, end: current.endTime },
+          slot2: { start: next.startTime, end: next.endTime },
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
 function groupByDay(availability: NutriAvailability[]): WeekScheduleState {
   const grouped: WeekScheduleState = {};
 
@@ -114,6 +161,19 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
   async function handleSave() {
     setError(null);
     setSuccessMessage(null);
+
+    // Validate for overlapping slots before saving
+    const overlapError = checkForOverlaps(schedule, DAYS_OF_WEEK);
+    if (overlapError) {
+      setError(
+        `Horários sobrepostos em ${overlapError.dayLabel}: ` +
+        `${overlapError.slot1.start}-${overlapError.slot1.end} e ` +
+        `${overlapError.slot2.start}-${overlapError.slot2.end}. ` +
+        `Por favor, ajuste os horários para não se sobreporem.`
+      );
+      return;
+    }
+
     setIsSaving(true);
 
     try {
