@@ -42,6 +42,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
+    request.nextUrl.pathname === "/patient" ||
     request.nextUrl.pathname.startsWith("/patient/");
 
   // Redirect unauthenticated users trying to access protected routes
@@ -51,8 +52,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth routes
-  if (user && isAuthRoute) {
+  // Redirect authenticated users away from auth routes (except logout)
+  const isLogoutRoute = request.nextUrl.pathname === "/auth/logout";
+  if (user && isAuthRoute && !isLogoutRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
