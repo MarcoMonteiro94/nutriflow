@@ -11,6 +11,20 @@ interface SearchParams {
   date?: string;
 }
 
+// Format date to YYYY-MM-DD using local timezone (not UTC)
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Parse YYYY-MM-DD string to Date at local midnight
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 type AppointmentWithPatient = Appointment & {
   patients: {
     id: string;
@@ -40,10 +54,10 @@ async function getAppointments(selectedDate?: string): Promise<AppointmentWithPa
     .order("scheduled_at", { ascending: true });
 
   if (selectedDate) {
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Parse date string to local Date object
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
 
     query = query
       .gte("scheduled_at", startOfDay.toISOString())
@@ -80,21 +94,21 @@ export default async function SchedulePage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const selectedDate = params.date || new Date().toISOString().split("T")[0];
+  const selectedDate = params.date || formatLocalDate(new Date());
 
   const appointments = await getAppointments(selectedDate);
   const appointmentDates = await getAppointmentDates();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
           <p className="text-muted-foreground">
             Gerencie seus atendimentos e consultas.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/schedule/new">
             <Plus className="mr-2 h-4 w-4" />
             Agendar Consulta
@@ -116,7 +130,7 @@ export default async function SchedulePage({
           </CardHeader>
           <CardContent>
             <ScheduleCalendar
-              selectedDate={new Date(selectedDate)}
+              selectedDate={parseLocalDate(selectedDate)}
               appointmentDates={appointmentDates}
             />
           </CardContent>
@@ -127,7 +141,7 @@ export default async function SchedulePage({
           <CardHeader>
             <CardTitle>
               Atendimentos do dia{" "}
-              {new Date(selectedDate).toLocaleDateString("pt-BR", {
+              {parseLocalDate(selectedDate).toLocaleDateString("pt-BR", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
