@@ -64,27 +64,39 @@ export async function signup(
   });
 
   if (error) {
+    console.error("Signup error:", error.message, error);
     if (error.message.includes("already registered")) {
       return { error: "Este email já está cadastrado" };
     }
-    return { error: "Erro ao criar conta. Tente novamente." };
+    if (error.message.includes("valid email")) {
+      return { error: "Por favor, insira um email válido" };
+    }
+    if (error.message.includes("password")) {
+      return { error: "A senha deve ter pelo menos 6 caracteres" };
+    }
+    return { error: `Erro ao criar conta: ${error.message}` };
+  }
+
+  // Check if email confirmation is required
+  if (data.user?.identities?.length === 0) {
+    return { error: "Este email já está cadastrado" };
   }
 
   if (!data.user) {
+    console.error("Signup returned no user");
     return { error: "Erro ao criar conta. Tente novamente." };
   }
 
-  // Create profile for the new user
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: data.user.id,
-    email: data.user.email!,
-    full_name: fullName,
-    role: "nutri",
-  });
+  // Profile is created automatically by database trigger (handle_new_user)
+  // No need to manually insert here
 
-  if (profileError) {
-    // Profile creation failed - log but don't block signup
-    console.error("Profile creation failed:", profileError);
+  // Check if email confirmation is required (user exists but session is null)
+  if (!data.session) {
+    // Email confirmation is required - don't redirect, show success message
+    return {
+      success: true,
+      error: undefined
+    };
   }
 
   revalidatePath("/", "layout");

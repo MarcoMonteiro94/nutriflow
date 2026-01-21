@@ -52,6 +52,12 @@ export default function LoginPage() {
             </div>
           )}
 
+          {state.success && (
+            <div className="rounded-xl bg-green-500/10 p-4 text-sm text-green-700 dark:text-green-400">
+              Conta criada com sucesso! Verifique seu email para confirmar o cadastro.
+            </div>
+          )}
+
           {isSignup && (
             <div className="space-y-2">
               <Label htmlFor="full_name">Nome Completo</Label>
