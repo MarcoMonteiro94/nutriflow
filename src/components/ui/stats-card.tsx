@@ -36,7 +36,7 @@ export function StatsCard({
 }: StatsCardProps) {
   return (
     <motion.div
-      className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl p-6 shadow-soft"
+      className="bg-card text-card-foreground flex flex-col gap-3 rounded-2xl p-4 shadow-soft sm:gap-4 sm:p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -57,16 +57,16 @@ export function StatsCard({
         </span>
         <div
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-xl",
+            "flex h-8 w-8 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl",
             iconColorStyles[iconColor]
           )}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       </div>
       <div className="space-y-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tracking-tight">{value}</span>
+          <span className="text-2xl font-bold tracking-tight sm:text-3xl">{value}</span>
           {trend && (
             <span
               className={cn(
