@@ -399,16 +399,21 @@ export function AppointmentForm({
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:gap-4">
         <Button
           type="button"
           variant="outline"
           onClick={() => router.back()}
           disabled={isSubmitting}
+          className="w-full sm:w-auto"
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting || patients.length === 0 || !time}>
+        <Button
+          type="submit"
+          disabled={isSubmitting || patients.length === 0 || !time}
+          className="w-full sm:w-auto"
+        >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEditing ? "Salvar Alterações" : "Agendar Consulta"}
         </Button>

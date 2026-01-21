@@ -246,9 +246,9 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
           return (
             <div
               key={day.value}
-              className="rounded-xl border bg-card p-4 shadow-soft"
+              className="rounded-xl border bg-card p-3 sm:p-4 shadow-soft"
             >
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <Switch
                     id={`day-${day.value}`}
@@ -274,6 +274,7 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => addSlot(day.value)}
+                  className="w-full sm:w-auto"
                 >
                   <Plus className="mr-1 h-4 w-4" />
                   Adicionar horário
@@ -312,7 +313,7 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
           {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Salvar Configuração
         </Button>

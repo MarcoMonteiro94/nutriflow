@@ -37,12 +37,24 @@ export function TimeSlotRow({
   onRemove,
 }: TimeSlotRowProps) {
   return (
-    <div className="flex items-center gap-3">
-      <Switch checked={isActive} onCheckedChange={onToggleActive} />
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex items-center justify-between sm:justify-start gap-3">
+        <Switch checked={isActive} onCheckedChange={onToggleActive} />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+          className="text-muted-foreground hover:text-destructive sm:hidden"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="sr-only">Remover horário</span>
+        </Button>
+      </div>
 
       <div className="flex flex-1 items-center gap-2">
         <Select value={startTime} onValueChange={onStartTimeChange}>
-          <SelectTrigger className="w-[110px]">
+          <SelectTrigger className="flex-1 sm:w-[110px] sm:flex-none">
             <SelectValue placeholder="Início" />
           </SelectTrigger>
           <SelectContent>
@@ -54,10 +66,10 @@ export function TimeSlotRow({
           </SelectContent>
         </Select>
 
-        <span className="text-muted-foreground">até</span>
+        <span className="text-muted-foreground text-sm">até</span>
 
         <Select value={endTime} onValueChange={onEndTimeChange}>
-          <SelectTrigger className="w-[110px]">
+          <SelectTrigger className="flex-1 sm:w-[110px] sm:flex-none">
             <SelectValue placeholder="Fim" />
           </SelectTrigger>
           <SelectContent>
@@ -75,7 +87,7 @@ export function TimeSlotRow({
         variant="ghost"
         size="icon"
         onClick={onRemove}
-        className="text-muted-foreground hover:text-destructive"
+        className="text-muted-foreground hover:text-destructive hidden sm:flex"
       >
         <Trash2 className="h-4 w-4" />
         <span className="sr-only">Remover horário</span>

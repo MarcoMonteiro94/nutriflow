@@ -57,14 +57,14 @@ export function AppointmentsList({ appointments }: AppointmentsListProps) {
         return (
           <StaggerItem key={appointment.id}>
             <motion.div
-              className="flex items-center justify-between rounded-lg border p-4"
+              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border p-3 sm:p-4"
               whileHover={{
                 backgroundColor: "var(--muted)",
                 transition: { duration: 0.2 },
               }}
             >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <span className="text-lg font-bold">
                     {scheduledAt.toLocaleTimeString("pt-BR", {
                       hour: "2-digit",
@@ -72,18 +72,36 @@ export function AppointmentsList({ appointments }: AppointmentsListProps) {
                     })}
                   </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground shrink-0" />
                     <Link
                       href={`/patients/${appointment.patients?.id}`}
-                      className="font-medium hover:underline"
+                      className="font-medium hover:underline truncate"
                     >
                       {appointment.patients?.full_name ?? "Paciente"}
                     </Link>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium sm:hidden ${
+                        appointment.status === "scheduled"
+                          ? "bg-blue-100 text-blue-800"
+                          : appointment.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : appointment.status === "cancelled"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {appointment.status === "scheduled" && "Agendado"}
+                      {appointment.status === "completed" && "Realizado"}
+                      {appointment.status === "cancelled" && "Cancelado"}
+                      {!["scheduled", "completed", "cancelled"].includes(
+                        appointment.status
+                      ) && appointment.status}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3 shrink-0" />
                     <span>
                       {scheduledAt.toLocaleTimeString("pt-BR", {
                         hour: "2-digit",
@@ -98,16 +116,16 @@ export function AppointmentsList({ appointments }: AppointmentsListProps) {
                     </span>
                   </div>
                   {appointment.notes && (
-                    <p className="mt-1 text-sm text-muted-foreground truncate max-w-md">
+                    <p className="mt-1 text-sm text-muted-foreground truncate max-w-full sm:max-w-md">
                       {appointment.notes}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2">
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  className={`hidden sm:inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                     appointment.status === "scheduled"
                       ? "bg-blue-100 text-blue-800"
                       : appointment.status === "completed"

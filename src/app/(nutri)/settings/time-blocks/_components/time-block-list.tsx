@@ -84,15 +84,15 @@ export function TimeBlockList({ timeBlocks }: TimeBlockListProps) {
         return (
           <div
             key={block.id}
-            className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-soft"
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border bg-card p-3 sm:p-4 shadow-soft"
           >
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
                 <Icon className="h-5 w-5 text-muted-foreground" />
               </div>
 
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{block.title}</span>
                   <Badge variant={config.variant}>{config.label}</Badge>
                 </div>
@@ -109,13 +109,14 @@ export function TimeBlockList({ timeBlocks }: TimeBlockListProps) {
                       {format(startDate, "d 'de' MMMM 'de' yyyy", {
                         locale: ptBR,
                       })}
-                      {" • "}
+                      <span className="hidden sm:inline">{" • "}</span>
+                      <br className="sm:hidden" />
                       {format(startDate, "HH:mm")} - {format(endDate, "HH:mm")}
                     </>
                   )}
                 </p>
                 {block.notes && (
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
                     {block.notes}
                   </p>
                 )}
@@ -126,16 +127,16 @@ export function TimeBlockList({ timeBlocks }: TimeBlockListProps) {
               <AlertDialogTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive"
+                  size="sm"
+                  className="w-full sm:w-auto text-muted-foreground hover:text-destructive"
                   disabled={deletingId === block.id}
                 >
                   {deletingId === block.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin sm:mr-0 mr-2" />
                   ) : (
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 sm:mr-0 mr-2" />
                   )}
-                  <span className="sr-only">Remover bloqueio</span>
+                  <span className="sm:sr-only">Remover bloqueio</span>
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
