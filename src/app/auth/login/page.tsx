@@ -121,7 +121,7 @@ function LoginForm() {
         </form>
 
         {/* Only show toggle if user came from invite link */}
-        {inviteMode && (
+        {inviteMode && isSignup && (
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Já tem uma conta?{" "}
             <button
@@ -135,8 +135,23 @@ function LoginForm() {
           </div>
         )}
 
+        {/* Toggle back to signup when in login mode via invite */}
+        {inviteMode && !isSignup && (
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            Não tem uma conta?{" "}
+            <button
+              type="button"
+              onClick={() => setIsSignup(true)}
+              className="font-medium text-primary hover:text-primary/80 transition-colors"
+              disabled={isPending}
+            >
+              Criar Conta
+            </button>
+          </div>
+        )}
+
         {/* Show message for non-invite users */}
-        {!inviteMode && !isSignup && (
+        {!inviteMode && (
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Não tem uma conta? Solicite um convite ao administrador da sua clínica.
           </div>
