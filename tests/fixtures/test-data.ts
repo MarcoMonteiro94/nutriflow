@@ -92,6 +92,57 @@ export const testAppointments = {
   },
 };
 
+export const testOrganizations = {
+  clinic1: {
+    name: 'Clínica NutriTest',
+    slug: 'nutritest',
+  },
+  clinic2: {
+    name: 'Centro de Nutrição Test',
+    slug: 'centro-nutri-test',
+  },
+};
+
+export const testInvites = {
+  receptionist: {
+    email: 'receptionist@test.com',
+    role: 'receptionist' as const,
+  },
+  nutri: {
+    email: 'nutri-invited@test.com',
+    role: 'nutri' as const,
+  },
+  admin: {
+    email: 'admin-invited@test.com',
+    role: 'admin' as const,
+  },
+  patient: {
+    email: 'patient-invited@test.com',
+    role: 'patient' as const,
+  },
+};
+
+export const testUsersWithRoles = {
+  admin: {
+    email: 'test-admin@nutriflow.test',
+    password: 'TestPassword123!',
+    fullName: 'Test Admin',
+    role: 'admin' as const,
+  },
+  receptionist: {
+    email: 'test-receptionist@nutriflow.test',
+    password: 'TestPassword123!',
+    fullName: 'Test Recepcionista',
+    role: 'receptionist' as const,
+  },
+  patient: {
+    email: 'test-patient@nutriflow.test',
+    password: 'TestPassword123!',
+    fullName: 'Test Paciente',
+    role: 'patient' as const,
+  },
+};
+
 export const invalidCredentials = {
   wrongEmail: 'wrong@email.com',
   wrongPassword: 'WrongPassword123!',

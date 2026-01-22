@@ -49,6 +49,7 @@ export type Database = {
           id: string;
           nutri_id: string;
           profile_id: string | null;
+          user_id: string | null;
           full_name: string;
           email: string | null;
           phone: string | null;
@@ -63,6 +64,7 @@ export type Database = {
           id?: string;
           nutri_id: string;
           profile_id?: string | null;
+          user_id?: string | null;
           full_name: string;
           email?: string | null;
           phone?: string | null;
@@ -77,6 +79,7 @@ export type Database = {
           id?: string;
           nutri_id?: string;
           profile_id?: string | null;
+          user_id?: string | null;
           full_name?: string;
           email?: string | null;
           phone?: string | null;
@@ -321,6 +324,7 @@ export type Database = {
           rescheduled_reason: string | null;
           cancellation_reason: string | null;
           cancelled_at: string | null;
+          organization_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -337,6 +341,7 @@ export type Database = {
           rescheduled_reason?: string | null;
           cancellation_reason?: string | null;
           cancelled_at?: string | null;
+          organization_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -353,6 +358,7 @@ export type Database = {
           rescheduled_reason?: string | null;
           cancellation_reason?: string | null;
           cancelled_at?: string | null;
+          organization_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -610,6 +616,252 @@ export type Database = {
           }
         ];
       };
+      anamnesis_reports: {
+        Row: {
+          id: string;
+          patient_id: string;
+          nutri_id: string;
+          chief_complaint: string | null;
+          history_present_illness: string | null;
+          past_medical_history: string[];
+          family_history: string[];
+          social_history: Record<string, unknown>;
+          dietary_history: Record<string, unknown>;
+          current_medications: string[];
+          supplements: string[];
+          goals: string[];
+          observations: string | null;
+          source_type: "audio" | "text" | "hybrid";
+          original_transcript: string | null;
+          audio_file_path: string | null;
+          audio_duration_seconds: number | null;
+          ai_model_used: string | null;
+          confidence_score: number | null;
+          status: "draft" | "processing" | "review" | "approved";
+          approved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          nutri_id: string;
+          chief_complaint?: string | null;
+          history_present_illness?: string | null;
+          past_medical_history?: string[];
+          family_history?: string[];
+          social_history?: Record<string, unknown>;
+          dietary_history?: Record<string, unknown>;
+          current_medications?: string[];
+          supplements?: string[];
+          goals?: string[];
+          observations?: string | null;
+          source_type: "audio" | "text" | "hybrid";
+          original_transcript?: string | null;
+          audio_file_path?: string | null;
+          audio_duration_seconds?: number | null;
+          ai_model_used?: string | null;
+          confidence_score?: number | null;
+          status?: "draft" | "processing" | "review" | "approved";
+          approved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          nutri_id?: string;
+          chief_complaint?: string | null;
+          history_present_illness?: string | null;
+          past_medical_history?: string[];
+          family_history?: string[];
+          social_history?: Record<string, unknown>;
+          dietary_history?: Record<string, unknown>;
+          current_medications?: string[];
+          supplements?: string[];
+          goals?: string[];
+          observations?: string | null;
+          source_type?: "audio" | "text" | "hybrid";
+          original_transcript?: string | null;
+          audio_file_path?: string | null;
+          audio_duration_seconds?: number | null;
+          ai_model_used?: string | null;
+          confidence_score?: number | null;
+          status?: "draft" | "processing" | "review" | "approved";
+          approved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "anamnesis_reports_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "anamnesis_reports_nutri_id_fkey";
+            columns: ["nutri_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      organizations: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          logo_url: string | null;
+          settings: Record<string, unknown>;
+          owner_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          logo_url?: string | null;
+          settings?: Record<string, unknown>;
+          owner_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          logo_url?: string | null;
+          settings?: Record<string, unknown>;
+          owner_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organizations_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      organization_members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          user_id: string;
+          role: "admin" | "nutri" | "receptionist" | "patient";
+          invited_by: string | null;
+          invited_at: string | null;
+          accepted_at: string | null;
+          status: "pending" | "active" | "inactive";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          user_id: string;
+          role?: "admin" | "nutri" | "receptionist" | "patient";
+          invited_by?: string | null;
+          invited_at?: string | null;
+          accepted_at?: string | null;
+          status?: "pending" | "active" | "inactive";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          user_id?: string;
+          role?: "admin" | "nutri" | "receptionist" | "patient";
+          invited_by?: string | null;
+          invited_at?: string | null;
+          accepted_at?: string | null;
+          status?: "pending" | "active" | "inactive";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_members_invited_by_fkey";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      organization_invites: {
+        Row: {
+          id: string;
+          organization_id: string;
+          email: string;
+          role: "admin" | "nutri" | "receptionist" | "patient";
+          invited_by: string;
+          token: string;
+          expires_at: string;
+          accepted_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          email: string;
+          role?: "admin" | "nutri" | "receptionist" | "patient";
+          invited_by: string;
+          token: string;
+          expires_at: string;
+          accepted_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          email?: string;
+          role?: "admin" | "nutri" | "receptionist" | "patient";
+          invited_by?: string;
+          token?: string;
+          expires_at?: string;
+          accepted_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_invites_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_invites_invited_by_fkey";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -619,6 +871,8 @@ export type Database = {
       plan_status: "active" | "archived";
       block_type: "personal" | "holiday" | "vacation" | "other";
       appointment_action: "created" | "rescheduled" | "cancelled" | "completed" | "no_show";
+      org_role: "admin" | "nutri" | "receptionist" | "patient";
+      member_status: "pending" | "active" | "inactive";
     };
   };
 };
@@ -644,7 +898,17 @@ export type PatientToken = Tables<"patient_tokens">;
 export type NutriAvailability = Tables<"nutri_availability">;
 export type NutriTimeBlock = Tables<"nutri_time_blocks">;
 export type AppointmentHistory = Tables<"appointment_history">;
+export type AnamnesisReportRow = Tables<"anamnesis_reports">;
 
 // Enum types
 export type BlockType = Database["public"]["Enums"]["block_type"];
 export type AppointmentAction = Database["public"]["Enums"]["appointment_action"];
+export type AnamnesisSourceType = "audio" | "text" | "hybrid";
+export type AnamnesisStatus = "draft" | "processing" | "review" | "approved";
+
+// Organization types
+export type Organization = Tables<"organizations">;
+export type OrganizationMember = Tables<"organization_members">;
+export type OrganizationInvite = Tables<"organization_invites">;
+export type OrgRole = Database["public"]["Enums"]["org_role"];
+export type MemberStatus = Database["public"]["Enums"]["member_status"];

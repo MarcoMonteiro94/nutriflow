@@ -12,7 +12,8 @@ import {
   Phone,
   Target,
   UtensilsCrossed,
-  Activity
+  Activity,
+  FileText
 } from "lucide-react";
 import { DeletePatientButton } from "../_components/delete-patient-button";
 import { SharePlanButton } from "./_components/share-plan-button";
@@ -57,10 +58,16 @@ async function getPatientStats(patientId: string) {
     .select("*", { count: "exact", head: true })
     .eq("patient_id", patientId);
 
+  const { count: anamnesisCount } = await supabase
+    .from("anamnesis_reports")
+    .select("*", { count: "exact", head: true })
+    .eq("patient_id", patientId);
+
   return {
     mealPlans: mealPlansCount ?? 0,
     appointments: appointmentsCount ?? 0,
     measurements: measurementsCount ?? 0,
+    anamnesis: anamnesisCount ?? 0,
   };
 }
 
@@ -241,6 +248,23 @@ export default async function PatientDetailPage({ params }: PageProps) {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Anamneses
+              </CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.anamnesis}</div>
+              <Button asChild variant="link" className="h-auto p-0 text-xs">
+                <Link href={`/patients/${id}/anamnesis`}>
+                  Ver anamneses →
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -269,6 +293,12 @@ export default async function PatientDetailPage({ params }: PageProps) {
             <Link href={`/patients/${id}/measurements/new`}>
               <Activity className="mr-2 h-4 w-4" />
               Registrar Medidas
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full sm:w-auto">
+            <Link href={`/patients/${id}/anamnesis/new`}>
+              <FileText className="mr-2 h-4 w-4" />
+              Nova Anamnese
             </Link>
           </Button>
           <SharePlanButton

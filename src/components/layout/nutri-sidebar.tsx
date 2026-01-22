@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Building2,
   CalendarDays,
   ChefHat,
   LayoutDashboard,
@@ -29,42 +30,57 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import type { OrgRole } from "@/types/database";
 
-const mainNavItems = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Pacientes",
-    href: "/patients",
-    icon: Users,
-  },
-  {
-    title: "Planos",
-    href: "/plans",
-    icon: UtensilsCrossed,
-  },
-  {
-    title: "Agenda",
-    href: "/schedule",
-    icon: CalendarDays,
-  },
-  {
-    title: "Alimentos",
-    href: "/foods",
-    icon: ChefHat,
-  },
-];
+// Navigation items by role
+const navItemsByRole: Record<OrgRole, Array<{ title: string; href: string; icon: typeof LayoutDashboard }>> = {
+  admin: [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Pacientes", href: "/patients", icon: Users },
+    { title: "Planos", href: "/plans", icon: UtensilsCrossed },
+    { title: "Agenda", href: "/schedule", icon: CalendarDays },
+    { title: "Alimentos", href: "/foods", icon: ChefHat },
+  ],
+  nutri: [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Pacientes", href: "/patients", icon: Users },
+    { title: "Planos", href: "/plans", icon: UtensilsCrossed },
+    { title: "Agenda", href: "/schedule", icon: CalendarDays },
+    { title: "Alimentos", href: "/foods", icon: ChefHat },
+  ],
+  receptionist: [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Pacientes", href: "/patients", icon: Users },
+    { title: "Agenda", href: "/schedule", icon: CalendarDays },
+  ],
+  patient: [
+    { title: "Meu Painel", href: "/patient/dashboard", icon: LayoutDashboard },
+  ],
+};
 
-const secondaryNavItems = [
-  {
-    title: "Configurações",
-    href: "/settings",
-    icon: Settings,
-  },
-];
+const secondaryNavItemsByRole: Record<OrgRole, Array<{ title: string; href: string; icon: typeof Building2 }>> = {
+  admin: [
+    { title: "Minha Clínica", href: "/organization", icon: Building2 },
+    { title: "Configurações", href: "/settings", icon: Settings },
+  ],
+  nutri: [
+    { title: "Configurações", href: "/settings", icon: Settings },
+  ],
+  receptionist: [
+    { title: "Configurações", href: "/settings", icon: Settings },
+  ],
+  patient: [
+    { title: "Configurações", href: "/settings", icon: Settings },
+  ],
+};
+
+const roleLabels: Record<OrgRole, string> = {
+  admin: "Administrador",
+  nutri: "Nutricionista",
+  receptionist: "Recepcionista",
+  patient: "Paciente",
+};
 
 interface NutriSidebarProps {
   children: React.ReactNode;
@@ -73,10 +89,17 @@ interface NutriSidebarProps {
     email: string;
     avatar?: string;
   };
+  role?: OrgRole | null;
+  isOwner?: boolean;
 }
 
-export function NutriSidebar({ children, user }: NutriSidebarProps) {
+export function NutriSidebar({ children, user, role, isOwner }: NutriSidebarProps) {
   const pathname = usePathname();
+
+  // Get nav items based on role, default to nutri for backwards compatibility
+  const effectiveRole = role || "nutri";
+  const mainNavItems = navItemsByRole[effectiveRole] || navItemsByRole.nutri;
+  const secondaryNavItems = secondaryNavItemsByRole[effectiveRole] || secondaryNavItemsByRole.nutri;
 
   return (
     <SidebarProvider>
@@ -136,36 +159,50 @@ export function NutriSidebar({ children, user }: NutriSidebarProps) {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback>
-                  {user?.name?.charAt(0).toUpperCase() || "N"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">
-                  {user?.name || "Nutricionista"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {user?.email || "email@exemplo.com"}
-                </span>
+          <div className="flex flex-col gap-2 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.avatar} />
+                  <AvatarFallback>
+                    {user?.name?.charAt(0).toUpperCase() || "N"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">
+                    {user?.name || "Usuário"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {user?.email || "email@exemplo.com"}
+                  </span>
+                </div>
               </div>
+              <form action="/auth/logout" method="post">
+                <button
+                  type="submit"
+                  className={cn(
+                    "inline-flex h-8 w-8 items-center justify-center rounded-xl",
+                    "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    "transition-all hover:shadow-soft"
+                  )}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="sr-only">Sair</span>
+                </button>
+              </form>
             </div>
-            <form action="/auth/logout" method="post">
-              <button
-                type="submit"
-                className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-xl",
-                  "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  "transition-all hover:shadow-soft"
+            {role && (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {roleLabels[effectiveRole]}
+                </Badge>
+                {isOwner && (
+                  <Badge variant="outline" className="text-xs">
+                    Proprietário
+                  </Badge>
                 )}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="sr-only">Sair</span>
-              </button>
-            </form>
+              </div>
+            )}
           </div>
         </SidebarFooter>
       </Sidebar>

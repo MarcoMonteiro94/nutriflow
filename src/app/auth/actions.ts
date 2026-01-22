@@ -17,6 +17,7 @@ export async function login(
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const redirectTo = formData.get("redirect") as string;
 
   if (!email || !password) {
     return { error: "Email e senha são obrigatórios" };
@@ -32,6 +33,12 @@ export async function login(
   }
 
   revalidatePath("/", "layout");
+
+  // Handle redirect if provided
+  if (redirectTo && redirectTo.startsWith("/")) {
+    redirect(redirectTo);
+  }
+
   redirect("/dashboard");
 }
 
@@ -99,7 +106,14 @@ export async function signup(
     };
   }
 
+  const redirectTo = formData.get("redirect") as string;
   revalidatePath("/", "layout");
+
+  // Handle redirect if provided
+  if (redirectTo && redirectTo.startsWith("/")) {
+    redirect(redirectTo);
+  }
+
   redirect("/dashboard");
 }
 
