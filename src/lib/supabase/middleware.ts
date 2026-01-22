@@ -43,7 +43,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/patient" ||
-    request.nextUrl.pathname.startsWith("/patient/");
+    request.nextUrl.pathname.startsWith("/patient/") ||
+    request.nextUrl.pathname.startsWith("/invite/");
 
   // Redirect unauthenticated users trying to access protected routes
   if (!user && !isAuthRoute && !isPublicRoute) {

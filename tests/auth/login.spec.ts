@@ -54,7 +54,7 @@ test.describe('Login', () => {
     expect(url.includes('/auth/login') || url.includes('/dashboard')).toBeTruthy();
   });
 
-  test('should submit signup and login form', async ({ page }) => {
+  test('should submit login form with test user', async ({ page }) => {
     // This test verifies the auth flow works (submission)
     // Actual authentication depends on Supabase
     await loginPage.emailInput.fill(testUsers.nutritionist.email);
@@ -69,17 +69,17 @@ test.describe('Login', () => {
     expect(url.includes('/auth/login') || url.includes('/dashboard')).toBeTruthy();
   });
 
-  test('should toggle between login and signup modes', async ({ page }) => {
-    // Initially in login mode
-    await expect(loginPage.fullNameInput).not.toBeVisible();
+  test('should NOT show signup toggle on regular login page', async ({ page }) => {
+    // Public login page should not have signup toggle
+    await loginPage.expectNoPublicSignup();
 
-    // Switch to signup
-    await loginPage.switchToSignup();
-    await expect(loginPage.fullNameInput).toBeVisible();
-
-    // Switch back to login
-    await loginPage.switchToLogin();
+    // Full name input (signup-only) should not be visible
     await expect(loginPage.fullNameInput).not.toBeVisible();
+  });
+
+  test('should show message about requesting invite', async () => {
+    // Should show informative message for users without accounts
+    await expect(loginPage.noAccountMessage).toBeVisible();
   });
 
   test('should have proper accessibility attributes', async ({ page }) => {

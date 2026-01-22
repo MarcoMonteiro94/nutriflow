@@ -79,14 +79,11 @@ async function login(page: Page, email: string, password: string): Promise<boole
 }
 
 async function signup(page: Page, fullName: string, email: string, password: string): Promise<boolean> {
-  await page.goto('/auth/login', { timeout: 5000 });
+  // Signup is only available via invite mode (mode=signup in URL)
+  await page.goto('/auth/login?mode=signup', { timeout: 5000 });
   await page.waitForLoadState('domcontentloaded');
 
-  await page.waitForSelector('input[name="email"]', { state: 'visible', timeout: 3000 });
-
-  // Switch to signup mode
-  const createAccountButton = page.locator('button:has-text("Criar conta")').first();
-  await createAccountButton.click();
+  // Wait for the full name input which is only visible in signup mode
   await page.waitForSelector('input[name="full_name"]', { state: 'visible', timeout: 3000 });
 
   await page.fill('input[name="full_name"]', fullName);
