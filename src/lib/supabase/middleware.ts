@@ -40,11 +40,18 @@ export async function updateSession(request: NextRequest) {
 
   // Define protected routes
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/patient" ||
     request.nextUrl.pathname.startsWith("/patient/") ||
-    request.nextUrl.pathname.startsWith("/invite/");
+    request.nextUrl.pathname.startsWith("/invite/") ||
+    request.nextUrl.pathname.startsWith("/book/");
+
+  // API routes handle their own auth
+  if (isApiRoute) {
+    return supabaseResponse;
+  }
 
   // Redirect unauthenticated users trying to access protected routes
   if (!user && !isAuthRoute && !isPublicRoute) {
