@@ -862,6 +862,131 @@ export type Database = {
           }
         ];
       };
+      anthropometry_assessments: {
+        Row: {
+          id: string;
+          patient_id: string;
+          assessed_at: string;
+          // Basic measurements
+          weight: number | null;
+          height: number | null;
+          // Skinfolds (dobras cutâneas) in mm
+          triceps_skinfold: number | null;
+          subscapular_skinfold: number | null;
+          suprailiac_skinfold: number | null;
+          abdominal_skinfold: number | null;
+          thigh_skinfold: number | null;
+          chest_skinfold: number | null;
+          midaxillary_skinfold: number | null;
+          // Circumferences (circunferências) in cm
+          neck_circumference: number | null;
+          chest_circumference: number | null;
+          waist_circumference: number | null;
+          abdomen_circumference: number | null;
+          hip_circumference: number | null;
+          right_arm_circumference: number | null;
+          left_arm_circumference: number | null;
+          right_forearm_circumference: number | null;
+          left_forearm_circumference: number | null;
+          right_thigh_circumference: number | null;
+          left_thigh_circumference: number | null;
+          right_calf_circumference: number | null;
+          left_calf_circumference: number | null;
+          // Calculated fields (stored for historical reference)
+          bmi: number | null;
+          body_fat_percentage: number | null;
+          waist_hip_ratio: number | null;
+          calculation_protocol: string | null;
+          // Metadata
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          assessed_at?: string;
+          // Basic measurements
+          weight?: number | null;
+          height?: number | null;
+          // Skinfolds (dobras cutâneas) in mm
+          triceps_skinfold?: number | null;
+          subscapular_skinfold?: number | null;
+          suprailiac_skinfold?: number | null;
+          abdominal_skinfold?: number | null;
+          thigh_skinfold?: number | null;
+          chest_skinfold?: number | null;
+          midaxillary_skinfold?: number | null;
+          // Circumferences (circunferências) in cm
+          neck_circumference?: number | null;
+          chest_circumference?: number | null;
+          waist_circumference?: number | null;
+          abdomen_circumference?: number | null;
+          hip_circumference?: number | null;
+          right_arm_circumference?: number | null;
+          left_arm_circumference?: number | null;
+          right_forearm_circumference?: number | null;
+          left_forearm_circumference?: number | null;
+          right_thigh_circumference?: number | null;
+          left_thigh_circumference?: number | null;
+          right_calf_circumference?: number | null;
+          left_calf_circumference?: number | null;
+          // Calculated fields (stored for historical reference)
+          bmi?: number | null;
+          body_fat_percentage?: number | null;
+          waist_hip_ratio?: number | null;
+          calculation_protocol?: string | null;
+          // Metadata
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          assessed_at?: string;
+          // Basic measurements
+          weight?: number | null;
+          height?: number | null;
+          // Skinfolds (dobras cutâneas) in mm
+          triceps_skinfold?: number | null;
+          subscapular_skinfold?: number | null;
+          suprailiac_skinfold?: number | null;
+          abdominal_skinfold?: number | null;
+          thigh_skinfold?: number | null;
+          chest_skinfold?: number | null;
+          midaxillary_skinfold?: number | null;
+          // Circumferences (circunferências) in cm
+          neck_circumference?: number | null;
+          chest_circumference?: number | null;
+          waist_circumference?: number | null;
+          abdomen_circumference?: number | null;
+          hip_circumference?: number | null;
+          right_arm_circumference?: number | null;
+          left_arm_circumference?: number | null;
+          right_forearm_circumference?: number | null;
+          left_forearm_circumference?: number | null;
+          right_thigh_circumference?: number | null;
+          left_thigh_circumference?: number | null;
+          right_calf_circumference?: number | null;
+          left_calf_circumference?: number | null;
+          // Calculated fields (stored for historical reference)
+          bmi?: number | null;
+          body_fat_percentage?: number | null;
+          waist_hip_ratio?: number | null;
+          calculation_protocol?: string | null;
+          // Metadata
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "anthropometry_assessments_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -899,6 +1024,7 @@ export type NutriAvailability = Tables<"nutri_availability">;
 export type NutriTimeBlock = Tables<"nutri_time_blocks">;
 export type AppointmentHistory = Tables<"appointment_history">;
 export type AnamnesisReportRow = Tables<"anamnesis_reports">;
+export type AnthropometryAssessment = Tables<"anthropometry_assessments">;
 
 // Enum types
 export type BlockType = Database["public"]["Enums"]["block_type"];
