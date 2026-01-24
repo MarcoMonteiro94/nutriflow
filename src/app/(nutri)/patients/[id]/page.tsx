@@ -13,7 +13,8 @@ import {
   Target,
   UtensilsCrossed,
   Activity,
-  FileText
+  FileText,
+  Ruler
 } from "lucide-react";
 import { DeletePatientButton } from "../_components/delete-patient-button";
 import { SharePlanButton } from "./_components/share-plan-button";
@@ -63,11 +64,17 @@ async function getPatientStats(patientId: string) {
     .select("*", { count: "exact", head: true })
     .eq("patient_id", patientId);
 
+  const { count: anthropometryCount } = await supabase
+    .from("anthropometry_assessments")
+    .select("*", { count: "exact", head: true })
+    .eq("patient_id", patientId);
+
   return {
     mealPlans: mealPlansCount ?? 0,
     appointments: appointmentsCount ?? 0,
     measurements: measurementsCount ?? 0,
     anamnesis: anamnesisCount ?? 0,
+    anthropometry: anthropometryCount ?? 0,
   };
 }
 
@@ -265,6 +272,23 @@ export default async function PatientDetailPage({ params }: PageProps) {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Antropometria
+              </CardTitle>
+              <Ruler className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.anthropometry}</div>
+              <Button asChild variant="link" className="h-auto p-0 text-xs">
+                <Link href={`/patients/${id}/anthropometry`}>
+                  Ver avaliações →
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -299,6 +323,12 @@ export default async function PatientDetailPage({ params }: PageProps) {
             <Link href={`/patients/${id}/anamnesis/new`}>
               <FileText className="mr-2 h-4 w-4" />
               Nova Anamnese
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full sm:w-auto">
+            <Link href={`/patients/${id}/anthropometry/new`}>
+              <Ruler className="mr-2 h-4 w-4" />
+              Nova Antropometria
             </Link>
           </Button>
           <SharePlanButton
