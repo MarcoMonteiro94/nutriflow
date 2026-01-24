@@ -27,19 +27,25 @@ export function DeleteFoodButton({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleDelete() {
     setIsLoading(true);
+    setError(null);
 
     const supabase = createClient();
 
-    const { error } = await supabase
+    const { error: deleteError } = await supabase
       .from("food_items")
       .delete()
       .eq("id", foodId);
 
-    if (error) {
-      console.error("Error deleting food:", error);
+    if (deleteError) {
+      setError(
+        deleteError.message.includes("violates foreign key constraint")
+          ? "Este alimento está sendo usado em um plano alimentar e não pode ser excluído."
+          : deleteError.message
+      );
       setIsLoading(false);
       return;
     }
@@ -64,6 +70,11 @@ export function DeleteFoodButton({
             o alimento será removido permanentemente do sistema.
           </DialogDescription>
         </DialogHeader>
+        {error && (
+          <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
+            {error}
+          </div>
+        )}
         <DialogFooter>
           <Button
             variant="outline"

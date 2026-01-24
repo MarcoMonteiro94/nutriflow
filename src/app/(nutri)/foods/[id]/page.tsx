@@ -17,6 +17,7 @@ import {
   Tag,
 } from "lucide-react";
 import type { FoodItem } from "@/types/database";
+import { DeleteFoodButton } from "../_components/delete-food-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -107,6 +108,7 @@ export default async function FoodDetailPage({ params }: PageProps) {
                 Editar
               </Link>
             </Button>
+            <DeleteFoodButton foodId={food.id} foodName={food.name} />
           </div>
         )}
       </div>

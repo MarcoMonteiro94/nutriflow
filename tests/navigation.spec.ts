@@ -17,4 +17,10 @@ test.describe('Navigation', () => {
     expect(response?.status()).toBeLessThan(500);
     await expect(page.locator('body')).toBeVisible();
   });
+
+  test('foods page route loads', async ({ page }) => {
+    const response = await page.goto('/foods');
+    expect(response?.status()).toBeLessThan(500);
+    await expect(page.locator('body')).toBeVisible();
+  });
 });
