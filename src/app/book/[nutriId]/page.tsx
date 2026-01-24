@@ -4,6 +4,7 @@ import { Calendar as CalendarIcon, User } from "lucide-react";
 import { getPublicNutriInfo } from "@/lib/queries/public-booking";
 import { createClient } from "@/lib/supabase/server";
 import type { NutriAvailability } from "@/types/database";
+import { BookingForm } from "./_components/booking-form";
 
 interface PageProps {
   params: Promise<{
@@ -155,15 +156,7 @@ export default async function BookingPage({ params }: PageProps) {
                     </p>
                   </div>
                 ) : (
-                  <div className="w-full">
-                    <p className="text-sm text-muted-foreground text-center mb-4">
-                      {availableDates.length} dias disponíveis nos próximos 60 dias
-                    </p>
-                    {/* Booking form component will be added in next subtask */}
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>Formulário de agendamento em desenvolvimento</p>
-                    </div>
-                  </div>
+                  <BookingForm nutriId={nutriId} availableDates={availableDates} />
                 )}
               </div>
             </CardContent>
