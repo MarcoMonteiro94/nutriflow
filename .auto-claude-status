@@ -3,23 +3,23 @@
   "spec": "002-public-patient-self-booking",
   "state": "building",
   "subtasks": {
-    "completed": 6,
+    "completed": 8,
     "total": 10,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Organization Booking Page",
+    "current": "Integration & Testing",
     "id": null,
-    "total": 3
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 8,
+    "number": 10,
     "started_at": "2026-01-24T00:04:35.123135"
   },
-  "last_update": "2026-01-24T00:49:23.693375"
+  "last_update": "2026-01-24T01:00:04.116008"
 }
