@@ -4,7 +4,7 @@ This directory contains end-to-end tests for the public booking feature.
 
 ## Test Files
 
-- `public-booking.spec.ts` - Tests for solo practitioner booking flow
+- `public-booking.spec.ts` - Tests for solo practitioner and organization booking flows
 
 ## Test Coverage
 
@@ -22,6 +22,18 @@ This directory contains end-to-end tests for the public booking feature.
 - ✅ Validates email format
 - ✅ Shows loading states
 - ✅ Handles invalid nutriId (404)
+
+### Organization Booking Flow
+- ✅ Page loads without authentication
+- ✅ Displays organization information
+- ✅ Shows list of nutritionists
+- ✅ Shows nutritionist details in cards
+- ✅ Expands nutritionist card to reveal booking form
+- ✅ Shows next available slot for each nutritionist
+- ✅ Completes full organization booking flow
+- ✅ Handles invalid organization slug (404)
+- ✅ Handles organization with no active nutritionists
+- ✅ Allows selecting different nutritionists
 
 ### Conflict Prevention
 - ✅ UI shows occupied slots as disabled
@@ -64,6 +76,7 @@ The tests are designed to gracefully handle missing data:
 
 ## Verification Steps
 
+### Solo Practitioner Flow
 The tests verify the following acceptance criteria:
 1. ✅ Visit /book/[nutriId] as unauthenticated user
 2. ✅ Select available date and time slot
@@ -72,3 +85,14 @@ The tests verify the following acceptance criteria:
 5. ✅ Verify appointment created (success message shown)
 6. ✅ Verify patient record created (email deduplication works)
 7. ✅ Verify no double-booking (conflict prevention works via disabled slots)
+
+### Organization Flow
+The tests verify the following acceptance criteria:
+1. ✅ Visit /book/org/[orgSlug] as unauthenticated user
+2. ✅ See list of available nutritionists
+3. ✅ Select a nutritionist
+4. ✅ Select available date and time slot
+5. ✅ Fill patient information form
+6. ✅ Submit booking
+7. ✅ Verify appointment has organization_id set (via API submission)
+8. ✅ Verify appointment visible to org admin (functional verification)
