@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, ChevronDown, ChevronUp, User } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import type { OrgNutritionist } from "@/lib/queries/public-booking";
+import { BookingForm } from "./booking-form";
 
 interface NutriSelectorProps {
   nutritionists: OrgNutritionist[];
@@ -22,9 +24,16 @@ interface NextSlotInfo {
   } | null;
 }
 
+interface AvailableDatesInfo {
+  nutriId: string;
+  loading: boolean;
+  dates: Date[];
+}
+
 export function NutriSelector({ nutritionists, organizationId }: NutriSelectorProps) {
   const [expandedNutriId, setExpandedNutriId] = useState<string | null>(null);
   const [nextSlots, setNextSlots] = useState<Map<string, NextSlotInfo>>(new Map());
+  const [availableDates, setAvailableDates] = useState<Map<string, AvailableDatesInfo>>(new Map());
 
   // Fetch next available slots for each nutritionist
   useEffect(() => {
@@ -71,8 +80,69 @@ export function NutriSelector({ nutritionists, organizationId }: NutriSelectorPr
     fetchNextSlots();
   }, [nutritionists]);
 
-  function toggleExpanded(nutriId: string) {
-    setExpandedNutriId(expandedNutriId === nutriId ? null : nutriId);
+  async function toggleExpanded(nutriId: string) {
+    const isCurrentlyExpanded = expandedNutriId === nutriId;
+    setExpandedNutriId(isCurrentlyExpanded ? null : nutriId);
+
+    // Fetch available dates when expanding
+    if (!isCurrentlyExpanded && !availableDates.has(nutriId)) {
+      setAvailableDates(new Map(availableDates.set(nutriId, {
+        nutriId,
+        loading: true,
+        dates: [],
+      })));
+
+      try {
+        const supabase = createClient();
+        const now = new Date();
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 60);
+
+        const { data: availability } = await supabase
+          .from("nutri_availability")
+          .select("day_of_week, start_time, end_time")
+          .eq("nutri_id", nutriId)
+          .eq("is_active", true);
+
+        if (!availability || availability.length === 0) {
+          setAvailableDates(new Map(availableDates.set(nutriId, {
+            nutriId,
+            loading: false,
+            dates: [],
+          })));
+          return;
+        }
+
+        // Generate dates based on availability
+        const dates: Date[] = [];
+        const currentDate = new Date(now);
+
+        while (currentDate <= futureDate) {
+          const dayOfWeek = currentDate.getDay();
+          const hasAvailability = availability.some(
+            (slot) => slot.day_of_week === dayOfWeek
+          );
+
+          if (hasAvailability) {
+            dates.push(new Date(currentDate));
+          }
+
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        setAvailableDates(new Map(availableDates.set(nutriId, {
+          nutriId,
+          loading: false,
+          dates,
+        })));
+      } catch (error) {
+        setAvailableDates(new Map(availableDates.set(nutriId, {
+          nutriId,
+          loading: false,
+          dates: [],
+        })));
+      }
+    }
   }
 
   function getInitials(name: string): string {
@@ -165,10 +235,17 @@ export function NutriSelector({ nutritionists, organizationId }: NutriSelectorPr
               {/* Expanded booking form section */}
               {isExpanded && (
                 <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    O formulário de agendamento será exibido aqui.
-                  </p>
-                  {/* Booking form will be integrated in subtask-4-3 */}
+                  {availableDates.get(nutri.id)?.loading ? (
+                    <div className="py-8 text-center text-sm text-muted-foreground">
+                      Carregando disponibilidade...
+                    </div>
+                  ) : (
+                    <BookingForm
+                      nutriId={nutri.id}
+                      organizationId={organizationId}
+                      availableDates={availableDates.get(nutri.id)?.dates ?? []}
+                    />
+                  )}
                 </div>
               )}
             </CardContent>
