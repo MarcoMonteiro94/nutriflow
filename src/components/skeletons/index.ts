@@ -1,4 +1,5 @@
 export { DashboardSkeleton } from "./dashboard-skeleton";
+export { FoodCardSkeleton, FoodsListSkeleton } from "./foods-skeleton";
 export { PatientCardSkeleton, PatientsListSkeleton } from "./patients-skeleton";
 export { PatientDetailSkeleton } from "./patient-detail-skeleton";
 export { PlanCardSkeleton, PlansListSkeleton } from "./plans-skeleton";
