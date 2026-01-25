@@ -8,6 +8,7 @@ import { MeasurementsChart } from "./_components/measurements-chart";
 import { MeasurementsList } from "./_components/measurements-list";
 import { GoalSettingsDialog } from "./_components/goal-settings-dialog";
 import { ProgressIndicators } from "./_components/progress-indicators";
+import { ManageCustomTypesDialog } from "./_components/manage-custom-types-dialog";
 import type { Measurement, Patient, MeasurementGoal } from "@/types/database";
 
 interface PageProps {
@@ -118,6 +119,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center w-full sm:w-auto">
+          <ManageCustomTypesDialog />
           <GoalSettingsDialog patientId={id} />
           <Button asChild className="w-full sm:w-auto">
             <Link href={`/patients/${id}/measurements/new`}>
