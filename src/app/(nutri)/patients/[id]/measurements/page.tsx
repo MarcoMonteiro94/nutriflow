@@ -12,6 +12,7 @@ import { ManageCustomTypesDialog } from "./_components/manage-custom-types-dialo
 import type { Measurement, Patient, MeasurementGoal, CustomMeasurementType, CustomMeasurementValue, MeasurementPhoto } from "@/types/database";
 import { PhotoUpload } from "./_components/photo-upload";
 import { PhotoComparison } from "./_components/photo-comparison";
+import { ExportMenu } from "./_components/export-menu";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -180,6 +181,12 @@ export default async function MeasurementsPage({ params }: PageProps) {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center w-full sm:w-auto">
           <ManageCustomTypesDialog />
           <GoalSettingsDialog patientId={id} />
+          <ExportMenu
+            measurements={measurements}
+            patientName={patient.full_name}
+            customTypes={customTypes}
+            customValues={customValues}
+          />
           <Button asChild className="w-full sm:w-auto">
             <Link href={`/patients/${id}/measurements/new`}>
               <Plus className="mr-2 h-4 w-4" />
