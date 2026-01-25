@@ -6,7 +6,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MeasurementsChart } from "./_components/measurements-chart";
 import { MeasurementsList } from "./_components/measurements-list";
-import type { Measurement, Patient } from "@/types/database";
+import { GoalSettingsDialog } from "./_components/goal-settings-dialog";
+import { ProgressIndicators } from "./_components/progress-indicators";
+import type { Measurement, Patient, MeasurementGoal } from "@/types/database";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -49,6 +51,25 @@ async function getMeasurements(patientId: string): Promise<Measurement[]> {
   return (data ?? []) as Measurement[];
 }
 
+async function getMeasurementGoals(patientId: string): Promise<MeasurementGoal[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("measurement_goals")
+    .select("*")
+    .eq("patient_id", patientId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []) as MeasurementGoal[];
+}
+
 function calculateChange(measurements: Measurement[], field: keyof Measurement): { value: number; trend: "up" | "down" | "stable" } | null {
   if (measurements.length < 2) return null;
 
@@ -72,6 +93,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
   }
 
   const measurements = await getMeasurements(id);
+  const goals = await getMeasurementGoals(id);
   const latestMeasurement = measurements[measurements.length - 1];
 
   const weightChange = calculateChange(measurements, "weight");
@@ -95,13 +117,19 @@ export default async function MeasurementsPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Button asChild className="w-full sm:w-auto">
-          <Link href={`/patients/${id}/measurements/new`}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Medida
-          </Link>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center w-full sm:w-auto">
+          <GoalSettingsDialog patientId={id} />
+          <Button asChild className="w-full sm:w-auto">
+            <Link href={`/patients/${id}/measurements/new`}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Medida
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Goal Progress Indicators */}
+      <ProgressIndicators goals={goals} latestMeasurement={latestMeasurement} />
 
       {/* Current Stats */}
       <div className="grid gap-4 md:grid-cols-4">
