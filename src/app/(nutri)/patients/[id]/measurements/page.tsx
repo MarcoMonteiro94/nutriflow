@@ -9,7 +9,7 @@ import { MeasurementsList } from "./_components/measurements-list";
 import { GoalSettingsDialog } from "./_components/goal-settings-dialog";
 import { ProgressIndicators } from "./_components/progress-indicators";
 import { ManageCustomTypesDialog } from "./_components/manage-custom-types-dialog";
-import type { Measurement, Patient, MeasurementGoal } from "@/types/database";
+import type { Measurement, Patient, MeasurementGoal, CustomMeasurementType, CustomMeasurementValue } from "@/types/database";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -71,6 +71,42 @@ async function getMeasurementGoals(patientId: string): Promise<MeasurementGoal[]
   return (data ?? []) as MeasurementGoal[];
 }
 
+async function getCustomMeasurementTypes(): Promise<CustomMeasurementType[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("custom_measurement_types")
+    .select("*")
+    .eq("nutri_id", user.id)
+    .order("name");
+
+  return (data ?? []) as CustomMeasurementType[];
+}
+
+async function getCustomMeasurementValues(patientId: string): Promise<CustomMeasurementValue[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("custom_measurement_values")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("measured_at", { ascending: true });
+
+  return (data ?? []) as CustomMeasurementValue[];
+}
+
 function calculateChange(measurements: Measurement[], field: keyof Measurement): { value: number; trend: "up" | "down" | "stable" } | null {
   if (measurements.length < 2) return null;
 
@@ -95,6 +131,8 @@ export default async function MeasurementsPage({ params }: PageProps) {
 
   const measurements = await getMeasurements(id);
   const goals = await getMeasurementGoals(id);
+  const customTypes = await getCustomMeasurementTypes();
+  const customValues = await getCustomMeasurementValues(id);
   const latestMeasurement = measurements[measurements.length - 1];
 
   const weightChange = calculateChange(measurements, "weight");
@@ -205,7 +243,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MeasurementsChart measurements={measurements} />
+          <MeasurementsChart measurements={measurements} customTypes={customTypes} customValues={customValues} />
         </CardContent>
       </Card>
 
@@ -220,7 +258,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MeasurementsList measurements={measurements} patientId={id} />
+          <MeasurementsList measurements={measurements} patientId={id} customTypes={customTypes} customValues={customValues} />
         </CardContent>
       </Card>
     </div>
