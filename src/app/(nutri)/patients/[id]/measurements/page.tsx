@@ -264,7 +264,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MeasurementsChart measurements={measurements} customTypes={customTypes} customValues={customValues} />
+          <MeasurementsChart measurements={measurements} customTypes={customTypes} customValues={customValues} goals={goals} />
         </CardContent>
       </Card>
 

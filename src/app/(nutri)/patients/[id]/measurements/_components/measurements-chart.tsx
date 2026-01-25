@@ -10,16 +10,18 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { Measurement, CustomMeasurementType, CustomMeasurementValue } from "@/types/database";
+import type { Measurement, CustomMeasurementType, CustomMeasurementValue, MeasurementGoal } from "@/types/database";
 
 interface MeasurementsChartProps {
   measurements: Measurement[];
   customTypes: CustomMeasurementType[];
   customValues: CustomMeasurementValue[];
+  goals?: MeasurementGoal[];
 }
 
 type MetricConfig = { label: string; color: string; unit: string };
@@ -41,7 +43,7 @@ const CUSTOM_METRIC_COLORS = [
   "#f97316", // orange
 ];
 
-export function MeasurementsChart({ measurements, customTypes, customValues }: MeasurementsChartProps) {
+export function MeasurementsChart({ measurements, customTypes, customValues, goals = [] }: MeasurementsChartProps) {
   // Build complete metric config including custom types
   const metricConfig = useMemo(() => {
     const config: Record<string, MetricConfig> = { ...STANDARD_METRIC_CONFIG };
@@ -167,6 +169,29 @@ export function MeasurementsChart({ measurements, customTypes, customValues }: M
                 connectNulls
               />
             ))}
+            {goals.map((goal) => {
+              const isSelected = selectedMetrics.includes(goal.metric_type);
+              if (!isSelected) return null;
+              const config = metricConfig[goal.metric_type];
+              if (!config) return null;
+              return (
+                <ReferenceLine
+                  key={`goal-${goal.id}`}
+                  y={goal.target_value}
+                  stroke={config.color}
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                  strokeOpacity={0.6}
+                  label={{
+                    value: `Meta: ${goal.target_value} ${config.unit}`,
+                    position: "right",
+                    fill: config.color,
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                />
+              );
+            })}
           </LineChart>
         </ResponsiveContainer>
       </div>
