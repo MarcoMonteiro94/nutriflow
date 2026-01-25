@@ -9,7 +9,9 @@ import { MeasurementsList } from "./_components/measurements-list";
 import { GoalSettingsDialog } from "./_components/goal-settings-dialog";
 import { ProgressIndicators } from "./_components/progress-indicators";
 import { ManageCustomTypesDialog } from "./_components/manage-custom-types-dialog";
-import type { Measurement, Patient, MeasurementGoal, CustomMeasurementType, CustomMeasurementValue } from "@/types/database";
+import type { Measurement, Patient, MeasurementGoal, CustomMeasurementType, CustomMeasurementValue, MeasurementPhoto } from "@/types/database";
+import { PhotoUpload } from "./_components/photo-upload";
+import { PhotoComparison } from "./_components/photo-comparison";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -107,6 +109,24 @@ async function getCustomMeasurementValues(patientId: string): Promise<CustomMeas
   return (data ?? []) as CustomMeasurementValue[];
 }
 
+async function getMeasurementPhotos(patientId: string): Promise<MeasurementPhoto[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("measurement_photos")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("uploaded_at", { ascending: false });
+
+  return (data ?? []) as MeasurementPhoto[];
+}
+
 function calculateChange(measurements: Measurement[], field: keyof Measurement): { value: number; trend: "up" | "down" | "stable" } | null {
   if (measurements.length < 2) return null;
 
@@ -133,6 +153,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
   const goals = await getMeasurementGoals(id);
   const customTypes = await getCustomMeasurementTypes();
   const customValues = await getCustomMeasurementValues(id);
+  const photos = await getMeasurementPhotos(id);
   const latestMeasurement = measurements[measurements.length - 1];
 
   const weightChange = calculateChange(measurements, "weight");
@@ -261,6 +282,24 @@ export default async function MeasurementsPage({ params }: PageProps) {
           <MeasurementsList measurements={measurements} patientId={id} customTypes={customTypes} customValues={customValues} />
         </CardContent>
       </Card>
+
+      {/* Progress Photos */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PhotoUpload patientId={id} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Galeria de Fotos</CardTitle>
+            <CardDescription>
+              {photos.length === 0
+                ? "Nenhuma foto registrada ainda"
+                : `${photos.length} foto${photos.length > 1 ? "s" : ""} registrada${photos.length > 1 ? "s" : ""}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PhotoComparison photos={photos} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
