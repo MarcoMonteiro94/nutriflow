@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import type { Measurement } from "@/types/database";
+import type { Measurement, CustomMeasurementType, CustomMeasurementValue } from "@/types/database";
 
 interface MeasurementFormProps {
   patientId: string;
@@ -45,7 +45,61 @@ export function MeasurementForm({
   const [hip, setHip] = useState(initialData?.hip_circumference?.toString() || "");
   const [notes, setNotes] = useState(initialData?.notes || "");
 
+  // Custom measurements state
+  const [customTypes, setCustomTypes] = useState<CustomMeasurementType[]>([]);
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const [isLoadingCustomTypes, setIsLoadingCustomTypes] = useState(true);
+
   const isEditing = !!measurementId;
+
+  // Load custom measurement types and existing values
+  useEffect(() => {
+    async function loadCustomData() {
+      const supabase = createClient();
+
+      // Get current user (nutritionist)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoadingCustomTypes(false);
+        return;
+      }
+
+      // Fetch custom measurement types for this nutritionist
+      const { data: types, error: typesError } = await supabase
+        .from("custom_measurement_types")
+        .select("*")
+        .eq("nutri_id", user.id)
+        .order("name");
+
+      if (typesError) {
+        setIsLoadingCustomTypes(false);
+        return;
+      }
+
+      setCustomTypes((types ?? []) as CustomMeasurementType[]);
+
+      // If editing, fetch existing custom values for this measurement date and patient
+      if (isEditing && initialData?.measured_at) {
+        const { data: values, error: valuesError } = await supabase
+          .from("custom_measurement_values")
+          .select("*")
+          .eq("patient_id", patientId)
+          .eq("measured_at", initialData.measured_at);
+
+        if (!valuesError && values) {
+          const valueMap: Record<string, string> = {};
+          values.forEach((v: CustomMeasurementValue) => {
+            valueMap[v.type_id] = v.value.toString();
+          });
+          setCustomValues(valueMap);
+        }
+      }
+
+      setIsLoadingCustomTypes(false);
+    }
+
+    loadCustomData();
+  }, [patientId, measurementId, initialData?.measured_at, isEditing]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,9 +110,12 @@ export function MeasurementForm({
       return;
     }
 
-    // At least one measurement is required
-    if (!weight && !height && !bodyFat && !muscleMass && !waist && !hip) {
-      setError("Preencha pelo menos uma medida.");
+    // Check if at least one measurement (standard or custom) is filled
+    const hasStandardMeasurement = weight || height || bodyFat || muscleMass || waist || hip;
+    const hasCustomMeasurement = Object.values(customValues).some((val) => val.trim() !== "");
+
+    if (!hasStandardMeasurement && !hasCustomMeasurement) {
+      setError("Preencha pelo menos uma medida (padrão ou personalizada).");
       return;
     }
 
@@ -98,10 +155,41 @@ export function MeasurementForm({
         }
       }
 
+      // Save custom measurement values
+      if (hasCustomMeasurement) {
+        // First, delete existing custom values for this patient and date (if editing)
+        if (isEditing && initialData?.measured_at) {
+          await supabase
+            .from("custom_measurement_values")
+            .delete()
+            .eq("patient_id", patientId)
+            .eq("measured_at", initialData.measured_at);
+        }
+
+        // Insert new custom values
+        const customValuesToInsert = Object.entries(customValues)
+          .filter(([_, value]) => value.trim() !== "")
+          .map(([typeId, value]) => ({
+            patient_id: patientId,
+            type_id: typeId,
+            value: parseFloat(value),
+            measured_at: date.toISOString(),
+          }));
+
+        if (customValuesToInsert.length > 0) {
+          const { error: customError } = await supabase
+            .from("custom_measurement_values")
+            .insert(customValuesToInsert);
+
+          if (customError) {
+            throw customError;
+          }
+        }
+      }
+
       router.push(`/patients/${patientId}/measurements`);
       router.refresh();
     } catch (err) {
-      console.error("Error saving measurement:", err);
       setError("Erro ao salvar medida. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -235,6 +323,36 @@ export function MeasurementForm({
           />
         </div>
       </div>
+
+      {/* Custom Measurements Section */}
+      {!isLoadingCustomTypes && customTypes.length > 0 && (
+        <div className="space-y-4 rounded-lg border p-4">
+          <h3 className="text-sm font-semibold">Medidas Personalizadas</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {customTypes.map((type) => (
+              <div key={type.id} className="space-y-2">
+                <Label htmlFor={`custom-${type.id}`}>
+                  {type.name} ({type.unit})
+                </Label>
+                <Input
+                  id={`custom-${type.id}`}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={customValues[type.id] || ""}
+                  onChange={(e) =>
+                    setCustomValues((prev) => ({
+                      ...prev,
+                      [type.id]: e.target.value,
+                    }))
+                  }
+                  placeholder={`Digite o valor em ${type.unit}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="notes">Observações</Label>
