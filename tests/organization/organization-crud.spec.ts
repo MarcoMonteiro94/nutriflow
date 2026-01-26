@@ -12,7 +12,8 @@ test.describe('Organization CRUD', () => {
   test('should display create organization page', async ({ authenticatedPage }) => {
     await orgPage.gotoCreate();
 
-    await expect(authenticatedPage.getByText(/criar.*clínica|nova.*organização/i)).toBeVisible();
+    // Page heading is "Criar Clínica"
+    await expect(authenticatedPage.getByRole('heading', { name: /criar clínica/i })).toBeVisible();
     await expect(orgPage.nameInput).toBeVisible();
     await expect(orgPage.slugInput).toBeVisible();
   });

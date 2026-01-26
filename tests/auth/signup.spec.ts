@@ -98,7 +98,7 @@ test.describe('Signup (Invite-Only Mode)', () => {
     test('should submit signup form', async ({ page }) => {
       // This test just verifies the form can be submitted
       // Actual signup depends on Supabase being available
-      const uniqueEmail = `test-${Date.now()}@nutriflow.test`;
+      const uniqueEmail = `test-${Date.now()}@example.com`;
 
       await loginPage.fullNameInput.fill('New Test User');
       await loginPage.emailInput.fill(uniqueEmail);

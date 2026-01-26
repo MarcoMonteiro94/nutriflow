@@ -73,7 +73,7 @@ export default async function PatientProgressPage() {
     .eq("patient_id", patient.id)
     .order("measured_at", { ascending: false });
 
-  const measurementsList = measurements ?? [];
+  const measurementsList = (measurements ?? []) as Measurement[];
   const latestMeasurement = measurementsList[0];
   const weightTrend = getWeightTrend(measurementsList);
 

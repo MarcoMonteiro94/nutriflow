@@ -20,6 +20,11 @@ const roleLabels: Record<OrgRole, string> = {
 export function NutriScheduleCard({ nutri }: NutriScheduleCardProps) {
   const hasAppointments = nutri.todayAppointmentsCount > 0;
 
+  // Handle case where profiles might be null (user deleted or not synced)
+  if (!nutri.profiles) {
+    return null;
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -29,8 +34,8 @@ export function NutriScheduleCard({ nutri }: NutriScheduleCardProps) {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base">{nutri.profiles.full_name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{nutri.profiles.email}</p>
+              <CardTitle className="text-base">{nutri.profiles.full_name ?? "Usuário"}</CardTitle>
+              <p className="text-sm text-muted-foreground">{nutri.profiles.email ?? ""}</p>
             </div>
           </div>
           <Badge variant="secondary">{roleLabels[nutri.role]}</Badge>

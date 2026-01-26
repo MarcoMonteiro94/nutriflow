@@ -7,10 +7,10 @@ test.describe('Sidebar Navigation', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
 
-    // Check for main navigation items
-    await expect(page.getByRole('link', { name: /dashboard/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /pacientes/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /planos/i })).toBeVisible();
+    // Check for main navigation items in sidebar (use first() to avoid ambiguity)
+    await expect(page.locator('a[href="/dashboard"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/patients"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/plans"]').first()).toBeVisible();
   });
 
   test('should navigate to dashboard', async ({ authenticatedPage }) => {
@@ -18,7 +18,7 @@ test.describe('Sidebar Navigation', () => {
     await page.goto('/patients');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('link', { name: /dashboard/i }).click();
+    await page.locator('a[href="/dashboard"]').first().click();
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
@@ -27,7 +27,7 @@ test.describe('Sidebar Navigation', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('link', { name: /pacientes/i }).click();
+    await page.locator('a[href="/patients"]').first().click();
     await expect(page).toHaveURL(/\/patients/);
   });
 
@@ -36,7 +36,7 @@ test.describe('Sidebar Navigation', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('link', { name: /planos/i }).click();
+    await page.locator('a[href="/plans"]').first().click();
     await expect(page).toHaveURL(/\/plans/);
   });
 
@@ -45,8 +45,9 @@ test.describe('Sidebar Navigation', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('link', { name: /agenda/i }).click();
-    await expect(page).toHaveURL(/\/agenda/);
+    // Use specific sidebar link to avoid ambiguity with other "Agenda" links on page
+    await page.locator('a[href="/schedule"]').first().click();
+    await expect(page).toHaveURL(/\/schedule/);
   });
 
   test('should highlight active navigation item', async ({ authenticatedPage }) => {
@@ -55,7 +56,7 @@ test.describe('Sidebar Navigation', () => {
     await page.waitForLoadState('networkidle');
 
     // The active link should have data-active="true"
-    const patientsLink = page.getByRole('link', { name: /pacientes/i });
+    const patientsLink = page.locator('a[href="/patients"]').first();
     const isActive = await patientsLink.getAttribute('data-active');
 
     // Or check for active styling
@@ -72,8 +73,8 @@ test.describe('Sidebar Navigation', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
 
-    // Check for NutriFlow logo/text
-    await expect(page.locator('text=NutriFlow')).toBeVisible();
+    // Check for NutriFlow logo/text - use first() to avoid strict mode violation
+    await expect(page.locator('text=NutriFlow').first()).toBeVisible();
   });
 
   test('should display user info in sidebar footer', async ({ authenticatedPage }) => {

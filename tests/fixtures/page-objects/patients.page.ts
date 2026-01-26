@@ -142,6 +142,7 @@ export class PatientFormPage {
 export class PatientDetailPage {
   readonly page: Page;
   readonly patientName: Locator;
+  readonly pageTitle: Locator;
   readonly editButton: Locator;
   readonly deleteButton: Locator;
   readonly createPlanButton: Locator;
@@ -150,11 +151,13 @@ export class PatientDetailPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.patientName = page.locator('h1');
+    // The page title is "Perfil do Paciente", patient name is in a separate element
+    this.pageTitle = page.locator('h1');
+    this.patientName = page.locator('main').locator('text=/^[A-Z].*[a-z]+/').first();
     this.editButton = page.getByRole('link', { name: /editar/i });
-    this.deleteButton = page.getByRole('button', { name: /excluir|deletar/i });
-    this.createPlanButton = page.getByRole('link', { name: /criar plano|novo plano/i });
-    this.backButton = page.getByRole('link', { name: /voltar/i });
+    this.deleteButton = page.locator('button').filter({ has: page.locator('img') }).last(); // The dropdown trigger
+    this.createPlanButton = page.getByRole('link', { name: /criar.*plano|novo plano/i });
+    this.backButton = page.locator('a[href="/patients"]');
     this.patientInfo = page.locator('[data-slot="card"]').first();
   }
 
@@ -164,9 +167,10 @@ export class PatientDetailPage {
   }
 
   async expectLoaded(patientName?: string) {
-    await expect(this.patientName).toBeVisible({ timeout: 10000 });
+    await expect(this.pageTitle).toBeVisible({ timeout: 10000 });
     if (patientName) {
-      await expect(this.patientName).toContainText(patientName);
+      // Patient name is displayed separately from the page title
+      await expect(this.page.locator(`text=${patientName}`)).toBeVisible({ timeout: 10000 });
     }
   }
 

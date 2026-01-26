@@ -24,8 +24,8 @@ test.describe('Patient Search', () => {
 
     // Create two patients with distinct names
     const uniqueId = Date.now();
-    const patient1Name = `Alpha Test ${uniqueId}`;
-    const patient2Name = `Beta Test ${uniqueId}`;
+    const patient1Name = `UniqueAlpha ${uniqueId}`;
+    const patient2Name = `UniqueBeta ${uniqueId}`;
 
     // Create first patient
     await patientForm.goto();
@@ -45,14 +45,15 @@ test.describe('Patient Search', () => {
     // Check if search is available
     const searchInput = page.getByPlaceholder(/buscar|pesquisar/i);
     if (await searchInput.isVisible()) {
-      await searchInput.fill('Alpha');
-      await page.waitForTimeout(500); // Wait for debounce
+      await searchInput.fill('UniqueAlpha');
+      await page.waitForTimeout(1000); // Wait for debounce and filter
 
-      // Should show Alpha patient, not Beta
-      const patientCards = patientsPage.patientCards;
-      const cardTexts = await patientCards.allTextContents();
-      const hasAlpha = cardTexts.some(text => text.includes('Alpha'));
-      expect(hasAlpha).toBeTruthy();
+      // Verify search input has our value
+      await expect(searchInput).toHaveValue('UniqueAlpha');
+
+      // Look for the Alpha patient link specifically
+      const alphaLink = page.getByRole('link', { name: new RegExp(patient1Name) });
+      await expect(alphaLink).toBeVisible({ timeout: 5000 });
     }
   });
 

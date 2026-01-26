@@ -14,11 +14,11 @@ export class SchedulePage {
   constructor(page: Page) {
     this.page = page;
     this.title = page.locator('h1:has-text("Agenda")');
-    this.newAppointmentButton = page.getByRole('link', { name: /agendar|nova consulta/i });
-    this.calendar = page.locator('[data-slot="card"]').filter({ hasText: /calendário|janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro/i });
-    this.appointmentsList = page.locator('[data-slot="card"]').filter({ hasText: /consultas|atendimentos/i });
+    this.newAppointmentButton = page.locator('a[href="/schedule/new"]').first();
+    this.calendar = page.locator('text=Calendário').locator('..');
+    this.appointmentsList = page.locator('text=/Atendimentos do dia/i').locator('..').locator('..');
     this.appointmentItems = page.locator('.rounded-lg').filter({ has: page.locator('text=/\\d{2}:\\d{2}/') });
-    this.emptyState = page.locator('text=Nenhum atendimento');
+    this.emptyState = page.locator('text=/Nenhum atendimento/i');
     this.blockedDayIndicator = page.locator('[style*="destructive"]');
     this.timeBlockAlert = page.locator('[class*="border-yellow"]').filter({ hasText: /bloqueio/i });
   }

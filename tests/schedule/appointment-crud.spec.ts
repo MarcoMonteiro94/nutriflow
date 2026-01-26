@@ -18,7 +18,8 @@ test.describe('Appointment CRUD Operations', () => {
 
       await schedulePage.goto();
 
-      const newButton = page.getByRole('link', { name: /agendar|nova consulta/i });
+      // Look for any link that navigates to schedule/new
+      const newButton = page.locator('a[href="/schedule/new"]').first();
       await expect(newButton).toBeVisible();
     });
 
@@ -39,8 +40,8 @@ test.describe('Appointment CRUD Operations', () => {
 
       await schedulePage.goto();
 
-      // Should have appointments section
-      const appointmentsSection = page.locator('text=/consultas|atendimentos/i');
+      // Should have appointments section - "Atendimentos do dia X de Y de Z"
+      const appointmentsSection = page.locator('text=/Atendimentos do dia/i');
       await expect(appointmentsSection).toBeVisible();
     });
   });

@@ -9,10 +9,10 @@ export class PlansPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.title = page.locator('h1:has-text("Planos")');
-    this.newPlanButton = page.getByRole('link', { name: /criar plano|novo plano/i });
+    this.title = page.getByRole('heading', { level: 1, name: /planos/i });
+    this.newPlanButton = page.locator('a[href="/plans/new"]').first();
     this.planCards = page.locator('[data-slot="card"]');
-    this.emptyState = page.locator('text=Nenhum plano');
+    this.emptyState = page.locator('text=/nenhum plano/i');
   }
 
   async goto() {

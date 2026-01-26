@@ -32,25 +32,25 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 const TEST_USERS = {
   admin: {
-    email: 'test-admin@nutriflow.test',
+    email: 'test-admin@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Admin',
     profile_role: 'nutri' as const, // Profile role (staff)
   },
   nutri: {
-    email: 'test-nutri@nutriflow.test',
+    email: 'test-nutri@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Nutricionista',
     profile_role: 'nutri' as const,
   },
   receptionist: {
-    email: 'test-receptionist@nutriflow.test',
+    email: 'test-receptionist@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Recepcionista',
     profile_role: 'nutri' as const, // Profile role (staff)
   },
   patient: {
-    email: 'test-patient@nutriflow.test',
+    email: 'test-patient@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Paciente',
     profile_role: 'patient' as const,
@@ -220,7 +220,7 @@ async function main() {
 
   console.log('\n✅ Test data seeded successfully!\n');
   console.log('Test credentials:');
-  console.log('  Email: test-nutri@nutriflow.test');
+  console.log('  Email: test-nutri@example.com');
   console.log('  Password: TestPassword123!');
   console.log('');
 }

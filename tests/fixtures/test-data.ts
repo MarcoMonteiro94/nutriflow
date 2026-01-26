@@ -4,12 +4,12 @@
 
 export const testUsers = {
   nutritionist: {
-    email: 'test-nutri@nutriflow.test',
+    email: 'test-nutri@example.com',
     password: 'TestPassword123!',
     fullName: 'Test Nutricionista',
   },
   nutritionist2: {
-    email: 'test-nutri2@nutriflow.test',
+    email: 'test-nutri2@example.com',
     password: 'TestPassword123!',
     fullName: 'Second Nutricionista',
   },
@@ -124,19 +124,19 @@ export const testInvites = {
 
 export const testUsersWithRoles = {
   admin: {
-    email: 'test-admin@nutriflow.test',
+    email: 'test-admin@example.com',
     password: 'TestPassword123!',
     fullName: 'Test Admin',
     role: 'admin' as const,
   },
   receptionist: {
-    email: 'test-receptionist@nutriflow.test',
+    email: 'test-receptionist@example.com',
     password: 'TestPassword123!',
     fullName: 'Test Recepcionista',
     role: 'receptionist' as const,
   },
   patient: {
-    email: 'test-patient@nutriflow.test',
+    email: 'test-patient@example.com',
     password: 'TestPassword123!',
     fullName: 'Test Paciente',
     role: 'patient' as const,
