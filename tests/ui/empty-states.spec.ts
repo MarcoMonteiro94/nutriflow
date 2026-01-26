@@ -23,12 +23,13 @@ test.describe('Empty States', () => {
     await page.goto('/patients');
     await page.waitForLoadState('networkidle');
 
-    // Either empty state or patient cards
+    // Either empty state or patient list items
     const emptyState = page.locator('text=/nenhum paciente/i');
-    const patientCards = page.locator('[data-slot="card"]');
+    // Patient cards have links to patient profiles
+    const patientLinks = page.locator('a[href^="/patients/"]').filter({ hasNot: page.locator('[href="/patients/new"]') });
 
     const hasEmptyState = await emptyState.isVisible().catch(() => false);
-    const hasPatients = await patientCards.count() > 0;
+    const hasPatients = await patientLinks.count() > 0;
 
     expect(hasEmptyState || hasPatients).toBeTruthy();
   });

@@ -69,15 +69,15 @@ test.describe('Meal Plan CRUD Operations', () => {
 
       await plansPage.goto();
 
-      // If there are plans, try to edit one
-      const planCards = plansPage.planCards;
-      const count = await planCards.count();
+      // If there are plans (not empty state), try to edit one
+      const editLinks = page.getByRole('link', { name: /editar/i });
+      const count = await editLinks.count();
 
       if (count > 0) {
-        const editLink = planCards.first().getByRole('link', { name: /editar/i });
-        await editLink.click();
+        await editLinks.first().click();
         await expect(page).toHaveURL(/\/plans\/[a-f0-9-]+\/edit/);
       }
+      // If no plans, test passes (no plans to edit)
     });
   });
 });

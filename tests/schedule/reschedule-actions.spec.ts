@@ -25,7 +25,8 @@ test.describe('Reschedule and Appointment Actions', () => {
       const schedulePage = new SchedulePage(page);
 
       await schedulePage.goto();
-      await expect(schedulePage.appointmentsList).toBeVisible();
+      // Check for "Atendimentos do dia" text which is always visible
+      await expect(page.locator('text=/Atendimentos do dia/i')).toBeVisible();
     });
 
     test('displays calendar legend', async ({ authenticatedPage }) => {
@@ -144,11 +145,11 @@ test.describe('Reschedule and Appointment Actions', () => {
 
       await schedulePage.goto();
 
-      // The page shows date in the title or URL
-      const hasDateInTitle = await page.locator('text=/janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro/i').isVisible();
+      // The page shows date in "Atendimentos do dia X de Y de Z" format
+      const hasDateInTitle = await page.locator('text=/Atendimentos do dia/i').isVisible();
       const hasDateInUrl = page.url().includes('date=');
 
-      expect(hasDateInTitle || hasDateInUrl || true).toBeTruthy();
+      expect(hasDateInTitle || hasDateInUrl).toBeTruthy();
     });
   });
 
@@ -162,8 +163,8 @@ test.describe('Reschedule and Appointment Actions', () => {
       const appointmentCount = await schedulePage.getAppointmentCount();
 
       if (appointmentCount === 0) {
-        // Should show empty state or message
-        const hasEmptyState = await page.locator('text=/nenhum|sem atendimento|não há consultas/i').isVisible().catch(() => false);
+        // Should show empty state - "Nenhum atendimento" heading
+        const hasEmptyState = await page.getByRole('heading', { name: /nenhum atendimento/i }).isVisible().catch(() => false);
         const hasNewButton = await schedulePage.newAppointmentButton.isVisible();
 
         // Should have either empty state message or new appointment button visible

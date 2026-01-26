@@ -5,11 +5,11 @@ test.describe('Role-Based Sidebar Navigation', () => {
     await authenticatedPage.goto('/dashboard');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    // Nutri should see these menu items
-    const dashboardLink = authenticatedPage.locator('a[href="/dashboard"]');
-    const patientsLink = authenticatedPage.locator('a[href="/patients"]');
-    const plansLink = authenticatedPage.locator('a[href="/plans"]');
-    const scheduleLink = authenticatedPage.locator('a[href="/schedule"]');
+    // Nutri should see these menu items (use first() to avoid strict mode violations)
+    const dashboardLink = authenticatedPage.locator('a[href="/dashboard"]').first();
+    const patientsLink = authenticatedPage.locator('a[href="/patients"]').first();
+    const plansLink = authenticatedPage.locator('a[href="/plans"]').first();
+    const scheduleLink = authenticatedPage.locator('a[href="/schedule"]').first();
 
     await expect(dashboardLink).toBeVisible();
     await expect(patientsLink).toBeVisible();
@@ -85,8 +85,8 @@ test.describe('Role-Based Sidebar Navigation', () => {
     await authenticatedPage.goto('/dashboard');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    // Click on patients link
-    const patientsLink = authenticatedPage.locator('a[href="/patients"]');
+    // Click on patients link (use first() to avoid strict mode violations)
+    const patientsLink = authenticatedPage.locator('a[href="/patients"]').first();
 
     if (await patientsLink.isVisible()) {
       await patientsLink.click();

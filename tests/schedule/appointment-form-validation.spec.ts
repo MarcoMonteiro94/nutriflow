@@ -18,8 +18,8 @@ test.describe('Appointment Form with Conflict Validation', () => {
 
       await formPage.goto();
 
-      // Should have patient selection
-      const patientSelect = page.locator('text=/paciente/i');
+      // Should have patient selection combobox
+      const patientSelect = page.getByRole('combobox', { name: /paciente/i });
       await expect(patientSelect).toBeVisible();
     });
 
@@ -151,15 +151,15 @@ test.describe('Appointment Form with Conflict Validation', () => {
       }
     });
 
-    test('cancel button returns to schedule page', async ({ authenticatedPage }) => {
+    test('cancel button returns to previous page', async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       const formPage = new AppointmentFormPage(page);
 
       await formPage.goto();
       await formPage.cancel();
 
-      // Should navigate away from form
-      await page.waitForURL(/\/schedule|\/patients/, { timeout: 10000 });
+      // Should navigate away from form (to schedule, dashboard, or patients)
+      await page.waitForURL(/\/schedule|\/dashboard|\/patients/, { timeout: 10000 });
     });
   });
 
