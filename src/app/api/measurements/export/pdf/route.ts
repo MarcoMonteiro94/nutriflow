@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateMeasurementPDF } from "@/lib/measurements/export-pdf";
+import type { Patient, Measurement } from "@/types/database";
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,12 +58,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate PDF
-    const pdfBuffer = await generateMeasurementPDF(patient, measurements ?? []);
+    const pdfBuffer = await generateMeasurementPDF(patient as Patient, (measurements ?? []) as Measurement[]);
 
     // Return PDF file
-    const fileName = `medidas_${patient.full_name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+    const typedPatient = patient as Patient;
+    const fileName = `medidas_${typedPatient.full_name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
 
-    return new NextResponse(pdfBuffer, {
+    return new Response(pdfBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

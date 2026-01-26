@@ -215,8 +215,8 @@ const MeasurementsPDFDocument: React.FC<MeasurementsPDFProps> = ({ patient, meas
 export async function generateMeasurementPDF(
   patient: Patient,
   measurements: Measurement[]
-): Promise<Buffer> {
+): Promise<Blob> {
   const doc = <MeasurementsPDFDocument patient={patient} measurements={measurements} />;
-  const pdfBlob = await pdf(doc).toBuffer();
+  const pdfBlob = await pdf(doc).toBlob();
   return pdfBlob;
 }

@@ -88,7 +88,7 @@ export function MeasurementForm({
 
         if (!valuesError && values) {
           const valueMap: Record<string, string> = {};
-          values.forEach((v: CustomMeasurementValue) => {
+          (values as CustomMeasurementValue[]).forEach((v) => {
             valueMap[v.type_id] = v.value.toString();
           });
           setCustomValues(valueMap);

@@ -213,7 +213,7 @@ export default async function ViewPlanPage({ params }: PageProps) {
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">{meal.time.slice(0, 5)}</span>
-                        <span className="text-lg font-semibold">{meal.name}</span>
+                        <span className="text-lg font-semibold">{meal.title}</span>
                       </div>
                       <span className="text-sm text-muted-foreground">
                         {getMealCalories(meal)} kcal
