@@ -6,7 +6,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MeasurementsChart } from "./_components/measurements-chart";
 import { MeasurementsList } from "./_components/measurements-list";
-import type { Measurement, Patient } from "@/types/database";
+import { GoalSettingsDialog } from "./_components/goal-settings-dialog";
+import { ProgressIndicators } from "./_components/progress-indicators";
+import { ManageCustomTypesDialog } from "./_components/manage-custom-types-dialog";
+import type { Measurement, Patient, MeasurementGoal, CustomMeasurementType, CustomMeasurementValue, MeasurementPhoto } from "@/types/database";
+import { PhotoUpload } from "./_components/photo-upload";
+import { PhotoComparison } from "./_components/photo-comparison";
+import { ExportMenu } from "./_components/export-menu";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -49,6 +55,79 @@ async function getMeasurements(patientId: string): Promise<Measurement[]> {
   return (data ?? []) as Measurement[];
 }
 
+async function getMeasurementGoals(patientId: string): Promise<MeasurementGoal[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("measurement_goals")
+    .select("*")
+    .eq("patient_id", patientId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []) as MeasurementGoal[];
+}
+
+async function getCustomMeasurementTypes(): Promise<CustomMeasurementType[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("custom_measurement_types")
+    .select("*")
+    .eq("nutri_id", user.id)
+    .order("name");
+
+  return (data ?? []) as CustomMeasurementType[];
+}
+
+async function getCustomMeasurementValues(patientId: string): Promise<CustomMeasurementValue[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("custom_measurement_values")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("measured_at", { ascending: true });
+
+  return (data ?? []) as CustomMeasurementValue[];
+}
+
+async function getMeasurementPhotos(patientId: string): Promise<MeasurementPhoto[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("measurement_photos")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("uploaded_at", { ascending: false });
+
+  return (data ?? []) as MeasurementPhoto[];
+}
+
 function calculateChange(measurements: Measurement[], field: keyof Measurement): { value: number; trend: "up" | "down" | "stable" } | null {
   if (measurements.length < 2) return null;
 
@@ -72,6 +151,10 @@ export default async function MeasurementsPage({ params }: PageProps) {
   }
 
   const measurements = await getMeasurements(id);
+  const goals = await getMeasurementGoals(id);
+  const customTypes = await getCustomMeasurementTypes();
+  const customValues = await getCustomMeasurementValues(id);
+  const photos = await getMeasurementPhotos(id);
   const latestMeasurement = measurements[measurements.length - 1];
 
   const weightChange = calculateChange(measurements, "weight");
@@ -95,13 +178,26 @@ export default async function MeasurementsPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Button asChild className="w-full sm:w-auto">
-          <Link href={`/patients/${id}/measurements/new`}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Medida
-          </Link>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center w-full sm:w-auto">
+          <ManageCustomTypesDialog />
+          <GoalSettingsDialog patientId={id} />
+          <ExportMenu
+            measurements={measurements}
+            patientName={patient.full_name}
+            customTypes={customTypes}
+            customValues={customValues}
+          />
+          <Button asChild className="w-full sm:w-auto">
+            <Link href={`/patients/${id}/measurements/new`}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Medida
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Goal Progress Indicators */}
+      <ProgressIndicators goals={goals} latestMeasurement={latestMeasurement} />
 
       {/* Current Stats */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -175,7 +271,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MeasurementsChart measurements={measurements} />
+          <MeasurementsChart measurements={measurements} customTypes={customTypes} customValues={customValues} goals={goals} />
         </CardContent>
       </Card>
 
@@ -190,9 +286,27 @@ export default async function MeasurementsPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MeasurementsList measurements={measurements} patientId={id} />
+          <MeasurementsList measurements={measurements} patientId={id} customTypes={customTypes} customValues={customValues} />
         </CardContent>
       </Card>
+
+      {/* Progress Photos */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PhotoUpload patientId={id} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Galeria de Fotos</CardTitle>
+            <CardDescription>
+              {photos.length === 0
+                ? "Nenhuma foto registrada ainda"
+                : `${photos.length} foto${photos.length > 1 ? "s" : ""} registrada${photos.length > 1 ? "s" : ""}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PhotoComparison photos={photos} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -62,7 +62,7 @@ const TEST_ORG = {
   slug: 'nutritest',
 };
 
-async function createTestUser(userData: typeof TEST_USERS.admin) {
+async function createTestUser(userData: typeof TEST_USERS[keyof typeof TEST_USERS]) {
   // Check if user exists
   const { data: existingUsers } = await supabase.auth.admin.listUsers();
   const existingUser = existingUsers?.users?.find(u => u.email === userData.email);

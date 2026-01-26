@@ -584,6 +584,178 @@ export type Database = {
           }
         ];
       };
+      measurement_goals: {
+        Row: {
+          id: string;
+          patient_id: string;
+          metric_type: string;
+          target_value: number;
+          target_date: string | null;
+          current_value: number | null;
+          is_active: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          metric_type: string;
+          target_value: number;
+          target_date?: string | null;
+          current_value?: number | null;
+          is_active?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          metric_type?: string;
+          target_value?: number;
+          target_date?: string | null;
+          current_value?: number | null;
+          is_active?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "measurement_goals_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      custom_measurement_types: {
+        Row: {
+          id: string;
+          nutri_id: string;
+          name: string;
+          unit: string;
+          category: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nutri_id: string;
+          name: string;
+          unit: string;
+          category?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nutri_id?: string;
+          name?: string;
+          unit?: string;
+          category?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "custom_measurement_types_nutri_id_fkey";
+            columns: ["nutri_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      custom_measurement_values: {
+        Row: {
+          id: string;
+          patient_id: string;
+          type_id: string;
+          value: number;
+          measured_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          type_id: string;
+          value: number;
+          measured_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          type_id?: string;
+          value?: number;
+          measured_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "custom_measurement_values_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "custom_measurement_values_type_id_fkey";
+            columns: ["type_id"];
+            isOneToOne: false;
+            referencedRelation: "custom_measurement_types";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      measurement_photos: {
+        Row: {
+          id: string;
+          patient_id: string;
+          measurement_id: string | null;
+          photo_url: string;
+          view_type: string | null;
+          notes: string | null;
+          uploaded_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          measurement_id?: string | null;
+          photo_url: string;
+          view_type?: string | null;
+          notes?: string | null;
+          uploaded_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          measurement_id?: string | null;
+          photo_url?: string;
+          view_type?: string | null;
+          notes?: string | null;
+          uploaded_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "measurement_photos_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "measurement_photos_measurement_id_fkey";
+            columns: ["measurement_id"];
+            isOneToOne: false;
+            referencedRelation: "anthropometry_assessments";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       patient_tokens: {
         Row: {
           id: string;
@@ -1025,6 +1197,10 @@ export type NutriTimeBlock = Tables<"nutri_time_blocks">;
 export type AppointmentHistory = Tables<"appointment_history">;
 export type AnamnesisReportRow = Tables<"anamnesis_reports">;
 export type AnthropometryAssessment = Tables<"anthropometry_assessments">;
+export type MeasurementGoal = Tables<"measurement_goals">;
+export type CustomMeasurementType = Tables<"custom_measurement_types">;
+export type CustomMeasurementValue = Tables<"custom_measurement_values">;
+export type MeasurementPhoto = Tables<"measurement_photos">;
 
 // Enum types
 export type BlockType = Database["public"]["Enums"]["block_type"];
