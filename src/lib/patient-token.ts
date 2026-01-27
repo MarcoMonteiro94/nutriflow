@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 
@@ -52,7 +52,8 @@ export async function verifyPatientToken(token: string): Promise<{
   patientId?: string;
   error?: string;
 }> {
-  const supabase = await createClient();
+  // Use service client to bypass RLS - patients are not authenticated
+  const supabase = createServiceClient();
 
   const { data, error } = await supabase
     .from("patient_tokens")
@@ -152,8 +153,8 @@ export async function getPatientPlanByToken(token: string): Promise<{
           protein: number;
           carbs: number;
           fat: number;
-          portion_size: number;
-          portion_unit: string;
+          portion_size: number | null;
+          portion_unit: string | null;
         };
       }>;
     }>;
@@ -197,8 +198,8 @@ export async function getPatientPlanByToken(token: string): Promise<{
             protein: number;
             carbs: number;
             fat: number;
-            portion_size: number;
-            portion_unit: string;
+            portion_size: number | null;
+            portion_unit: string | null;
           };
         }>;
       }>;
@@ -211,4 +212,115 @@ export async function getPatientPlanByToken(token: string): Promise<{
  */
 export function generateMagicLinkUrl(token: string, baseUrl: string): string {
   return `${baseUrl}/patient/access?token=${token}`;
+}
+
+/**
+ * Get patient plan data for an authenticated user (bypasses RLS with service client)
+ */
+export async function getPatientPlanByUserId(userId: string): Promise<{
+  error?: string;
+  patient_id?: string;
+  plan?: {
+    id: string;
+    title: string | null;
+    description: string | null;
+    starts_at: string | null;
+    ends_at: string | null;
+    meals: Array<{
+      id: string;
+      title: string;
+      time: string;
+      notes: string | null;
+      meal_contents: Array<{
+        id: string;
+        amount: number;
+        is_substitution: boolean;
+        parent_content_id: string | null;
+        food_item: {
+          id: string;
+          name: string;
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          portion_size: number | null;
+          portion_unit: string | null;
+        };
+      }>;
+    }>;
+  } | null;
+}> {
+  const supabase = createServiceClient();
+
+  // First, get the patient linked to this user
+  const { data: patient, error: patientError } = await supabase
+    .from("patients")
+    .select("id")
+    .eq("user_id", userId)
+    .single();
+
+  if (patientError || !patient) {
+    return { error: "Paciente não encontrado" };
+  }
+
+  // Get the active meal plan for this patient
+  const { data: plan, error: planError } = await supabase
+    .from("meal_plans")
+    .select(`
+      id,
+      title,
+      description,
+      starts_at,
+      ends_at,
+      meals (
+        id,
+        title,
+        time,
+        notes,
+        meal_contents (
+          id,
+          amount,
+          is_substitution,
+          parent_content_id,
+          food_item:food_items (
+            id,
+            name,
+            calories,
+            protein,
+            carbs,
+            fat,
+            portion_size,
+            portion_unit
+          )
+        )
+      )
+    `)
+    .eq("patient_id", patient.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (planError) {
+    // No plan found is not an error, just return null
+    if (planError.code === "PGRST116") {
+      return { patient_id: patient.id, plan: null };
+    }
+    console.error("Error fetching plan:", planError);
+    return { error: "Erro ao carregar plano" };
+  }
+
+  // Sort meals by time
+  const sortedMeals = plan.meals?.sort((a, b) => a.time.localeCompare(b.time)) || [];
+
+  return {
+    patient_id: patient.id,
+    plan: {
+      ...plan,
+      meals: sortedMeals.map(meal => ({
+        ...meal,
+        meal_contents: meal.meal_contents || []
+      }))
+    }
+  };
 }

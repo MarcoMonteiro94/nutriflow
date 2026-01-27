@@ -1,9 +1,9 @@
-import { PatientBottomNav } from "@/components/layout/patient-bottom-nav";
+import { PatientLayout } from "@/components/layout/patient-layout";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { createClient } from "@/lib/supabase/server";
 import { RoleProvider } from "@/contexts/role-context";
 
-export default async function PatientLayout({
+export default async function PatientRootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -37,9 +37,9 @@ export default async function PatientLayout({
           : undefined
       }
     >
-      <PatientBottomNav isAuthenticated={isAuthenticated}>
+      <PatientLayout isAuthenticated={isAuthenticated}>
         {children}
-      </PatientBottomNav>
+      </PatientLayout>
       <PWAInstallPrompt />
     </RoleProvider>
   );

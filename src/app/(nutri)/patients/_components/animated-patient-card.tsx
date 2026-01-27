@@ -79,7 +79,7 @@ export function AnimatedPatientCard({ patient }: AnimatedPatientCardProps) {
             <Link href={`/patients/${patient.id}`}>Ver Perfil</Link>
           </Button>
           <Button asChild size="sm" className="flex-1">
-            <Link href={`/patients/${patient.id}/plan`}>Ver Plano</Link>
+            <Link href={`/plans?patient=${patient.id}`}>Ver Plano</Link>
           </Button>
         </div>
       </CardContent>

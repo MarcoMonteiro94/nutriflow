@@ -134,7 +134,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
               <Command.Group heading="Pacientes">
                 <CommandItem
                   onSelect={() =>
-                    runCommand(() => router.push("/patients/search?q=" + search))
+                    runCommand(() => router.push("/patients?q=" + search))
                   }
                 >
                   <Search className="mr-2 h-4 w-4" />
@@ -147,7 +147,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
               <Command.Group heading="Alimentos">
                 <CommandItem
                   onSelect={() =>
-                    runCommand(() => router.push("/foods/search?q=" + search))
+                    runCommand(() => router.push("/foods?q=" + search))
                   }
                 >
                   <Search className="mr-2 h-4 w-4" />

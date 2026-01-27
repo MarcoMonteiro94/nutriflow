@@ -1,35 +1,48 @@
-import { getPatientTokenCookie, getPatientPlanByToken } from "@/lib/patient-token";
+import { createClient } from "@/lib/supabase/server";
+import { getPatientTokenCookie, getPatientPlanByToken, getPatientPlanByUserId } from "@/lib/patient-token";
 import { PatientMealPlanView } from "./_components/patient-meal-plan-view";
 import { UtensilsCrossed, Lock } from "lucide-react";
 import Link from "next/link";
 
 export default async function PatientPlanPage() {
-  const token = await getPatientTokenCookie();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Not authenticated - show message to request link
-  if (!token) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-        <div className="rounded-full bg-muted p-4 mb-4">
-          <Lock className="h-8 w-8 text-muted-foreground" />
+  // Try authenticated access first
+  let result: Awaited<ReturnType<typeof getPatientPlanByToken>> | null = null;
+
+  if (user) {
+    // User is authenticated - get plan by user ID
+    result = await getPatientPlanByUserId(user.id);
+  } else {
+    // Try token-based access
+    const token = await getPatientTokenCookie();
+
+    if (!token) {
+      // Not authenticated and no token - show message to request link
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <Lock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-xl font-semibold">Acesso Restrito</h1>
+          <p className="mt-2 text-sm text-muted-foreground max-w-xs">
+            Para visualizar seu plano alimentar, você precisa de um link de acesso
+            do seu nutricionista.
+          </p>
+          <Link
+            href="/patient"
+            className="mt-4 text-sm text-primary hover:underline"
+          >
+            Voltar ao início
+          </Link>
         </div>
-        <h1 className="text-xl font-semibold">Acesso Restrito</h1>
-        <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-          Para visualizar seu plano alimentar, você precisa de um link de acesso
-          do seu nutricionista.
-        </p>
-        <Link
-          href="/patient"
-          className="mt-4 text-sm text-primary hover:underline"
-        >
-          Voltar ao início
-        </Link>
-      </div>
-    );
-  }
+      );
+    }
 
-  // Get plan data using RPC function (bypasses RLS)
-  const result = await getPatientPlanByToken(token);
+    // Get plan data using token
+    result = await getPatientPlanByToken(token);
+  }
 
   if (result.error) {
     return (

@@ -10,7 +10,10 @@ import {
   Scale,
   UtensilsCrossed,
   ArrowRight,
-  Clock
+  Clock,
+  TrendingUp,
+  Sparkles,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -33,12 +36,14 @@ export default async function PatientDashboardPage() {
 
   if (!patient) {
     return (
-      <div className="p-4">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-            <h2 className="text-lg font-semibold">Conta não vinculada</h2>
-            <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+      <div className="mx-auto max-w-2xl px-4 py-12 lg:px-8">
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-4 rounded-full bg-muted p-4">
+              <ClipboardList className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold">Conta não vinculada</h2>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
               Sua conta ainda não está vinculada a um perfil de paciente.
               Entre em contato com seu nutricionista para vincular sua conta.
             </p>
@@ -76,156 +81,280 @@ export default async function PatientDashboardPage() {
     .limit(1)
     .single();
 
+  const firstName = patient.full_name.split(" ")[0];
+  const greeting = getGreeting();
+
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Olá, {patient.full_name.split(" ")[0]}!</h1>
-        <p className="text-muted-foreground">Bem-vindo ao seu painel de acompanhamento.</p>
+    <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-10">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Sparkles className="h-4 w-4" />
+          <span className="text-sm">{greeting}</span>
+        </div>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight lg:text-3xl">
+          Olá, {firstName}!
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          Acompanhe seu progresso e mantenha o foco nos seus objetivos.
+        </p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <CalendarDays className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{appointments?.length || 0}</p>
-                <p className="text-xs text-muted-foreground">Consultas agendadas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                <Scale className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {latestMeasurement?.weight ? `${latestMeasurement.weight}kg` : "-"}
-                </p>
-                <p className="text-xs text-muted-foreground">Último peso</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Next Appointment */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Próxima Consulta
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {appointments && appointments.length > 0 ? (
-            <div className="space-y-3">
-              {appointments.slice(0, 1).map((apt) => (
-                <div key={apt.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-center justify-center h-12 w-12 rounded-lg bg-primary text-primary-foreground">
-                      <span className="text-lg font-bold">
-                        {format(new Date(apt.scheduled_at), "dd")}
-                      </span>
-                      <span className="text-xs">
-                        {format(new Date(apt.scheduled_at), "MMM", { locale: ptBR })}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        {format(new Date(apt.scheduled_at), "EEEE", { locale: ptBR })}
-                      </p>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(apt.scheduled_at), "HH:mm")}
-                      </div>
-                    </div>
+      {/* Main Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Stats & Quick Actions */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Quick Stats */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <CalendarDays className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <Badge variant="outline">
-                    {apt.status === "scheduled" ? "Agendada" : apt.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <Calendar className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Nenhuma consulta agendada
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Current Meal Plan */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <UtensilsCrossed className="h-5 w-5 text-primary" />
-              Meu Plano Alimentar
-            </CardTitle>
-            {mealPlan && (
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/patient/plan">
-                  Ver plano
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {mealPlan ? (
-            <div className="p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{mealPlan.title || "Plano Alimentar"}</p>
-                  {mealPlan.starts_at && mealPlan.ends_at && (
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(mealPlan.starts_at), "dd/MM")} - {format(new Date(mealPlan.ends_at), "dd/MM/yyyy")}
+                  <div>
+                    <p className="text-2xl font-bold tabular-nums">
+                      {appointments?.length || 0}
                     </p>
-                  )}
+                    <p className="text-xs text-muted-foreground">
+                      Consultas agendadas
+                    </p>
+                  </div>
                 </div>
-                <Badge variant="secondary" className="bg-green-500/10 text-green-600">
-                  Ativo
-                </Badge>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <UtensilsCrossed className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Nenhum plano alimentar ativo
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Button asChild variant="outline" className="h-auto py-4 flex-col gap-2">
-          <Link href="/patient/plan">
-            <UtensilsCrossed className="h-5 w-5" />
-            <span className="text-xs">Ver Plano</span>
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="h-auto py-4 flex-col gap-2">
-          <Link href="/patient/progress">
-            <Scale className="h-5 w-5" />
-            <span className="text-xs">Meu Progresso</span>
-          </Link>
-        </Button>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <Scale className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold tabular-nums">
+                      {latestMeasurement?.weight
+                        ? `${latestMeasurement.weight}kg`
+                        : "-"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Último peso</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold tabular-nums">
+                      {latestMeasurement?.body_fat_percentage
+                        ? `${latestMeasurement.body_fat_percentage}%`
+                        : "-"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Gordura corporal
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Meal Plan Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <UtensilsCrossed className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Meu Plano Alimentar</CardTitle>
+                    <CardDescription>
+                      {mealPlan
+                        ? "Seu plano personalizado"
+                        : "Aguardando plano do nutricionista"}
+                    </CardDescription>
+                  </div>
+                </div>
+                {mealPlan && (
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href="/patient/plan">
+                      Ver plano
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {mealPlan ? (
+                <div className="rounded-xl border bg-muted/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">
+                        {mealPlan.title || "Plano Alimentar"}
+                      </p>
+                      {mealPlan.starts_at && mealPlan.ends_at && (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {format(new Date(mealPlan.starts_at), "dd/MM")} -{" "}
+                          {format(new Date(mealPlan.ends_at), "dd/MM/yyyy")}
+                        </p>
+                      )}
+                    </div>
+                    <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                      Ativo
+                    </Badge>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-3 rounded-full bg-muted p-3">
+                    <UtensilsCrossed className="h-8 w-8 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum plano alimentar ativo
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button
+              asChild
+              variant="outline"
+              className="h-auto justify-start gap-4 p-4"
+            >
+              <Link href="/patient/plan">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium">Ver Plano</p>
+                  <p className="text-xs text-muted-foreground">
+                    Suas refeições do dia
+                  </p>
+                </div>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="h-auto justify-start gap-4 p-4"
+            >
+              <Link href="/patient/progress">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <Activity className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium">Meu Progresso</p>
+                  <p className="text-xs text-muted-foreground">
+                    Acompanhe sua evolução
+                  </p>
+                </div>
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Right Column - Next Appointment */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Próxima Consulta</CardTitle>
+                  <CardDescription>Seu agendamento</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {appointments && appointments.length > 0 ? (
+                <div className="space-y-4">
+                  {appointments.slice(0, 2).map((apt, index) => (
+                    <div
+                      key={apt.id}
+                      className={`flex items-center gap-4 rounded-xl p-3 ${
+                        index === 0 ? "bg-primary/5 ring-1 ring-primary/20" : "bg-muted/30"
+                      }`}
+                    >
+                      <div
+                        className={`flex flex-col items-center justify-center rounded-lg px-3 py-2 ${
+                          index === 0
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <span className="text-lg font-bold">
+                          {format(new Date(apt.scheduled_at), "dd")}
+                        </span>
+                        <span className="text-[10px] uppercase">
+                          {format(new Date(apt.scheduled_at), "MMM", {
+                            locale: ptBR,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium capitalize">
+                          {format(new Date(apt.scheduled_at), "EEEE", {
+                            locale: ptBR,
+                          })}
+                        </p>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(apt.scheduled_at), "HH:mm")}
+                        </div>
+                      </div>
+                      <Badge
+                        variant={index === 0 ? "default" : "outline"}
+                        className={index === 0 ? "bg-primary" : ""}
+                      >
+                        {apt.status === "scheduled" ? "Agendada" : apt.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-3 rounded-full bg-muted p-3">
+                    <Calendar className="h-8 w-8 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma consulta agendada
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Motivational Card */}
+          <Card className="bg-muted/30">
+            <CardContent className="p-6">
+              <div className="mb-3 text-4xl">💪</div>
+              <p className="font-medium">Continue assim!</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cada escolha saudável conta. Mantenha o foco e celebre suas
+                pequenas vitórias.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Bom dia";
+  if (hour >= 12 && hour < 18) return "Boa tarde";
+  return "Boa noite";
 }
