@@ -76,7 +76,7 @@ export function PatientCard({ patient }: PatientCardProps) {
             <Link href={`/patients/${patient.id}`}>Perfil</Link>
           </Button>
           <Button asChild size="sm" className="flex-1 text-xs sm:text-sm">
-            <Link href={`/patients/${patient.id}/plan`}>Plano</Link>
+            <Link href={`/plans?patient=${patient.id}`}>Plano</Link>
           </Button>
         </div>
       </CardContent>

@@ -73,8 +73,20 @@ export default async function NutriLayout({
       role = "admin";
       isOwner = true;
     } else {
-      // Default to nutri for backwards compatibility
-      role = "nutri";
+      // Check user metadata for user_type
+      const userType = user.user_metadata?.user_type;
+
+      if (userType === "patient") {
+        // Patient trying to access nutri area - redirect to patient portal
+        redirect("/patient/dashboard");
+      } else if (userType === "invite") {
+        // User signed up via invite but hasn't accepted yet
+        // They shouldn't be here - redirect to home
+        redirect("/");
+      } else {
+        // Default to nutri for backwards compatibility (direct nutri signup)
+        role = "nutri";
+      }
     }
   }
 

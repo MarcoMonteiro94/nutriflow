@@ -219,7 +219,7 @@ export default async function PatientDetailPage({ params }: PageProps) {
             <CardContent>
               <div className="text-2xl font-bold">{stats.mealPlans}</div>
               <Button asChild variant="link" className="h-auto p-0 text-xs">
-                <Link href={`/patients/${id}/plans`}>Ver planos →</Link>
+                <Link href={`/plans?patient=${id}`}>Ver planos →</Link>
               </Button>
             </CardContent>
           </Card>
@@ -302,7 +302,7 @@ export default async function PatientDetailPage({ params }: PageProps) {
         </CardHeader>
         <CardContent className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Button asChild className="w-full sm:w-auto">
-            <Link href={`/patients/${id}/plan/new`}>
+            <Link href={`/plans/new?patient=${id}`}>
               <UtensilsCrossed className="mr-2 h-4 w-4" />
               Criar Novo Plano
             </Link>

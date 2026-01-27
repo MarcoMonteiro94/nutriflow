@@ -24,6 +24,15 @@ function LoginForm() {
   const inviteMode = searchParams.get("mode") === "signup";
   const [isSignup, setIsSignup] = useState(inviteMode);
 
+  // Detect user type based on redirect URL
+  // - /patient/ → patient signup (no profile needed)
+  // - /invite/ → invite signup (profile handled by invite acceptance)
+  // - otherwise → regular nutri signup
+  const isPatientSignup = redirectTo.includes("/patient/");
+  const isInviteSignup = redirectTo.includes("/invite/");
+  const skipProfileCreation = isPatientSignup || isInviteSignup;
+  const userType = isPatientSignup ? "patient" : isInviteSignup ? "invite" : null;
+
   const [loginState, loginAction, loginPending] = useActionState(
     login,
     initialState
@@ -59,6 +68,8 @@ function LoginForm() {
         <form action={action} className="space-y-4">
           {/* Hidden field for redirect */}
           {redirectTo && <input type="hidden" name="redirect" value={redirectTo} />}
+          {/* Hidden field for user type (skip profile creation for patients and invites) */}
+          {userType && <input type="hidden" name="user_type" value={userType} />}
 
           {state.error && (
             <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">

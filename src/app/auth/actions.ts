@@ -51,6 +51,7 @@ export async function signup(
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const fullName = formData.get("full_name") as string;
+  const userType = formData.get("user_type") as string | null;
 
   if (!email || !password || !fullName) {
     return { error: "Todos os campos são obrigatórios" };
@@ -66,6 +67,7 @@ export async function signup(
     options: {
       data: {
         full_name: fullName,
+        ...(userType && { user_type: userType }),
       },
     },
   });

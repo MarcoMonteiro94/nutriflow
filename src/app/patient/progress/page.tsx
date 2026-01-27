@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Scale,
@@ -10,7 +10,10 @@ import {
   Calendar,
   Activity,
   ClipboardList,
-  Ruler
+  Ruler,
+  Sparkles,
+  Target,
+  Zap,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -34,6 +37,21 @@ function getWeightTrend(measurements: Measurement[]) {
   };
 }
 
+function getTotalProgress(measurements: Measurement[]) {
+  if (measurements.length < 2) return null;
+
+  const oldest = measurements[measurements.length - 1];
+  const newest = measurements[0];
+
+  if (!oldest.weight || !newest.weight) return null;
+
+  const diff = Number(newest.weight) - Number(oldest.weight);
+  return {
+    diff: diff.toFixed(1),
+    count: measurements.length,
+  };
+}
+
 export default async function PatientProgressPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -51,12 +69,14 @@ export default async function PatientProgressPage() {
 
   if (!patient) {
     return (
-      <div className="p-4">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-            <h2 className="text-lg font-semibold">Conta não vinculada</h2>
-            <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+      <div className="mx-auto max-w-2xl px-4 py-12 lg:px-8">
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-4 rounded-full bg-muted p-4">
+              <ClipboardList className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold">Conta não vinculada</h2>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
               Sua conta ainda não está vinculada a um perfil de paciente.
               Entre em contato com seu nutricionista para vincular sua conta.
             </p>
@@ -76,36 +96,48 @@ export default async function PatientProgressPage() {
   const measurementsList = (measurements ?? []) as Measurement[];
   const latestMeasurement = measurementsList[0];
   const weightTrend = getWeightTrend(measurementsList);
+  const totalProgress = getTotalProgress(measurementsList);
 
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Meu Progresso</h1>
-        <p className="text-muted-foreground">Acompanhe sua evolução ao longo do tempo.</p>
+    <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-10">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Sparkles className="h-4 w-4" />
+          <span className="text-sm">Evolução</span>
+        </div>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight lg:text-3xl">
+          Meu Progresso
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          Acompanhe sua evolução ao longo do tempo.
+        </p>
       </div>
 
-      {/* Current Stats */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Stats Grid */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Scale className="h-5 w-5 text-primary" />
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Scale className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Peso Atual
+                </p>
+                <p className="text-2xl font-bold tabular-nums">
                   {latestMeasurement?.weight ? `${latestMeasurement.weight}kg` : "-"}
                 </p>
-                <p className="text-xs text-muted-foreground">Peso atual</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                 {weightTrend?.trend === "down" ? (
                   <TrendingDown className="h-5 w-5 text-green-600" />
                 ) : weightTrend?.trend === "up" ? (
@@ -115,138 +147,248 @@ export default async function PatientProgressPage() {
                 )}
               </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Última Variação
+                </p>
+                <p className="text-2xl font-bold tabular-nums">
                   {weightTrend ? `${weightTrend.diff}kg` : "-"}
                 </p>
-                <p className="text-xs text-muted-foreground">Variação</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Activity className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  % Gordura
+                </p>
+                <p className="text-2xl font-bold tabular-nums">
+                  {latestMeasurement?.body_fat_percentage
+                    ? `${latestMeasurement.body_fat_percentage}%`
+                    : "-"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Zap className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Massa Muscular
+                </p>
+                <p className="text-2xl font-bold tabular-nums">
+                  {latestMeasurement?.muscle_mass
+                    ? `${latestMeasurement.muscle_mass}kg`
+                    : "-"}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Body Composition Summary */}
-      {latestMeasurement && (latestMeasurement.body_fat_percentage || latestMeasurement.muscle_mass) && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              Composição Corporal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {latestMeasurement.body_fat_percentage && (
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-xs text-muted-foreground">% Gordura</p>
-                  <p className="text-xl font-bold">{latestMeasurement.body_fat_percentage}%</p>
-                </div>
-              )}
-              {latestMeasurement.muscle_mass && (
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-xs text-muted-foreground">Massa Muscular</p>
-                  <p className="text-xl font-bold">{latestMeasurement.muscle_mass}kg</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Circumferences */}
-      {latestMeasurement && (latestMeasurement.waist_circumference || latestMeasurement.hip_circumference) && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Ruler className="h-5 w-5 text-primary" />
-              Medidas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {latestMeasurement.waist_circumference && (
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-xs text-muted-foreground">Cintura</p>
-                  <p className="text-xl font-bold">{latestMeasurement.waist_circumference}cm</p>
-                </div>
-              )}
-              {latestMeasurement.hip_circumference && (
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-xs text-muted-foreground">Quadril</p>
-                  <p className="text-xl font-bold">{latestMeasurement.hip_circumference}cm</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Measurements History */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Histórico de Medidas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {measurementsList.length > 0 ? (
-            <div className="space-y-3">
-              {measurementsList.map((measurement) => (
-                <div
-                  key={measurement.id}
-                  className="flex items-start justify-between p-3 rounded-lg bg-muted/50"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {format(new Date(measurement.measured_at), "dd/MM/yyyy", { locale: ptBR })}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-                      {measurement.weight && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Peso: </span>
-                          <span className="font-medium">{measurement.weight}kg</span>
-                        </div>
-                      )}
-                      {measurement.body_fat_percentage && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Gordura: </span>
-                          <span className="font-medium">{measurement.body_fat_percentage}%</span>
-                        </div>
-                      )}
-                      {measurement.muscle_mass && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Músculo: </span>
-                          <span className="font-medium">{measurement.muscle_mass}kg</span>
-                        </div>
-                      )}
-                      {measurement.waist_circumference && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Cintura: </span>
-                          <span className="font-medium">{measurement.waist_circumference}cm</span>
-                        </div>
-                      )}
-                    </div>
-                    {measurement.notes && (
-                      <p className="text-xs text-muted-foreground mt-1">{measurement.notes}</p>
-                    )}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Main Content */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Body Composition */}
+          {latestMeasurement && (
+            latestMeasurement.waist_circumference ||
+            latestMeasurement.hip_circumference
+          ) && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Ruler className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Medidas Corporais</CardTitle>
+                    <CardDescription>Circunferências em centímetros</CardDescription>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Scale className="h-10 w-10 text-muted-foreground/50 mb-3" />
-              <h3 className="font-semibold">Nenhuma medida registrada</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-                Seu nutricionista irá registrar suas medidas durante as consultas.
-              </p>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    { label: "Cintura", value: latestMeasurement.waist_circumference },
+                    { label: "Quadril", value: latestMeasurement.hip_circumference },
+                  ].filter(item => item.value).map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-xl bg-muted/30 p-4"
+                    >
+                      <span className="text-sm text-muted-foreground">{item.label}</span>
+                      <span className="text-lg font-bold tabular-nums">{item.value}cm</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+
+          {/* Measurements History */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Histórico de Medidas</CardTitle>
+                  <CardDescription>
+                    {measurementsList.length} registro{measurementsList.length !== 1 ? "s" : ""}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {measurementsList.length > 0 ? (
+                <div className="space-y-3">
+                  {measurementsList.map((measurement, index) => (
+                    <div
+                      key={measurement.id}
+                      className={`rounded-xl border p-4 transition-all ${
+                        index === 0
+                          ? "border-primary/20 bg-primary/5 ring-1 ring-primary/10"
+                          : "bg-muted/30"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={index === 0 ? "default" : "outline"} className="text-xs">
+                              {format(new Date(measurement.measured_at), "dd/MM/yyyy", { locale: ptBR })}
+                            </Badge>
+                            {index === 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                Mais recente
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            {measurement.weight && (
+                              <div className="flex items-center gap-1.5">
+                                <Scale className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-medium">{measurement.weight}kg</span>
+                              </div>
+                            )}
+                            {measurement.body_fat_percentage && (
+                              <div className="flex items-center gap-1.5">
+                                <Activity className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-medium">{measurement.body_fat_percentage}%</span>
+                              </div>
+                            )}
+                            {measurement.muscle_mass && (
+                              <div className="flex items-center gap-1.5">
+                                <Zap className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-medium">{measurement.muscle_mass}kg</span>
+                              </div>
+                            )}
+                            {measurement.waist_circumference && (
+                              <div className="flex items-center gap-1.5">
+                                <Ruler className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-medium">{measurement.waist_circumference}cm</span>
+                              </div>
+                            )}
+                          </div>
+                          {measurement.notes && (
+                            <p className="text-sm text-muted-foreground">{measurement.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="mb-4 rounded-full bg-muted p-4">
+                    <Scale className="h-10 w-10 text-muted-foreground/50" />
+                  </div>
+                  <h3 className="font-semibold">Nenhuma medida registrada</h3>
+                  <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+                    Seu nutricionista irá registrar suas medidas durante as consultas.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Summary */}
+        <div className="space-y-6">
+          {/* Total Progress */}
+          {totalProgress && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <span className="font-medium">Progresso Total</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-3xl font-bold tabular-nums">
+                      {Number(totalProgress.diff) > 0 ? "+" : ""}{totalProgress.diff}kg
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      desde a primeira medição
+                    </p>
+                  </div>
+                  <div className="h-px bg-border" />
+                  <p className="text-sm text-muted-foreground">
+                    Baseado em <strong>{totalProgress.count}</strong> medições
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Latest Measurement Date */}
+          {latestMeasurement && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="mb-3 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Última Medição</span>
+                </div>
+                <p className="text-lg font-semibold">
+                  {format(new Date(latestMeasurement.measured_at), "dd 'de' MMMM", { locale: ptBR })}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(latestMeasurement.measured_at), "yyyy", { locale: ptBR })}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Motivation Card */}
+          <Card className="bg-muted/30">
+            <CardContent className="p-6">
+              <div className="mb-3 text-3xl">🎯</div>
+              <p className="font-medium">
+                Consistência é a chave!
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cada medição é um passo na direção certa.
+                Continue acompanhando seu progresso.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
