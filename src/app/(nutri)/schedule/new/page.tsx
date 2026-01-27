@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AppointmentForm } from "../_components/appointment-form";
+import { getUserRole } from "@/lib/auth/authorization";
 import type { Patient } from "@/types/database";
 
 interface SearchParams {
@@ -20,11 +21,21 @@ async function getPatients(): Promise<Patient[]> {
     return [];
   }
 
-  const { data } = await supabase
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  // For receptionists, let RLS handle the filtering (they see all org patients)
+  // For nutris, filter to their own patients
+  let query = supabase
     .from("patients")
     .select("*")
-    .eq("nutri_id", user.id)
     .order("full_name", { ascending: true });
+
+  if (!isReceptionist) {
+    query = query.eq("nutri_id", user.id);
+  }
+
+  const { data } = await query;
 
   return (data ?? []) as Patient[];
 }

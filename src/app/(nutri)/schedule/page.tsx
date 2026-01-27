@@ -5,6 +5,7 @@ import { Plus, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { ScheduleCalendar } from "./_components/schedule-calendar";
 import { AppointmentsList } from "./_components/appointments-list";
+import { getUserRole } from "@/lib/auth/authorization";
 import type { Appointment, NutriTimeBlock } from "@/types/database";
 
 interface SearchParams {
@@ -41,6 +42,11 @@ async function getAppointments(selectedDate?: string): Promise<AppointmentWithPa
     return [];
   }
 
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  // For receptionists, let RLS handle the filtering (they see all org appointments)
+  // For nutris, filter to their own appointments
   let query = supabase
     .from("appointments")
     .select(`
@@ -50,8 +56,11 @@ async function getAppointments(selectedDate?: string): Promise<AppointmentWithPa
         full_name
       )
     `)
-    .eq("nutri_id", user.id)
     .order("scheduled_at", { ascending: true });
+
+  if (!isReceptionist) {
+    query = query.eq("nutri_id", user.id);
+  }
 
   if (selectedDate) {
     // Parse date string to local Date object
@@ -78,10 +87,18 @@ async function getAppointmentDates(): Promise<Date[]> {
     return [];
   }
 
-  const { data } = await supabase
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  let query = supabase
     .from("appointments")
-    .select("scheduled_at")
-    .eq("nutri_id", user.id);
+    .select("scheduled_at");
+
+  if (!isReceptionist) {
+    query = query.eq("nutri_id", user.id);
+  }
+
+  const { data } = await query;
 
   if (!data) return [];
 

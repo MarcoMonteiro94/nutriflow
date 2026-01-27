@@ -4,6 +4,7 @@ import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PatientsList } from "./_components/patients-list";
+import { getUserRole, hasPermission } from "@/lib/auth/authorization";
 import type { Patient } from "@/types/database";
 
 interface SearchParams {
@@ -19,11 +20,19 @@ async function getPatients(searchQuery?: string): Promise<Patient[]> {
     return [];
   }
 
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  // For receptionists, let RLS handle the filtering (they see all org patients)
+  // For nutris, filter to their own patients
   let query = supabase
     .from("patients")
     .select("*")
-    .eq("nutri_id", user.id)
     .order("created_at", { ascending: false });
+
+  if (!isReceptionist) {
+    query = query.eq("nutri_id", user.id);
+  }
 
   if (searchQuery) {
     query = query.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
