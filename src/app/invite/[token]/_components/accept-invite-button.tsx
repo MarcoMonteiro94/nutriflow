@@ -4,12 +4,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import type { OrgRole } from "@/types/database";
 
 interface AcceptInviteButtonProps {
   token: string;
+  role?: OrgRole;
 }
 
-export function AcceptInviteButton({ token }: AcceptInviteButtonProps) {
+function getRedirectPath(role?: OrgRole): string {
+  switch (role) {
+    case "receptionist":
+      return "/schedule";
+    case "patient":
+      return "/patient/dashboard";
+    default:
+      return "/dashboard";
+  }
+}
+
+export function AcceptInviteButton({ token, role }: AcceptInviteButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +48,9 @@ export function AcceptInviteButton({ token }: AcceptInviteButtonProps) {
         return;
       }
 
-      // Redirect to dashboard
-      router.push("/dashboard");
+      // Redirect based on role
+      const redirectPath = getRedirectPath(role);
+      router.push(redirectPath);
       router.refresh();
     } catch (err) {
       console.error("Error accepting invite:", err);

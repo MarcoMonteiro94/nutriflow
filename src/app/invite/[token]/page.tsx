@@ -81,7 +81,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
               <p className="text-sm text-center text-muted-foreground">
                 Logado como <strong>{user.email}</strong>
               </p>
-              <AcceptInviteButton token={token} />
+              <AcceptInviteButton token={token} role={invite.role} />
             </div>
           ) : (
             <div className="space-y-4">
