@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,21 +42,14 @@ const roleDescriptions: Record<OrgRole, string> = {
 
 export function InviteDialog({ organizationId, currentUserRole, isOwner }: InviteDialogProps) {
   const router = useRouter();
+  // Get the roles this user can invite
+  const invitableRoles = getInvitableRoles(currentUserRole, isOwner);
+
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<OrgRole | "">("");
-
-  // Get the roles this user can invite
-  const invitableRoles = getInvitableRoles(currentUserRole, isOwner);
-
-  // Set default role to first available option
-  useEffect(() => {
-    if (invitableRoles.length > 0 && !role) {
-      setRole(invitableRoles[0]);
-    }
-  }, [invitableRoles, role]);
+  const [role, setRole] = useState<OrgRole | "">(invitableRoles[0] ?? "");
 
   // Don't render if user can't invite anyone
   if (!canInviteMembers(currentUserRole, isOwner)) {

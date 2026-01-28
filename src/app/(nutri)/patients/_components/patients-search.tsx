@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X, Loader2, SlidersHorizontal } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PatientsSearchProps {

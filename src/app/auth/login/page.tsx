@@ -30,7 +30,6 @@ function LoginForm() {
   // - otherwise → regular nutri signup
   const isPatientSignup = redirectTo.includes("/patient/");
   const isInviteSignup = redirectTo.includes("/invite/");
-  const skipProfileCreation = isPatientSignup || isInviteSignup;
   const userType = isPatientSignup ? "patient" : isInviteSignup ? "invite" : null;
 
   const [loginState, loginAction, loginPending] = useActionState(

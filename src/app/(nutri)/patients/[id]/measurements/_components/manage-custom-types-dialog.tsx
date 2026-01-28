@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,13 +42,7 @@ export function ManageCustomTypesDialog() {
     { value: "other", label: "Outros" },
   ];
 
-  useEffect(() => {
-    if (open) {
-      loadCustomTypes();
-    }
-  }, [open]);
-
-  async function loadCustomTypes() {
+  const loadCustomTypes = useCallback(async () => {
     const supabase = createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,7 +64,13 @@ export function ManageCustomTypesDialog() {
     }
 
     setCustomTypes((data ?? []) as CustomMeasurementType[]);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      loadCustomTypes();
+    }
+  }, [open, loadCustomTypes]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

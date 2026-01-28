@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Share2, Calendar, User, UtensilsCrossed, Clock } from "lucide-react";
+import { ArrowLeft, Edit, Calendar, User, UtensilsCrossed, Clock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { MealPlan, Meal, MealContent, FoodItem, Patient } from "@/types/database";

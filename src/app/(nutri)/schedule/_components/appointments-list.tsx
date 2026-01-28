@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Clock, User, MoreHorizontal, Pencil, Trash2, Calendar, RefreshCw, Check, XCircle, History } from "lucide-react";
+import { Clock, User, MoreHorizontal, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Appointment } from "@/types/database";
 import {
