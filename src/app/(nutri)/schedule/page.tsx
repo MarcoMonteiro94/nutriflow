@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
+import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
-import { ScheduleCalendar } from "./_components/schedule-calendar";
-import { AppointmentsList } from "./_components/appointments-list";
+import { ScheduleTimeline } from "./_components/schedule-timeline";
+import { MobileCalendarDrawer } from "./_components/mobile-calendar-drawer";
+import { DesktopCalendarSidebar } from "./_components/desktop-calendar-sidebar";
+import { getUserRole } from "@/lib/auth/authorization";
 import type { Appointment, NutriTimeBlock } from "@/types/database";
 
 interface SearchParams {
@@ -41,6 +42,11 @@ async function getAppointments(selectedDate?: string): Promise<AppointmentWithPa
     return [];
   }
 
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  // For receptionists, let RLS handle the filtering (they see all org appointments)
+  // For nutris, filter to their own appointments
   let query = supabase
     .from("appointments")
     .select(`
@@ -50,8 +56,11 @@ async function getAppointments(selectedDate?: string): Promise<AppointmentWithPa
         full_name
       )
     `)
-    .eq("nutri_id", user.id)
     .order("scheduled_at", { ascending: true });
+
+  if (!isReceptionist) {
+    query = query.eq("nutri_id", user.id);
+  }
 
   if (selectedDate) {
     // Parse date string to local Date object
@@ -78,10 +87,18 @@ async function getAppointmentDates(): Promise<Date[]> {
     return [];
   }
 
-  const { data } = await supabase
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  let query = supabase
     .from("appointments")
-    .select("scheduled_at")
-    .eq("nutri_id", user.id);
+    .select("scheduled_at");
+
+  if (!isReceptionist) {
+    query = query.eq("nutri_id", user.id);
+  }
+
+  const { data } = await query;
 
   if (!data) return [];
 
@@ -169,81 +186,53 @@ export default async function SchedulePage({
     getTimeBlocksForDate(selectedDate),
   ]);
 
+  const parsedSelectedDate = parseLocalDate(selectedDate);
+  const isToday = new Date().toDateString() === parsedSelectedDate.toDateString();
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-[calc(100vh-8rem)]">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Agenda</h1>
+          <p className="text-muted-foreground mt-1">
             Gerencie seus atendimentos e consultas.
           </p>
         </div>
-        <Button asChild className="w-full sm:w-auto">
+        <Button asChild className="w-full sm:w-auto rounded-full" size="lg">
           <Link href="/schedule/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Agendar Consulta
+            <Plus className="mr-2 h-5 w-5" />
+            <span className="sm:hidden">Nova Consulta</span>
+            <span className="hidden sm:inline">Agendar Consulta</span>
           </Link>
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Calendar */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Calendário
-            </CardTitle>
-            <CardDescription>
-              Clique em uma data para ver os atendimentos
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScheduleCalendar
-              selectedDate={parseLocalDate(selectedDate)}
-              appointmentDates={appointmentDates}
-              blockedDates={blockedDates}
-            />
-          </CardContent>
-        </Card>
+      {/* Mobile Calendar Drawer */}
+      <MobileCalendarDrawer
+        selectedDate={parsedSelectedDate}
+        appointmentDates={appointmentDates}
+        blockedDates={blockedDates}
+      />
 
-        {/* Appointments List */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>
-              Atendimentos do dia{" "}
-              {parseLocalDate(selectedDate).toLocaleDateString("pt-BR", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </CardTitle>
-            <CardDescription>
-              {appointments.length === 0
-                ? "Nenhum atendimento agendado para este dia"
-                : `${appointments.length} atendimento${appointments.length > 1 ? "s" : ""} agendado${appointments.length > 1 ? "s" : ""}`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        {/* Timeline / Appointments */}
+        <div className="order-2 lg:order-1">
+          {/* Date header for mobile (when not today) */}
+          <div className="lg:hidden mb-4">
             {timeBlocksForDay.length > 0 && (
-              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3">
+              <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 mb-4">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+                  <CalendarIcon className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-yellow-700 dark:text-yellow-400">
-                      Bloqueios neste dia:
+                    <p className="font-medium text-amber-700 dark:text-amber-400">
+                      Bloqueios neste dia
                     </p>
-                    <ul className="mt-1 space-y-1 text-yellow-600 dark:text-yellow-500">
+                    <ul className="mt-1 space-y-0.5 text-amber-600 dark:text-amber-500 text-xs">
                       {timeBlocksForDay.map((block) => (
                         <li key={block.id}>
                           {block.title}
-                          {block.block_type !== "other" && (
-                            <span className="text-xs ml-1">
-                              ({block.block_type === "personal" ? "Pessoal" :
-                                block.block_type === "holiday" ? "Feriado" :
-                                block.block_type === "vacation" ? "Férias" : block.block_type})
-                            </span>
-                          )}
                         </li>
                       ))}
                     </ul>
@@ -251,9 +240,50 @@ export default async function SchedulePage({
                 </div>
               </div>
             )}
-            <AppointmentsList appointments={appointments} />
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Main content area */}
+          <div className="bg-card rounded-2xl border shadow-soft p-4 sm:p-6">
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">
+                  {isToday ? "Consultas de Hoje" : (
+                    <>
+                      <span className="hidden sm:inline">Consultas de </span>
+                      {parsedSelectedDate.toLocaleDateString("pt-BR", {
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </>
+                  )}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {appointments.length === 0
+                    ? "Nenhum atendimento agendado"
+                    : `${appointments.length} atendimento${appointments.length !== 1 ? "s" : ""}`}
+                </p>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <ScheduleTimeline
+              appointments={appointments}
+              selectedDate={parsedSelectedDate}
+            />
+          </div>
+        </div>
+
+        {/* Desktop Calendar Sidebar */}
+        <div className="order-1 lg:order-2">
+          <DesktopCalendarSidebar
+            selectedDate={parsedSelectedDate}
+            appointmentDates={appointmentDates}
+            blockedDates={blockedDates}
+            timeBlocksForDay={timeBlocksForDay}
+            appointmentCount={appointments.length}
+          />
+        </div>
       </div>
     </div>
   );

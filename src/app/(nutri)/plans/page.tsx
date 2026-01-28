@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import Link from "next/link";
 import { PlansList } from "./_components/plans-list";
+import { getUserRole, isClinicalRole } from "@/lib/auth/authorization";
 import type { MealPlan } from "@/types/database";
 
 type MealPlanWithPatient = MealPlan & {
@@ -60,6 +62,12 @@ export default async function PlansPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  // Block non-clinical roles (receptionists) from accessing this page
+  const userRole = await getUserRole();
+  if (!userRole || !isClinicalRole(userRole.role)) {
+    redirect("/schedule");
+  }
+
   const params = await searchParams;
   const patientId = params.patient;
   const mealPlans = await getMealPlans(patientId);

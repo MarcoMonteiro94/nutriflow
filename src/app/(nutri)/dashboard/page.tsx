@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { DashboardContent } from "./_components/dashboard-content";
+import { getUserRole } from "@/lib/auth/authorization";
 
 async function getDashboardStats() {
   const supabase = await createClient();
@@ -15,33 +16,50 @@ async function getDashboardStats() {
     };
   }
 
-  // Get total patients count
-  const { count: totalPatients } = await supabase
-    .from("patients")
-    .select("*", { count: "exact", head: true })
-    .eq("nutri_id", user.id);
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
 
-  // Get active meal plans count
-  const { count: activePlans } = await supabase
+  // For receptionists, let RLS handle the filtering (they see all org data)
+  // For nutris, filter to their own data
+  let patientsQuery = supabase
+    .from("patients")
+    .select("*", { count: "exact", head: true });
+
+  let activePlansQuery = supabase
     .from("meal_plans")
     .select("*", { count: "exact", head: true })
-    .eq("nutri_id", user.id)
     .eq("status", "active");
+
+  if (!isReceptionist) {
+    patientsQuery = patientsQuery.eq("nutri_id", user.id);
+    activePlansQuery = activePlansQuery.eq("nutri_id", user.id);
+  }
+
+  // Get total patients count
+  const { count: totalPatients } = await patientsQuery;
+
+  // Get active meal plans count
+  const { count: activePlans } = await activePlansQuery;
 
   // Get today's appointments
   const today = new Date();
   const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
   const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
 
-  const { count: todayAppointments } = await supabase
+  let todayAppointmentsQuery = supabase
     .from("appointments")
     .select("*", { count: "exact", head: true })
-    .eq("nutri_id", user.id)
     .gte("scheduled_at", startOfDay)
     .lte("scheduled_at", endOfDay);
 
+  if (!isReceptionist) {
+    todayAppointmentsQuery = todayAppointmentsQuery.eq("nutri_id", user.id);
+  }
+
+  const { count: todayAppointments } = await todayAppointmentsQuery;
+
   // Get upcoming appointments (next 5)
-  const { data: upcomingAppointments } = await supabase
+  let upcomingAppointmentsQuery = supabase
     .from("appointments")
     .select(`
       id,
@@ -53,10 +71,15 @@ async function getDashboardStats() {
         full_name
       )
     `)
-    .eq("nutri_id", user.id)
     .gte("scheduled_at", new Date().toISOString())
     .order("scheduled_at", { ascending: true })
     .limit(5);
+
+  if (!isReceptionist) {
+    upcomingAppointmentsQuery = upcomingAppointmentsQuery.eq("nutri_id", user.id);
+  }
+
+  const { data: upcomingAppointments } = await upcomingAppointmentsQuery;
 
   return {
     totalPatients: totalPatients ?? 0,

@@ -13,6 +13,11 @@ export const testUsers = {
     password: 'TestPassword123!',
     fullName: 'Second Nutricionista',
   },
+  receptionist: {
+    email: 'test-receptionist@example.com',
+    password: 'TestPassword123!',
+    fullName: 'Test Recepcionista',
+  },
 };
 
 export const testPatients = {

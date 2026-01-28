@@ -14,6 +14,8 @@ interface TimeSlotPickerProps {
   selectedTime: string;
   onTimeSelect: (time: string) => void;
   excludeAppointmentId?: string;
+  /** Optional nutri ID to check availability for (used by receptionists) */
+  nutriId?: string;
 }
 
 interface AvailableSlot {
@@ -28,6 +30,7 @@ export function TimeSlotPicker({
   selectedTime,
   onTimeSelect,
   excludeAppointmentId,
+  nutriId,
 }: TimeSlotPickerProps) {
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,10 +44,17 @@ export function TimeSlotPicker({
       setSlots([]);
       setNoAvailability(false);
     }
-  }, [date, duration, excludeAppointmentId]);
+  }, [date, duration, excludeAppointmentId, nutriId]);
 
   async function loadAvailableSlots() {
     if (!date) return;
+
+    // If nutriId is provided but empty (receptionist hasn't selected yet), don't load
+    if (nutriId === "") {
+      setSlots([]);
+      setNoAvailability(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -61,13 +71,16 @@ export function TimeSlotPicker({
         return;
       }
 
+      // Use provided nutriId if available, otherwise use logged-in user's ID
+      const targetNutriId = nutriId || user.id;
+
       const dayOfWeek = date.getDay();
 
       // Get availability for this day
       const { data: availabilityData } = await supabase
         .from("nutri_availability")
         .select("*")
-        .eq("nutri_id", user.id)
+        .eq("nutri_id", targetNutriId)
         .eq("day_of_week", dayOfWeek)
         .eq("is_active", true)
         .order("start_time", { ascending: true });
@@ -89,7 +102,7 @@ export function TimeSlotPicker({
       const { data: blocksData } = await supabase
         .from("nutri_time_blocks")
         .select("*")
-        .eq("nutri_id", user.id)
+        .eq("nutri_id", targetNutriId)
         .lte("start_datetime", endOfDay.toISOString())
         .gte("end_datetime", startOfDay.toISOString());
 
@@ -99,7 +112,7 @@ export function TimeSlotPicker({
       let appointmentQuery = supabase
         .from("appointments")
         .select("*")
-        .eq("nutri_id", user.id)
+        .eq("nutri_id", targetNutriId)
         .neq("status", "cancelled")
         .gte("scheduled_at", startOfDay.toISOString())
         .lte("scheduled_at", endOfDay.toISOString());
@@ -185,6 +198,16 @@ export function TimeSlotPicker({
     }
   }
 
+  // If receptionist hasn't selected a nutri yet
+  if (nutriId === "") {
+    return (
+      <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+        <Clock className="mx-auto h-8 w-8 mb-2 opacity-50" />
+        Selecione um nutricionista para ver os horários disponíveis
+      </div>
+    );
+  }
+
   if (!date) {
     return (
       <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
@@ -215,11 +238,17 @@ export function TimeSlotPicker({
     return (
       <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4 text-center text-sm text-yellow-700 dark:text-yellow-400">
         <AlertCircle className="mx-auto h-6 w-6 mb-2" />
-        Você não configurou disponibilidade para este dia da semana.
-        <br />
-        <a href="/settings/availability" className="underline hover:no-underline mt-1 inline-block">
-          Configurar disponibilidade
-        </a>
+        {nutriId ? (
+          <>O nutricionista selecionado não configurou disponibilidade para este dia da semana.</>
+        ) : (
+          <>
+            Você não configurou disponibilidade para este dia da semana.
+            <br />
+            <a href="/settings/availability" className="underline hover:no-underline mt-1 inline-block">
+              Configurar disponibilidade
+            </a>
+          </>
+        )}
       </div>
     );
   }

@@ -5,17 +5,30 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import type { Patient } from "@/types/database";
+import type { NutriOption } from "@/lib/queries/organization";
 
 interface PatientFormProps {
   patient?: Patient;
+  isReceptionist?: boolean;
+  nutris?: NutriOption[];
 }
 
-export function PatientForm({ patient }: PatientFormProps) {
+export function PatientForm({ patient, isReceptionist = false, nutris = [] }: PatientFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedNutriId, setSelectedNutriId] = useState<string>(
+    patient?.nutri_id || (nutris.length === 1 ? nutris[0].id : "")
+  );
 
   const isEditing = !!patient;
 
@@ -68,11 +81,21 @@ export function PatientForm({ patient }: PatientFormProps) {
 
       router.push(`/patients/${patient.id}`);
     } else {
+      // For receptionists, use the selected nutri_id
+      // For nutris/admins, use their own user.id
+      const nutriIdToUse = isReceptionist && selectedNutriId ? selectedNutriId : user.id;
+
+      if (isReceptionist && !selectedNutriId) {
+        setError("Selecione um nutricionista para o paciente.");
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error: insertError } = await supabase
         .from("patients")
         .insert({
           ...patientData,
-          nutri_id: user.id,
+          nutri_id: nutriIdToUse,
         })
         .select("id")
         .single();
@@ -94,6 +117,27 @@ export function PatientForm({ patient }: PatientFormProps) {
       {error && (
         <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
           {error}
+        </div>
+      )}
+
+      {isReceptionist && nutris.length > 0 && (
+        <div className="space-y-2">
+          <Label htmlFor="nutri">Nutricionista Responsável *</Label>
+          <Select value={selectedNutriId} onValueChange={setSelectedNutriId}>
+            <SelectTrigger id="nutri">
+              <SelectValue placeholder="Selecione o nutricionista" />
+            </SelectTrigger>
+            <SelectContent>
+              {nutris.map((nutri) => (
+                <SelectItem key={nutri.id} value={nutri.id}>
+                  {nutri.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Selecione o nutricionista que será responsável por este paciente.
+          </p>
         </div>
       )}
 
