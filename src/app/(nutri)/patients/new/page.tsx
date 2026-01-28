@@ -1,7 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PatientForm } from "../_components/patient-form";
+import { getUserRole } from "@/lib/auth/authorization";
+import { getOrganizationNutris, type NutriOption } from "@/lib/queries/organization";
 
-export default function NewPatientPage() {
+export default async function NewPatientPage() {
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  let nutris: NutriOption[] = [];
+  if (isReceptionist) {
+    nutris = await getOrganizationNutris();
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -19,7 +29,7 @@ export default function NewPatientPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PatientForm />
+          <PatientForm isReceptionist={isReceptionist} nutris={nutris} />
         </CardContent>
       </Card>
     </div>

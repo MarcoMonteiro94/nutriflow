@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AppointmentForm } from "../_components/appointment-form";
 import { getUserRole } from "@/lib/auth/authorization";
+import { getOrganizationNutris, type NutriOption } from "@/lib/queries/organization";
 import type { Patient } from "@/types/database";
 
 interface SearchParams {
@@ -48,6 +49,14 @@ export default async function NewAppointmentPage({
   const params = await searchParams;
   const patients = await getPatients();
 
+  const userRole = await getUserRole();
+  const isReceptionist = userRole?.role === "receptionist";
+
+  let nutris: NutriOption[] = [];
+  if (isReceptionist) {
+    nutris = await getOrganizationNutris();
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
@@ -78,6 +87,8 @@ export default async function NewAppointmentPage({
             patients={patients}
             defaultPatientId={params.patient}
             defaultDate={params.date}
+            isReceptionist={isReceptionist}
+            nutris={nutris}
           />
         </CardContent>
       </Card>

@@ -572,6 +572,97 @@ export async function acceptInvite(
 }
 
 // ============================================
+// Get Organization Nutris (for receptionist forms)
+// ============================================
+
+export type NutriOption = {
+  id: string;
+  full_name: string;
+  email: string;
+};
+
+/**
+ * Get all active nutris (nutri + admin roles) from the user's organization
+ * Used by receptionists to select which nutritionist to assign patients/appointments to
+ */
+export async function getOrganizationNutris(): Promise<NutriOption[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  // Get user's organization
+  const { data: membership } = await supabase
+    .from("organization_members")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .limit(1)
+    .single();
+
+  if (!membership) {
+    return [];
+  }
+
+  // Get all nutris (nutri + admin) from the organization
+  const { data: members, error } = await supabase
+    .from("organization_members")
+    .select(
+      `
+      user_id,
+      profiles!organization_members_user_id_fkey(id, full_name, email)
+    `
+    )
+    .eq("organization_id", membership.organization_id)
+    .in("role", ["nutri", "admin"])
+    .eq("status", "active");
+
+  if (error || !members) {
+    console.error("Error fetching organization nutris:", error);
+    return [];
+  }
+
+  // Also include org owner if not already in members
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("owner_id")
+    .eq("id", membership.organization_id)
+    .single();
+
+  const nutris: NutriOption[] = members.map((m) => {
+    const profile = m.profiles as { id: string; full_name: string; email: string };
+    return {
+      id: profile.id,
+      full_name: profile.full_name,
+      email: profile.email,
+    };
+  });
+
+  // Add owner if not already included
+  if (org?.owner_id && !nutris.find((n) => n.id === org.owner_id)) {
+    const { data: ownerProfile } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("id", org.owner_id)
+      .single();
+
+    if (ownerProfile) {
+      nutris.unshift({
+        id: ownerProfile.id,
+        full_name: ownerProfile.full_name,
+        email: ownerProfile.email,
+      });
+    }
+  }
+
+  return nutris;
+}
+
+// ============================================
 // Dashboard Stats
 // ============================================
 

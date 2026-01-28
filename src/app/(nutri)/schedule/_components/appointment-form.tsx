@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { Patient, NutriAvailability, NutriTimeBlock, Appointment } from "@/types/database";
+import type { NutriOption } from "@/lib/queries/organization";
 import { TimeSlotPicker } from "./time-slot-picker";
 
 interface AppointmentFormProps {
@@ -37,7 +38,10 @@ interface AppointmentFormProps {
     scheduled_at: string;
     duration_minutes: number;
     notes: string | null;
+    nutri_id?: string;
   };
+  isReceptionist?: boolean;
+  nutris?: NutriOption[];
 }
 
 const DURATION_OPTIONS = [
@@ -54,6 +58,8 @@ export function AppointmentForm({
   defaultDate,
   appointmentId,
   initialData,
+  isReceptionist = false,
+  nutris = [],
 }: AppointmentFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,6 +73,9 @@ export function AppointmentForm({
 
   const [patientId, setPatientId] = useState(
     initialData?.patient_id || defaultPatientId || ""
+  );
+  const [selectedNutriId, setSelectedNutriId] = useState<string>(
+    initialData?.nutri_id || (nutris.length === 1 ? nutris[0].id : "")
   );
   const [date, setDate] = useState<Date | undefined>(initialDateObj);
   const [time, setTime] = useState(
@@ -97,6 +106,14 @@ export function AppointmentForm({
         return false;
       }
 
+      // For receptionists, use selected nutri's ID; otherwise use logged-in user's ID
+      const nutriIdForValidation = isReceptionist && selectedNutriId ? selectedNutriId : user.id;
+
+      if (isReceptionist && !selectedNutriId) {
+        setValidationError("Selecione um nutricionista");
+        return false;
+      }
+
       const [hours, minutes] = time.split(":").map(Number);
       const slotStart = new Date(date);
       slotStart.setHours(hours, minutes, 0, 0);
@@ -116,14 +133,17 @@ export function AppointmentForm({
       const { data: availabilityData } = await supabase
         .from("nutri_availability")
         .select("*")
-        .eq("nutri_id", user.id)
+        .eq("nutri_id", nutriIdForValidation)
         .eq("day_of_week", dayOfWeek)
         .eq("is_active", true);
 
       const availability = (availabilityData ?? []) as NutriAvailability[];
 
       if (availability.length === 0) {
-        setValidationError("Você não atende neste dia da semana");
+        const errorMsg = isReceptionist
+          ? "O nutricionista selecionado não atende neste dia da semana"
+          : "Você não atende neste dia da semana";
+        setValidationError(errorMsg);
         return false;
       }
 
@@ -132,7 +152,10 @@ export function AppointmentForm({
       });
 
       if (!isWithinAvailability) {
-        setValidationError("Horário fora da sua disponibilidade configurada");
+        const errorMsg = isReceptionist
+          ? "Horário fora da disponibilidade configurada do nutricionista"
+          : "Horário fora da sua disponibilidade configurada";
+        setValidationError(errorMsg);
         return false;
       }
 
@@ -140,7 +163,7 @@ export function AppointmentForm({
       const { data: blocksData } = await supabase
         .from("nutri_time_blocks")
         .select("*")
-        .eq("nutri_id", user.id)
+        .eq("nutri_id", nutriIdForValidation)
         .lte("start_datetime", slotEnd.toISOString())
         .gte("end_datetime", slotStart.toISOString());
 
@@ -160,7 +183,7 @@ export function AppointmentForm({
       let appointmentQuery = supabase
         .from("appointments")
         .select("*")
-        .eq("nutri_id", user.id)
+        .eq("nutri_id", nutriIdForValidation)
         .neq("status", "cancelled")
         .gte("scheduled_at", startOfDay.toISOString())
         .lte("scheduled_at", endOfDay.toISOString());
@@ -238,9 +261,18 @@ export function AppointmentForm({
       const scheduledAt = new Date(date);
       scheduledAt.setHours(hours, minutes, 0, 0);
 
+      // For receptionists, use selected nutri's ID; otherwise use logged-in user's ID
+      const nutriIdToUse = isReceptionist && selectedNutriId ? selectedNutriId : user.id;
+
+      if (isReceptionist && !selectedNutriId) {
+        setError("Selecione um nutricionista para a consulta.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const appointmentData = {
         patient_id: patientId,
-        nutri_id: user.id,
+        nutri_id: nutriIdToUse,
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parseInt(duration),
         notes: notes || null,
@@ -290,6 +322,34 @@ export function AppointmentForm({
         <div className="rounded-md bg-yellow-500/10 border border-yellow-500/50 p-3 text-sm text-yellow-700 dark:text-yellow-400 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{validationError}</span>
+        </div>
+      )}
+
+      {isReceptionist && nutris.length > 0 && (
+        <div className="space-y-2">
+          <Label htmlFor="nutri">Nutricionista *</Label>
+          <Select
+            value={selectedNutriId}
+            onValueChange={(value) => {
+              setSelectedNutriId(value);
+              setTime(""); // Reset time when nutri changes (different availability)
+              setValidationError(null);
+            }}
+          >
+            <SelectTrigger id="nutri">
+              <SelectValue placeholder="Selecione o nutricionista" />
+            </SelectTrigger>
+            <SelectContent>
+              {nutris.map((nutri) => (
+                <SelectItem key={nutri.id} value={nutri.id}>
+                  {nutri.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Selecione o nutricionista responsável pela consulta.
+          </p>
         </div>
       )}
 
@@ -386,6 +446,7 @@ export function AppointmentForm({
           setValidationError(null);
         }}
         excludeAppointmentId={appointmentId}
+        nutriId={isReceptionist ? selectedNutriId : undefined}
       />
 
       <div className="space-y-2">

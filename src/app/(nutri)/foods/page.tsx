@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUserRole, isClinicalRole } from "@/lib/auth/authorization";
 import type { FoodItem } from "@/types/database";
 
 interface SearchParams {
@@ -39,6 +41,12 @@ export default async function FoodsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  // Block non-clinical roles (receptionists) from accessing this page
+  const userRole = await getUserRole();
+  if (!userRole || !isClinicalRole(userRole.role)) {
+    redirect("/schedule");
+  }
+
   const params = await searchParams;
   const foods = await getFoods(params.q);
 
