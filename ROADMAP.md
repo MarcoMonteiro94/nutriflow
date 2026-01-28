@@ -26,7 +26,7 @@ Fase 6: Qualidade             ░░░░░░░░░░░░░░░░�
 
 | Issue | Título | Labels | Status |
 |-------|--------|--------|--------|
-| [#14](https://github.com/MarcoMonteiro94/nutriflow/issues/14) | fix: storage RLS muito permissivo | `bug` `beta` `security` | ⏳ Pendente |
+| [#14](https://github.com/MarcoMonteiro94/nutriflow/issues/14) | fix: storage RLS muito permissivo | `bug` `beta` `security` | 🔄 Em andamento |
 
 ### Bugs Críticos
 
