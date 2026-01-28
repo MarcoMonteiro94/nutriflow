@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Clock
 } from "lucide-react";
-import Link from "next/link";
 import type { Patient } from "@/types/database";
 
 interface PatientCardEnhancedProps {

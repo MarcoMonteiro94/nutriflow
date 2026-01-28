@@ -9,12 +9,9 @@ import {
   Settings,
   User,
   UtensilsCrossed,
-  Menu,
-  X,
   Home,
   Leaf,
 } from "lucide-react";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -76,7 +73,6 @@ interface PatientLayoutProps {
 
 export function PatientLayout({ children, isAuthenticated }: PatientLayoutProps) {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
 
   const isActive = (href: string) => {

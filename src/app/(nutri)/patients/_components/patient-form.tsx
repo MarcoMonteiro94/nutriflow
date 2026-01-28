@@ -41,21 +41,12 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [] }: Pa
     const supabase = createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
-    console.log("User:", user);
 
     if (!user) {
       setError("Você precisa estar logado para cadastrar pacientes.");
       setIsLoading(false);
       return;
     }
-
-    // Debug: Check if profile exists
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    console.log("Profile:", profile, "Error:", profileError);
 
     const patientData = {
       full_name: formData.get("full_name") as string,

@@ -1,8 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { User, Calendar, Clock } from "lucide-react";
-import Link from "next/link";
 import type { NutriWithAppointments } from "@/lib/queries/organization";
 import type { OrgRole } from "@/types/database";
 

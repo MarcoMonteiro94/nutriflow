@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, UtensilsCrossed, Calendar, FileText } from "lucide-react";
+import { ArrowLeft, Plus, UtensilsCrossed, Calendar } from "lucide-react";
 import type { MealPlan, Patient } from "@/types/database";
 
 interface PageProps {

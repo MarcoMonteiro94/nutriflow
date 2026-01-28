@@ -272,8 +272,6 @@ export function PatientMealPlanView({ planTitle, meals }: PatientMealPlanViewPro
     0
   );
 
-  const totalFoods = meals.reduce((sum, meal) => sum + meal.foods.length, 0);
-
   const totalSubstitutions = meals.reduce(
     (sum, meal) =>
       sum + meal.foods.reduce((fs, f) => fs + f.substitutions.length, 0),
