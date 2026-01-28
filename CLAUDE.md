@@ -4,6 +4,21 @@
 
 NutriFlow is a nutrition management platform for nutritionists to manage patients, meal plans, appointments, and measurements.
 
+## Roadmap
+
+**IMPORTANTE:** No início de cada conversa, leia o arquivo `ROADMAP.md` para entender o estado atual do projeto e as prioridades.
+
+- Sempre manter o `ROADMAP.md` atualizado após:
+  - Concluir uma issue (marcar como ✅)
+  - Iniciar trabalho em uma issue (marcar como 🔄)
+  - Criar novas issues no GitHub
+  - Mudar prioridades ou dependências
+
+- Ao trabalhar em issues:
+  1. Verificar dependências no roadmap antes de começar
+  2. Atualizar status da issue no roadmap quando iniciar
+  3. Atualizar status quando concluir (após merge)
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
