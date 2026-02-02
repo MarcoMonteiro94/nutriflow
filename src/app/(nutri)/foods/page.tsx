@@ -1,12 +1,8 @@
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, UtensilsCrossed } from "lucide-react";
-import Link from "next/link";
+import { Apple } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUserRole, isClinicalRole } from "@/lib/auth/authorization";
+import { FoodsList } from "./_components/foods-list";
 import type { FoodItem } from "@/types/database";
 
 interface SearchParams {
@@ -16,7 +12,9 @@ interface SearchParams {
 async function getFoods(searchQuery?: string): Promise<FoodItem[]> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return [];
@@ -41,7 +39,6 @@ export default async function FoodsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  // Block non-clinical roles (receptionists) from accessing this page
   const userRole = await getUserRole();
   if (!userRole || !isClinicalRole(userRole.role)) {
     redirect("/schedule");
@@ -50,87 +47,47 @@ export default async function FoodsPage({
   const params = await searchParams;
   const foods = await getFoods(params.q);
 
+  const totalFoods = foods.length;
+  const customFoods = foods.filter((f) => f.source === "custom").length;
+  const officialFoods = foods.filter((f) => f.source === "official").length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Alimentos</h1>
-          <p className="text-muted-foreground">
-            Gerencie sua base de alimentos.
-          </p>
-        </div>
-        <Button asChild className="w-full sm:w-auto">
-          <Link href="/foods/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Alimento
-          </Link>
-        </Button>
-      </div>
+    <div className="min-h-[calc(100vh-4rem)]">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden border-b bg-gradient-to-br from-card via-card to-primary/[0.02]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-primary/[0.03] to-transparent blur-3xl" />
 
-      {/* Search */}
-      <div className="flex gap-4">
-        <form className="flex-1" action="/foods" method="GET">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              name="q"
-              placeholder="Buscar por nome..."
-              defaultValue={params.q}
-              className="pl-10"
-            />
+        <div className="relative px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-start gap-4">
+              <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
+                <Apple className="h-7 w-7 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
+                  Base de Alimentos
+                </h1>
+                <p className="text-muted-foreground text-sm sm:text-base max-w-xl">
+                  Gerencie os alimentos disponíveis para criar planos alimentares
+                  personalizados para seus pacientes.
+                </p>
+              </div>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
 
-      {/* Foods List - Inline for now, will be extracted to component in subtask-1-2 */}
-      {foods.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <UtensilsCrossed className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold">
-              {params.q ? "Nenhum alimento encontrado" : "Nenhum alimento cadastrado"}
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground text-center max-w-sm">
-              {params.q
-                ? `Não encontramos alimentos com "${params.q}". Tente outro termo.`
-                : "Comece cadastrando seu primeiro alimento personalizado."}
-            </p>
-            {!params.q && (
-              <Button asChild className="mt-4">
-                <Link href="/foods/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Cadastrar Alimento
-                </Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {foods.map((food) => (
-            <Card key={food.id} className="hover:bg-muted/50 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium truncate">{food.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {food.calories} kcal | P: {food.protein}g | C: {food.carbs}g | G: {food.fat}g
-                    </p>
-                  </div>
-                  <Badge variant={food.source === "official" ? "secondary" : "outline"}>
-                    {food.source === "official" ? "Oficial" : "Personalizado"}
-                  </Badge>
-                </div>
-                {food.category && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Categoria: {food.category}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+      {/* Main Content */}
+      <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        <div className="max-w-6xl mx-auto">
+          <FoodsList
+            foods={foods}
+            searchQuery={params.q}
+            stats={{ total: totalFoods, custom: customFoods, official: officialFoods }}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }
