@@ -16,7 +16,9 @@ async function getPatientChallenges(): Promise<ParticipantWithChallenge[]> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return [];
+  if (!user) {
+    return [];
+  }
 
   // Get patient record
   const { data: patient } = await supabase
@@ -25,7 +27,9 @@ async function getPatientChallenges(): Promise<ParticipantWithChallenge[]> {
     .eq("user_id", user.id)
     .single();
 
-  if (!patient) return [];
+  if (!patient) {
+    return [];
+  }
 
   // Get challenges the patient is participating in
   const { data: participations } = await supabase
@@ -41,11 +45,13 @@ async function getPatientChallenges(): Promise<ParticipantWithChallenge[]> {
 
   if (!participations) return [];
 
-  // Filter only active challenges
-  return participations.filter((p) => {
+  // Filter only active or completed challenges
+  const filtered = participations.filter((p) => {
     const challenge = p.challenge as Challenge | null;
     return challenge && (challenge.status === "active" || challenge.status === "completed");
   }) as ParticipantWithChallenge[];
+
+  return filtered;
 }
 
 export default async function PatientChallengesPage() {
