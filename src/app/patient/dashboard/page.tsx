@@ -100,38 +100,179 @@ export default async function PatientDashboardPage() {
         </p>
       </div>
 
+      {/* Mobile Priority: Next Appointment & Meal Plan */}
+      <div className="space-y-4 mb-6 lg:hidden">
+        {/* Next Appointment - Mobile */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
+                <Calendar className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Próxima Consulta</CardTitle>
+                <CardDescription className="text-xs">Seu agendamento</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {appointments && appointments.length > 0 ? (
+              <div
+                className="flex items-center gap-4 rounded-xl p-3 bg-primary/5 ring-1 ring-primary/20"
+              >
+                <div
+                  className="flex flex-col items-center justify-center rounded-lg px-3 py-2 bg-primary text-primary-foreground"
+                >
+                  <span className="text-lg font-bold">
+                    {format(new Date(appointments[0].scheduled_at), "dd")}
+                  </span>
+                  <span className="text-[10px] uppercase">
+                    {format(new Date(appointments[0].scheduled_at), "MMM", {
+                      locale: ptBR,
+                    })}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium capitalize">
+                    {format(new Date(appointments[0].scheduled_at), "EEEE", {
+                      locale: ptBR,
+                    })}
+                  </p>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {format(new Date(appointments[0].scheduled_at), "HH:mm")}
+                  </div>
+                </div>
+                <Badge variant="default" className="bg-primary">
+                  Agendada
+                </Badge>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="mb-2 rounded-full bg-muted p-2">
+                  <Calendar className="h-6 w-6 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma consulta agendada
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Meal Plan - Mobile */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <UtensilsCrossed className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Meu Plano Alimentar</CardTitle>
+                  <CardDescription className="text-xs">
+                    {mealPlan
+                      ? "Seu plano personalizado"
+                      : "Aguardando plano"}
+                  </CardDescription>
+                </div>
+              </div>
+              {mealPlan && (
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/patient/plan">
+                    Ver
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {mealPlan ? (
+              <div className="rounded-xl border bg-muted/30 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">
+                      {mealPlan.title || "Plano Alimentar"}
+                    </p>
+                    {mealPlan.starts_at && mealPlan.ends_at && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {format(new Date(mealPlan.starts_at), "dd/MM")} -{" "}
+                        {format(new Date(mealPlan.ends_at), "dd/MM/yyyy")}
+                      </p>
+                    )}
+                  </div>
+                  <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 text-xs">
+                    Ativo
+                  </Badge>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="mb-2 rounded-full bg-muted p-2">
+                  <UtensilsCrossed className="h-6 w-6 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Nenhum plano alimentar ativo
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Main Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Stats & Quick Actions */}
         <div className="space-y-6 lg:col-span-2">
           {/* Quick Stats */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+          <div className="grid gap-3 grid-cols-3">
+            <Card className="rounded-2xl">
+              <CardContent className="p-3 sm:p-4">
+                {/* Mobile: vertical centered */}
+                <div className="flex flex-col items-center text-center gap-1 sm:hidden">
+                  <CalendarDays className="h-5 w-5 mb-1 text-muted-foreground" />
+                  <p className="text-xl font-semibold tabular-nums">
+                    {appointments?.length || 0}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">Consultas</p>
+                </div>
+                {/* Desktop: horizontal with icon box */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
                     <CalendarDays className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold tabular-nums">
+                    <p className="text-2xl font-semibold tabular-nums">
                       {appointments?.length || 0}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Consultas agendadas
-                    </p>
+                    <p className="text-xs text-muted-foreground">Consultas agendadas</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+            <Card className="rounded-2xl">
+              <CardContent className="p-3 sm:p-4">
+                {/* Mobile: vertical centered */}
+                <div className="flex flex-col items-center text-center gap-1 sm:hidden">
+                  <Scale className="h-5 w-5 mb-1 text-muted-foreground" />
+                  <p className="text-xl font-semibold tabular-nums">
+                    {latestMeasurement?.weight
+                      ? `${latestMeasurement.weight}`
+                      : "-"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {latestMeasurement?.weight ? "kg" : "Peso"}
+                  </p>
+                </div>
+                {/* Desktop: horizontal with icon box */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
                     <Scale className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold tabular-nums">
+                    <p className="text-2xl font-semibold tabular-nums">
                       {latestMeasurement?.weight
                         ? `${latestMeasurement.weight}kg`
                         : "-"}
@@ -142,29 +283,40 @@ export default async function PatientDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+            <Card className="rounded-2xl">
+              <CardContent className="p-3 sm:p-4">
+                {/* Mobile: vertical centered */}
+                <div className="flex flex-col items-center text-center gap-1 sm:hidden">
+                  <TrendingUp className="h-5 w-5 mb-1 text-muted-foreground" />
+                  <p className="text-xl font-semibold tabular-nums">
+                    {latestMeasurement?.body_fat_percentage
+                      ? `${latestMeasurement.body_fat_percentage}`
+                      : "-"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {latestMeasurement?.body_fat_percentage ? "% gordura" : "Gordura"}
+                  </p>
+                </div>
+                {/* Desktop: horizontal with icon box */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
                     <TrendingUp className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold tabular-nums">
+                    <p className="text-2xl font-semibold tabular-nums">
                       {latestMeasurement?.body_fat_percentage
                         ? `${latestMeasurement.body_fat_percentage}%`
                         : "-"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Gordura corporal
-                    </p>
+                    <p className="text-xs text-muted-foreground">Gordura corporal</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Meal Plan Card */}
-          <Card>
+          {/* Meal Plan Card - Desktop only */}
+          <Card className="hidden lg:block">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -262,8 +414,8 @@ export default async function PatientDashboardPage() {
           </div>
         </div>
 
-        {/* Right Column - Next Appointment */}
-        <div className="space-y-6">
+        {/* Right Column - Next Appointment (Desktop only) */}
+        <div className="hidden lg:block space-y-6">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">

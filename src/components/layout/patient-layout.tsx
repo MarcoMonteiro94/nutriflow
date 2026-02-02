@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  Trophy,
   User,
   UtensilsCrossed,
   Home,
@@ -48,6 +49,11 @@ const authenticatedNavItems = [
     title: "Meu Plano",
     href: "/patient/plan",
     icon: UtensilsCrossed,
+  },
+  {
+    title: "Desafios",
+    href: "/patient/challenges",
+    icon: Trophy,
   },
   {
     title: "Progresso",
@@ -178,7 +184,7 @@ export function PatientLayout({ children, isAuthenticated }: PatientLayoutProps)
       {/* Mobile Bottom Navigation */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/80 backdrop-blur-xl lg:hidden safe-area-inset-bottom">
         <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2">
-          {navItems.slice(0, 4).map((item) => (
+          {navItems.slice(0, 5).map((item) => (
             <Link
               key={item.href}
               href={item.href}

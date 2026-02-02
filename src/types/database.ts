@@ -1159,6 +1159,140 @@ export type Database = {
           }
         ];
       };
+      challenges: {
+        Row: {
+          id: string;
+          org_id: string | null;
+          nutri_id: string;
+          title: string;
+          description: string | null;
+          start_date: string;
+          end_date: string;
+          status: "draft" | "active" | "completed" | "cancelled";
+          settings: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          org_id?: string | null;
+          nutri_id: string;
+          title: string;
+          description?: string | null;
+          start_date: string;
+          end_date: string;
+          status?: "draft" | "active" | "completed" | "cancelled";
+          settings?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          org_id?: string | null;
+          nutri_id?: string;
+          title?: string;
+          description?: string | null;
+          start_date?: string;
+          end_date?: string;
+          status?: "draft" | "active" | "completed" | "cancelled";
+          settings?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "challenges_nutri_id_fkey";
+            columns: ["nutri_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "challenges_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      challenge_participants: {
+        Row: {
+          id: string;
+          challenge_id: string;
+          patient_id: string;
+          joined_at: string;
+          completed_at: string | null;
+          badge_earned: boolean;
+        };
+        Insert: {
+          id?: string;
+          challenge_id: string;
+          patient_id: string;
+          joined_at?: string;
+          completed_at?: string | null;
+          badge_earned?: boolean;
+        };
+        Update: {
+          id?: string;
+          challenge_id?: string;
+          patient_id?: string;
+          joined_at?: string;
+          completed_at?: string | null;
+          badge_earned?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey";
+            columns: ["challenge_id"];
+            isOneToOne: false;
+            referencedRelation: "challenges";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "challenge_participants_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      challenge_checkins: {
+        Row: {
+          id: string;
+          participant_id: string;
+          checkin_date: string;
+          completed: boolean;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          participant_id: string;
+          checkin_date: string;
+          completed?: boolean;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          participant_id?: string;
+          checkin_date?: string;
+          completed?: boolean;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "challenge_checkins_participant_id_fkey";
+            columns: ["participant_id"];
+            isOneToOne: false;
+            referencedRelation: "challenge_participants";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -1170,6 +1304,7 @@ export type Database = {
       appointment_action: "created" | "rescheduled" | "cancelled" | "completed" | "no_show";
       org_role: "admin" | "nutri" | "receptionist" | "patient";
       member_status: "pending" | "active" | "inactive";
+      challenge_status: "draft" | "active" | "completed" | "cancelled";
     };
   };
 };
@@ -1214,3 +1349,52 @@ export type OrganizationMember = Tables<"organization_members">;
 export type OrganizationInvite = Tables<"organization_invites">;
 export type OrgRole = Database["public"]["Enums"]["org_role"];
 export type MemberStatus = Database["public"]["Enums"]["member_status"];
+
+// Challenge types
+export type ChallengeStatus = "draft" | "active" | "completed" | "cancelled";
+
+export type Challenge = {
+  id: string;
+  org_id: string | null;
+  nutri_id: string;
+  title: string;
+  description: string | null;
+  start_date: string;
+  end_date: string;
+  status: ChallengeStatus;
+  settings: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChallengeParticipant = {
+  id: string;
+  challenge_id: string;
+  patient_id: string;
+  joined_at: string;
+  completed_at: string | null;
+  badge_earned: boolean;
+};
+
+export type ChallengeCheckin = {
+  id: string;
+  participant_id: string;
+  checkin_date: string;
+  completed: boolean;
+  notes: string | null;
+  created_at: string;
+};
+
+// Challenge with relations (for queries)
+export type ChallengeWithParticipants = Challenge & {
+  participants: (ChallengeParticipant & {
+    patient: Patient;
+    checkins: ChallengeCheckin[];
+  })[];
+};
+
+export type ChallengeParticipantWithDetails = ChallengeParticipant & {
+  patient: Patient;
+  checkins: ChallengeCheckin[];
+  challenge: Challenge;
+};
