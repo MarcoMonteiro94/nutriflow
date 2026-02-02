@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  Trophy,
   Users,
   UtensilsCrossed,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const navItemsByRole: Record<OrgRole, Array<{ title: string; href: string; icon:
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Pacientes", href: "/patients", icon: Users },
     { title: "Planos", href: "/plans", icon: UtensilsCrossed },
+    { title: "Desafios", href: "/challenges", icon: Trophy },
     { title: "Agenda", href: "/schedule", icon: CalendarDays },
     { title: "Alimentos", href: "/foods", icon: ChefHat },
   ],
@@ -46,6 +48,7 @@ const navItemsByRole: Record<OrgRole, Array<{ title: string; href: string; icon:
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Pacientes", href: "/patients", icon: Users },
     { title: "Planos", href: "/plans", icon: UtensilsCrossed },
+    { title: "Desafios", href: "/challenges", icon: Trophy },
     { title: "Agenda", href: "/schedule", icon: CalendarDays },
     { title: "Alimentos", href: "/foods", icon: ChefHat },
   ],
