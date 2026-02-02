@@ -18,8 +18,10 @@ import {
 } from "lucide-react";
 import { DeletePatientButton } from "../_components/delete-patient-button";
 import { SharePlanButton } from "./_components/share-plan-button";
+import { LinkAccountButton } from "./_components/link-account-button";
 import { createPatientToken } from "@/lib/patient-token";
 import type { Patient } from "@/types/database";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -78,6 +80,23 @@ async function getPatientStats(patientId: string) {
   };
 }
 
+async function getLinkedUserEmail(userId: string | null): Promise<string | null> {
+  if (!userId) return null;
+
+  try {
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    const { data } = await serviceClient.auth.admin.getUserById(userId);
+    return data?.user?.email || null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function PatientDetailPage({ params }: PageProps) {
   const { id } = await params;
   const patient = await getPatient(id);
@@ -86,7 +105,10 @@ export default async function PatientDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const stats = await getPatientStats(id);
+  const [stats, linkedUserEmail] = await Promise.all([
+    getPatientStats(id),
+    getLinkedUserEmail(patient.user_id || null),
+  ]);
 
   async function generateToken() {
     "use server";
@@ -335,6 +357,13 @@ export default async function PatientDetailPage({ params }: PageProps) {
             patientId={id}
             patientName={patient.full_name}
             generateToken={generateToken}
+          />
+          <LinkAccountButton
+            patientId={id}
+            patientName={patient.full_name}
+            patientEmail={patient.email}
+            linkedUserId={patient.user_id || null}
+            linkedUserEmail={linkedUserEmail}
           />
         </CardContent>
       </Card>
