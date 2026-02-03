@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,11 +66,12 @@ export function ManageCustomTypesDialog() {
     setCustomTypes((data ?? []) as CustomMeasurementType[]);
   }, []);
 
-  useEffect(() => {
-    if (open) {
+  function handleOpenChange(newOpen: boolean) {
+    setOpen(newOpen);
+    if (newOpen) {
       loadCustomTypes();
     }
-  }, [open, loadCustomTypes]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -179,7 +180,7 @@ export function ManageCustomTypesDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Settings className="mr-2 h-4 w-4" />

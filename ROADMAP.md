@@ -7,7 +7,7 @@
 Este documento organiza todas as issues do projeto por prioridade e fase de desenvolvimento.
 
 ```
-Fase 1: Beta v1 (Crítico)     ████████░░░░░░░░░░░░  40%
+Fase 1: Beta v1 (Crítico)     ██████████░░░░░░░░░░  50%
 Fase 2: Beta v1 (Features)    ░░░░░░░░░░░░░░░░░░░░   0%
 Fase 3: Tech Debt             ░░░░░░░░░░░░░░░░░░░░   0%
 Fase 4: Portal do Paciente    ░░░░░░░░░░░░░░░░░░░░   0%
@@ -26,13 +26,13 @@ Fase 6: Qualidade             ░░░░░░░░░░░░░░░░�
 
 | Issue | Título | Labels | Status |
 |-------|--------|--------|--------|
-| [#14](https://github.com/MarcoMonteiro94/nutriflow/issues/14) | fix: storage RLS muito permissivo | `bug` `beta` `security` | 🔄 Em andamento |
+| [#14](https://github.com/MarcoMonteiro94/nutriflow/issues/14) | fix: storage RLS muito permissivo | `bug` `beta` `security` | ✅ Concluído |
 
 ### Bugs Críticos
 
 | Issue | Título | Labels | Status |
 |-------|--------|--------|--------|
-| [#13](https://github.com/MarcoMonteiro94/nutriflow/issues/13) | fix: corrigir 5 erros críticos de ESLint | `bug` `beta` | ⏳ Pendente |
+| [#13](https://github.com/MarcoMonteiro94/nutriflow/issues/13) | fix: corrigir 5 erros críticos de ESLint | `bug` `beta` | 🔄 Em andamento |
 | [#15](https://github.com/MarcoMonteiro94/nutriflow/issues/15) | fix: paciente não consegue ver anamnese | `bug` | ⏳ Pendente |
 | [#16](https://github.com/MarcoMonteiro94/nutriflow/issues/16) | fix: recepcionista sem acesso a tabelas de medições | `bug` | ⏳ Pendente |
 
