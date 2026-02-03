@@ -13,6 +13,9 @@ export default async function PatientRootLayout({
 
   // Check if user is authenticated and is a patient
   let isAuthenticated = false;
+  let hasChallenges = false;
+  let patientId: string | null = null;
+
   if (user) {
     const { data: patient } = await supabase
       .from("patients")
@@ -22,6 +25,17 @@ export default async function PatientRootLayout({
       .single();
 
     isAuthenticated = !!patient;
+    patientId = patient?.id || null;
+
+    // Check if patient has any challenge participations
+    if (patientId) {
+      const { count } = await supabase
+        .from("challenge_participants")
+        .select("id", { count: "exact", head: true })
+        .eq("patient_id", patientId);
+
+      hasChallenges = (count ?? 0) > 0;
+    }
   }
 
   return (
@@ -37,7 +51,7 @@ export default async function PatientRootLayout({
           : undefined
       }
     >
-      <PatientLayout isAuthenticated={isAuthenticated}>
+      <PatientLayout isAuthenticated={isAuthenticated} hasChallenges={hasChallenges}>
         {children}
       </PatientLayout>
       <PWAInstallPrompt />

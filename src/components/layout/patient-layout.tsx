@@ -75,11 +75,18 @@ const authenticatedNavItems = [
 interface PatientLayoutProps {
   children: React.ReactNode;
   isAuthenticated?: boolean;
+  hasChallenges?: boolean;
 }
 
-export function PatientLayout({ children, isAuthenticated }: PatientLayoutProps) {
+export function PatientLayout({ children, isAuthenticated, hasChallenges }: PatientLayoutProps) {
   const pathname = usePathname();
-  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
+
+  // Filter out challenges if patient has no challenges
+  const navItems = isAuthenticated
+    ? authenticatedNavItems.filter(item =>
+        item.href !== "/patient/challenges" || hasChallenges
+      )
+    : publicNavItems;
 
   const isActive = (href: string) => {
     if (href === "/patient" || href === "/patient/dashboard") {
