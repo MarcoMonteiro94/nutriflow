@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, FileText, Clock, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { Patient, AnamnesisReportRow } from "@/types/database";
+import type { Patient, AnamnesisReport } from "@/types/database";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -32,7 +32,7 @@ async function getPatient(id: string): Promise<Patient | null> {
   return data as Patient | null;
 }
 
-async function getAnamnesisReports(patientId: string): Promise<AnamnesisReportRow[]> {
+async function getAnamnesisReports(patientId: string): Promise<AnamnesisReport[]> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -48,7 +48,7 @@ async function getAnamnesisReports(patientId: string): Promise<AnamnesisReportRo
     .eq("nutri_id", user.id)
     .order("created_at", { ascending: false });
 
-  return (data ?? []) as AnamnesisReportRow[];
+  return (data ?? []) as AnamnesisReport[];
 }
 
 function getStatusBadge(status: string) {

@@ -52,7 +52,7 @@ export function ManageCustomTypesDialog() {
       return;
     }
 
-    const { data, error: fetchError } = await supabase
+    const { data, error: fetchError } = await (supabase as any)
       .from("custom_measurement_types")
       .select("*")
       .eq("nutri_id", user.id)
@@ -100,7 +100,7 @@ export function ManageCustomTypesDialog() {
     }
 
     // Check if type with same name already exists for this nutri
-    const { data: existingType } = await supabase
+    const { data: existingType } = await (supabase as any)
       .from("custom_measurement_types")
       .select("id")
       .eq("nutri_id", user.id)
@@ -113,7 +113,7 @@ export function ManageCustomTypesDialog() {
       return;
     }
 
-    const { error: createError } = await supabase
+    const { error: createError } = await (supabase as any)
       .from("custom_measurement_types")
       .insert({
         nutri_id: user.id,
@@ -152,7 +152,7 @@ export function ManageCustomTypesDialog() {
     }
 
     // First delete all values associated with this type
-    const { error: deleteValuesError } = await supabase
+    const { error: deleteValuesError } = await (supabase as any)
       .from("custom_measurement_values")
       .delete()
       .eq("type_id", typeId);
@@ -163,7 +163,7 @@ export function ManageCustomTypesDialog() {
     }
 
     // Then delete the type itself
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from("custom_measurement_types")
       .delete()
       .eq("id", typeId)

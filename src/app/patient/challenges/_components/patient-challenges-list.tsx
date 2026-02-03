@@ -88,7 +88,7 @@ function ChallengeCard({
   index: number;
 }) {
   const { challenge, checkins, badge_earned } = participation;
-  const statusConfig = getStatusConfig(challenge, badge_earned);
+  const statusConfig = getStatusConfig(challenge, badge_earned ?? false);
   const startDate = new Date(challenge.start_date);
   const endDate = new Date(challenge.end_date);
   const totalDays = differenceInDays(endDate, startDate) + 1;

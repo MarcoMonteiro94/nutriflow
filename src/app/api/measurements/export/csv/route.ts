@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch measurements for the patient
-    const { data: measurements, error: measurementsError } = await supabase
+    const { data: measurements, error: measurementsError } = await (supabase as any)
       .from("measurements")
       .select(`
         *,
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate CSV
-    const csv = generateMeasurementCSV(measurements ?? []);
+    const csv = generateMeasurementCSV((measurements ?? []) as any);
 
     // Return CSV file
     const fileName = `medidas_${patient.full_name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.csv`;

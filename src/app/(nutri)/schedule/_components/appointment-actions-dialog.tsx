@@ -277,12 +277,14 @@ export function AppointmentActionsDialog({
                           </p>
                         )}
 
-                        <p className="text-xs text-muted-foreground">
-                          {format(
-                            new Date(entry.created_at),
-                            "dd/MM/yy HH:mm"
-                          )}
-                        </p>
+                        {entry.created_at && (
+                          <p className="text-xs text-muted-foreground">
+                            {format(
+                              new Date(entry.created_at),
+                              "dd/MM/yy HH:mm"
+                            )}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

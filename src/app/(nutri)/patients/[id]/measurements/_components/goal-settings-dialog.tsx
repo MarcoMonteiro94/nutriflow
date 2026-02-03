@@ -90,7 +90,7 @@ export function GoalSettingsDialog({ patientId }: GoalSettingsDialogProps) {
     }
 
     // Check if an active goal already exists for this metric
-    const { data: existingGoal } = await supabase
+    const { data: existingGoal } = await (supabase as any)
       .from("measurement_goals")
       .select("id")
       .eq("patient_id", patientId)
@@ -100,7 +100,7 @@ export function GoalSettingsDialog({ patientId }: GoalSettingsDialogProps) {
 
     if (existingGoal) {
       // Update existing goal
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from("measurement_goals")
         .update({
           target_value: Number(targetValue),
@@ -117,7 +117,7 @@ export function GoalSettingsDialog({ patientId }: GoalSettingsDialogProps) {
       }
     } else {
       // Create new goal
-      const { error: createError } = await supabase
+      const { error: createError } = await (supabase as any)
         .from("measurement_goals")
         .insert({
           patient_id: patientId,

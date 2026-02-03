@@ -77,7 +77,7 @@ export function TimeBlockList({ timeBlocks }: TimeBlockListProps) {
   return (
     <div className="space-y-3">
       {timeBlocks.map((block) => {
-        const config = BLOCK_TYPE_CONFIG[block.block_type];
+        const config = BLOCK_TYPE_CONFIG[block.block_type ?? "personal"];
         const Icon = config.icon;
         const startDate = new Date(block.start_datetime);
         const endDate = new Date(block.end_datetime);

@@ -104,7 +104,7 @@ function groupByDay(availability: NutriAvailability[]): WeekScheduleState {
       id: slot.id,
       startTime: slot.start_time.slice(0, 5),
       endTime: slot.end_time.slice(0, 5),
-      isActive: slot.is_active,
+      isActive: slot.is_active ?? true,
     });
   }
 

@@ -94,11 +94,13 @@ export function AppointmentHistory({ history }: AppointmentHistoryProps) {
                 </p>
               )}
 
-              <p className="mt-1 text-xs text-muted-foreground">
-                {format(new Date(entry.created_at), "dd/MM/yyyy 'às' HH:mm", {
-                  locale: ptBR,
-                })}
-              </p>
+              {entry.created_at && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {format(new Date(entry.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                    locale: ptBR,
+                  })}
+                </p>
+              )}
             </div>
           </div>
         );

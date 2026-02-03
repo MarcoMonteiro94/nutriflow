@@ -206,7 +206,9 @@ export async function deleteOrganization(
 // Organization Members
 // ============================================
 
-export type MemberWithProfile = OrganizationMember & {
+export type MemberWithProfile = Omit<OrganizationMember, 'role' | 'status'> & {
+  role: OrgRole;
+  status: "active" | "inactive" | "pending";
   profiles: {
     id: string;
     full_name: string;

@@ -1,13 +1,6 @@
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { getUserRole, isClinicalRole } from "@/lib/auth/authorization";
-import { ChallengeForm } from "../_components/challenge-form";
+import { ChallengeFormV2 } from "../_components/challenge-form-v2";
 
 export default async function NewChallengePage() {
   const userRole = await getUserRole();
@@ -16,25 +9,15 @@ export default async function NewChallengePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-6 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Novo Desafio</h1>
         <p className="text-muted-foreground">
-          Crie um desafio para motivar seus pacientes.
+          Crie um desafio com fases e metas para seus pacientes.
         </p>
       </div>
 
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle>Informações do Desafio</CardTitle>
-          <CardDescription>
-            Defina o título, descrição e período do desafio.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChallengeForm />
-        </CardContent>
-      </Card>
+      <ChallengeFormV2 />
     </div>
   );
 }
