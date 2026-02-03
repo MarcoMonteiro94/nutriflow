@@ -253,6 +253,10 @@ export default async function PatientChallengeDetailPage({
   const todayStr = format(now, "yyyy-MM-dd");
   const todayCheckin = checkins.find((c) => c.checkin_date === todayStr);
 
+  // Get all days in the challenge period
+  const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+  const checkinDates = new Set(checkins.map((c) => c.checkin_date));
+
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}

@@ -9,7 +9,7 @@ export default async function NewChallengePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 py-6 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Novo Desafio</h1>
         <p className="text-muted-foreground">

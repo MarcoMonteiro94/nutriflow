@@ -67,7 +67,7 @@ export function PendingInvites({ invites }: PendingInvitesProps) {
 
   function handleWhatsApp(invite: OrganizationInvite) {
     const link = getInviteLink(invite.token);
-    const role = roleLabels[invite.role];
+    const role = roleLabels[invite.role as OrgRole];
     const message = encodeURIComponent(
       `Olá! Você foi convidado para se juntar à nossa clínica no NutriFlow como ${role}.\n\nClique no link abaixo para aceitar o convite:\n${link}\n\nO convite expira em 7 dias.`
     );
@@ -119,7 +119,7 @@ export function PendingInvites({ invites }: PendingInvitesProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{roleLabels[invite.role]}</Badge>
+                  <Badge variant="secondary">{roleLabels[invite.role as OrgRole]}</Badge>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>

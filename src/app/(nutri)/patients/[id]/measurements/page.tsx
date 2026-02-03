@@ -64,7 +64,7 @@ async function getMeasurementGoals(patientId: string): Promise<MeasurementGoal[]
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("measurement_goals")
     .select("*")
     .eq("patient_id", patientId)
@@ -83,7 +83,7 @@ async function getCustomMeasurementTypes(): Promise<CustomMeasurementType[]> {
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("custom_measurement_types")
     .select("*")
     .eq("nutri_id", user.id)
@@ -101,7 +101,7 @@ async function getCustomMeasurementValues(patientId: string): Promise<CustomMeas
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("custom_measurement_values")
     .select("*")
     .eq("patient_id", patientId)
@@ -119,7 +119,7 @@ async function getMeasurementPhotos(patientId: string): Promise<MeasurementPhoto
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("measurement_photos")
     .select("*")
     .eq("patient_id", patientId)

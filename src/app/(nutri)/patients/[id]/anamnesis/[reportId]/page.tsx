@@ -111,8 +111,8 @@ export default function AnamnesisReviewPage({ params }: PageProps) {
     // Convert to database-compatible format
     const dbChanges = {
       ...changes,
-      social_history: changes.social_history as Record<string, unknown> | undefined,
-      dietary_history: changes.dietary_history as Record<string, unknown> | undefined,
+      social_history: changes.social_history as any,
+      dietary_history: changes.dietary_history as any,
     };
 
     const { error } = await supabase

@@ -12,7 +12,7 @@ interface InvitePageProps {
   }>;
 }
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
   admin: "Administrador",
   nutri: "Nutricionista",
   receptionist: "Recepcionista",
@@ -80,7 +80,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
               <p className="text-sm text-center text-muted-foreground">
                 Logado como <strong>{user.email}</strong>
               </p>
-              <AcceptInviteButton token={token} role={invite.role} />
+              <AcceptInviteButton token={token} role={invite.role as any} />
             </div>
           ) : (
             <div className="space-y-4">

@@ -65,7 +65,7 @@ export function MeasurementForm({
       }
 
       // Fetch custom measurement types for this nutritionist
-      const { data: types, error: typesError } = await supabase
+      const { data: types, error: typesError } = await (supabase as any)
         .from("custom_measurement_types")
         .select("*")
         .eq("nutri_id", user.id)
@@ -80,7 +80,7 @@ export function MeasurementForm({
 
       // If editing, fetch existing custom values for this measurement date and patient
       if (isEditing && initialData?.measured_at) {
-        const { data: values, error: valuesError } = await supabase
+        const { data: values, error: valuesError } = await (supabase as any)
           .from("custom_measurement_values")
           .select("*")
           .eq("patient_id", patientId)
@@ -159,7 +159,7 @@ export function MeasurementForm({
       if (hasCustomMeasurement) {
         // First, delete existing custom values for this patient and date (if editing)
         if (isEditing && initialData?.measured_at) {
-          await supabase
+          await (supabase as any)
             .from("custom_measurement_values")
             .delete()
             .eq("patient_id", patientId)
@@ -177,7 +177,7 @@ export function MeasurementForm({
           }));
 
         if (customValuesToInsert.length > 0) {
-          const { error: customError } = await supabase
+          const { error: customError } = await (supabase as any)
             .from("custom_measurement_values")
             .insert(customValuesToInsert);
 
