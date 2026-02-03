@@ -36,7 +36,7 @@ export function NutriScheduleCard({ nutri }: NutriScheduleCardProps) {
               <p className="text-sm text-muted-foreground">{nutri.profiles.email ?? ""}</p>
             </div>
           </div>
-          <Badge variant="secondary">{roleLabels[nutri.role]}</Badge>
+          <Badge variant="secondary">{roleLabels[nutri.role as OrgRole]}</Badge>
         </div>
       </CardHeader>
       <CardContent>
