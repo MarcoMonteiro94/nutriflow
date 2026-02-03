@@ -7,32 +7,45 @@ import { format, differenceInDays, isAfter, isBefore, eachDayOfInterval } from "
 import { ptBR } from "date-fns/locale";
 import { CheckinCalendar } from "../_components/checkin-calendar";
 import { ChallengeBadge } from "../_components/challenge-badge";
-import type { Challenge, ChallengeParticipant, ChallengeCheckin } from "@/types/database";
+import { V2ChallengeView } from "../_components/v2-challenge-view";
+import type {
+  Challenge,
+  ChallengeParticipant,
+  ChallengeCheckin,
+  ChallengeParticipantV2,
+  ChallengePhase,
+  ChallengeGoal,
+  GoalCheckin,
+  ParticipantAchievement,
+} from "@/types/database";
 
+// V1 participant type
 type ParticipantWithDetails = ChallengeParticipant & {
   challenge: Challenge;
   checkins: ChallengeCheckin[];
 };
 
-async function getParticipation(challengeId: string): Promise<ParticipantWithDetails | null> {
+// V2 participant type with phases and goals
+type V2ParticipantWithDetails = ChallengeParticipantV2 & {
+  challenge: Challenge;
+};
+
+async function getPatientId(userId: string): Promise<string | null> {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  // Get patient record
   const { data: patient } = await supabase
     .from("patients")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
 
-  if (!patient) return null;
+  return patient?.id || null;
+}
 
-  // Get participation with challenge and checkins
+async function getParticipation(challengeId: string, patientId: string): Promise<ParticipantWithDetails | null> {
+  const supabase = await createClient();
+
+  // Get participation with challenge and checkins (V1)
   const { data } = await supabase
     .from("challenge_participants")
     .select(
@@ -42,11 +55,69 @@ async function getParticipation(challengeId: string): Promise<ParticipantWithDet
       checkins:challenge_checkins(*)
     `
     )
-    .eq("patient_id", patient.id)
+    .eq("patient_id", patientId)
     .eq("challenge_id", challengeId)
     .single();
 
   return data as ParticipantWithDetails | null;
+}
+
+async function isV2Challenge(challengeId: string): Promise<boolean> {
+  const supabase = await createClient();
+
+  // Check if challenge has any goals (V2 indicator)
+  const { count } = await (supabase as any)
+    .from("challenge_goals")
+    .select("id", { count: "exact", head: true })
+    .eq("challenge_id", challengeId);
+
+  return (count ?? 0) > 0;
+}
+
+async function getV2Data(challengeId: string, participantId: string) {
+  const supabase = await createClient();
+
+  // Get phases with their goals
+  const { data: phases } = await (supabase as any)
+    .from("challenge_phases")
+    .select("*, goals:challenge_goals(*)")
+    .eq("challenge_id", challengeId)
+    .order("order_index", { ascending: true });
+
+  // Get direct goals (no phase)
+  const { data: directGoals } = await (supabase as any)
+    .from("challenge_goals")
+    .select("*")
+    .eq("challenge_id", challengeId)
+    .is("phase_id", null)
+    .order("order_index", { ascending: true });
+
+  // Get all goal IDs for this challenge
+  const allGoalIds = [
+    ...(phases?.flatMap((p: any) => p.goals?.map((g: any) => g.id) || []) || []),
+    ...(directGoals?.map((g: any) => g.id) || []),
+  ];
+
+  // Get all checkins for these goals
+  const { data: checkins } = await (supabase as any)
+    .from("goal_checkins")
+    .select("*")
+    .eq("participant_id", participantId)
+    .in("goal_id", allGoalIds.length > 0 ? allGoalIds : ["no-goals"]);
+
+  // Get achievements
+  const { data: achievements } = await (supabase as any)
+    .from("participant_achievements")
+    .select("*")
+    .eq("participant_id", participantId)
+    .order("earned_at", { ascending: false });
+
+  return {
+    phases: (phases || []) as (ChallengePhase & { goals: ChallengeGoal[] })[],
+    directGoals: (directGoals || []) as ChallengeGoal[],
+    checkins: (checkins || []) as GoalCheckin[],
+    achievements: (achievements || []) as ParticipantAchievement[],
+  };
 }
 
 export default async function PatientChallengeDetailPage({
@@ -63,17 +134,111 @@ export default async function PatientChallengeDetailPage({
     redirect("/auth/login");
   }
 
-  const { id } = await params;
-  const participation = await getParticipation(id);
+  const { id: challengeId } = await params;
 
+  // Get patient ID
+  const patientId = await getPatientId(user.id);
+  if (!patientId) {
+    notFound();
+  }
+
+  // Get participation
+  const participation = await getParticipation(challengeId, patientId);
   if (!participation) {
     notFound();
   }
 
-  const { challenge, checkins, badge_earned } = participation;
+  // Check if V2 challenge
+  const isV2 = await isV2Challenge(challengeId);
+
+  const { challenge, badge_earned } = participation;
   const startDate = new Date(challenge.start_date);
   const endDate = new Date(challenge.end_date);
   const now = new Date();
+
+  const isActive =
+    challenge.status === "active" &&
+    isAfter(now, startDate) &&
+    isBefore(now, endDate);
+
+  // V2 Challenge rendering
+  if (isV2) {
+    const v2Data = await getV2Data(challengeId, participation.id);
+
+    // Cast participant to V2 type with defaults for new fields
+    const v2Participant: ChallengeParticipantV2 = {
+      ...participation,
+      current_phase_id: (participation as any).current_phase_id || null,
+      current_goal_id: (participation as any).current_goal_id || null,
+      streak_count: (participation as any).streak_count || 0,
+      best_streak: (participation as any).best_streak || 0,
+    };
+
+    return (
+      <div className="min-h-[calc(100vh-4rem)]">
+        {/* Header */}
+        <div className="border-b bg-card">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <Link
+              href="/patient/challenges"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Link>
+
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    {challenge.title}
+                  </h1>
+                  {badge_earned && (
+                    <Badge variant="default" className="gap-1">
+                      <Award className="h-3 w-3" />
+                      Concluído
+                    </Badge>
+                  )}
+                </div>
+                {challenge.description && (
+                  <p className="text-muted-foreground max-w-2xl">
+                    {challenge.description}
+                  </p>
+                )}
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {format(startDate, "d MMM", { locale: ptBR })} -{" "}
+                      {format(endDate, "d MMM yyyy", { locale: ptBR })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* V2 Content */}
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto">
+            <V2ChallengeView
+              challenge={challenge}
+              participant={v2Participant}
+              phases={v2Data.phases}
+              directGoals={v2Data.directGoals}
+              checkins={v2Data.checkins}
+              achievements={v2Data.achievements}
+              patientId={patientId}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // V1 Challenge rendering (original code)
+  const { checkins } = participation;
   const totalDays = differenceInDays(endDate, startDate) + 1;
 
   const daysPassed = isAfter(now, startDate)
@@ -84,18 +249,9 @@ export default async function PatientChallengeDetailPage({
     : 0;
   const overallProgress = Math.round((checkins.length / totalDays) * 100);
 
-  const isActive =
-    challenge.status === "active" &&
-    isAfter(now, startDate) &&
-    isBefore(now, endDate);
-
   // Get today's checkin status
   const todayStr = format(now, "yyyy-MM-dd");
   const todayCheckin = checkins.find((c) => c.checkin_date === todayStr);
-
-  // Get all days in the challenge period
-  const allDays = eachDayOfInterval({ start: startDate, end: endDate });
-  const checkinDates = new Set(checkins.map((c) => c.checkin_date));
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -142,7 +298,7 @@ export default async function PatientChallengeDetailPage({
         </div>
       </div>
 
-      {/* Content */}
+      {/* V1 Content */}
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Badge Display (if earned) */}
