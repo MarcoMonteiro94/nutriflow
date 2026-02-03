@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { NutriSidebar } from "@/components/layout/nutri-sidebar";
 import { createClient } from "@/lib/supabase/server";
 import { RoleProvider } from "@/contexts/role-context";
@@ -84,7 +85,17 @@ export default async function NutriLayout({
         // They shouldn't be here - redirect to home
         redirect("/");
       } else {
-        // Default to nutri for backwards compatibility (direct nutri signup)
+        // User is a nutri without an organization
+        // Redirect to create organization page (unless already there)
+        const headersList = await headers();
+        const pathname = headersList.get("x-pathname") || "";
+
+        // Allow access to organization/create without redirect loop
+        if (!pathname.includes("/organization/create")) {
+          redirect("/organization/create");
+        }
+
+        // Default to nutri for the create org page
         role = "nutri";
       }
     }

@@ -73,6 +73,7 @@ export interface UserRole {
   organizationId: string | null;
   role: OrgRole | null;
   isOwner: boolean;
+  isSuperAdmin: boolean;
 }
 
 /**
@@ -85,6 +86,15 @@ export async function getUserRole(organizationId?: string): Promise<UserRole | n
   if (!user) {
     return null;
   }
+
+  // Check if user is a super admin
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_super_admin")
+    .eq("id", user.id)
+    .single();
+
+  const isSuperAdmin = profile?.is_super_admin === true;
 
   // If no organization specified, try to get the user's first organization
   if (!organizationId) {
@@ -108,6 +118,7 @@ export async function getUserRole(organizationId?: string): Promise<UserRole | n
         organizationId: membership.organization_id,
         role: membership.role as OrgRole,
         isOwner: org?.owner_id === user.id,
+        isSuperAdmin,
       };
     }
 
@@ -125,6 +136,18 @@ export async function getUserRole(organizationId?: string): Promise<UserRole | n
         organizationId: ownedOrg.id,
         role: "admin",
         isOwner: true,
+        isSuperAdmin,
+      };
+    }
+
+    // Super admins without org still get admin-level access
+    if (isSuperAdmin) {
+      return {
+        userId: user.id,
+        organizationId: null,
+        role: "admin",
+        isOwner: false,
+        isSuperAdmin: true,
       };
     }
 
@@ -134,6 +157,7 @@ export async function getUserRole(organizationId?: string): Promise<UserRole | n
       organizationId: null,
       role: null,
       isOwner: false,
+      isSuperAdmin: false,
     };
   }
 
@@ -154,11 +178,15 @@ export async function getUserRole(organizationId?: string): Promise<UserRole | n
 
   const isOwner = org?.owner_id === user.id;
 
+  // Super admins get admin access to any organization
+  const effectiveRole = isSuperAdmin ? "admin" : (isOwner ? "admin" : (membership?.role as OrgRole | null));
+
   return {
     userId: user.id,
     organizationId,
-    role: isOwner ? "admin" : (membership?.role as OrgRole | null),
+    role: effectiveRole,
     isOwner,
+    isSuperAdmin,
   };
 }
 
@@ -215,6 +243,13 @@ export function isClinicalRole(role: OrgRole | null): boolean {
  */
 export function isAdmin(role: OrgRole | null, isOwner?: boolean): boolean {
   return role === "admin" || isOwner === true;
+}
+
+/**
+ * Check if user is a super admin (system-level admin)
+ */
+export function isSuperAdmin(userRole: UserRole | null): boolean {
+  return userRole?.isSuperAdmin === true;
 }
 
 /**
