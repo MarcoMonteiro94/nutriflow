@@ -11,7 +11,7 @@ export interface AnamnesisInsights {
   model_used: string;
 }
 
-const MODEL_ID = "claude-sonnet-4-20250514";
+const MODEL_ID = process.env.AI_ANALYSIS_MODEL || "claude-sonnet-4-20250514";
 
 const ANALYSIS_PROMPT = `Você é um nutricionista clínico experiente analisando dados de uma anamnese nutricional.
 
