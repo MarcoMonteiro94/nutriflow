@@ -85,9 +85,9 @@ async function getDashboardStats() {
   const { data: upcomingAppointments } = await upcomingAppointmentsQuery;
 
   // Monthly stats
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+  const currentDate = new Date();
+  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
+  const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
   let monthlyAppointmentsQuery = supabase
     .from("appointments")
