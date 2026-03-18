@@ -1,9 +1,10 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
+import { LIMITS } from "@/lib/constants";
 
 const TOKEN_COOKIE_NAME = "patient_token";
-const TOKEN_EXPIRY_DAYS = 30;
+const TOKEN_EXPIRY_DAYS = LIMITS.PATIENT_TOKEN_EXPIRY_DAYS;
 
 /**
  * Generate a secure random token
