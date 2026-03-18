@@ -50,6 +50,7 @@ export interface AnamnesisReport {
   audio_duration_seconds: number | null;
   ai_model_used: string | null;
   confidence_score: number | null;
+  ai_insights: Record<string, unknown> | null;
 
   // Workflow
   status: AnamnesisStatus;

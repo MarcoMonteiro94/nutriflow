@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       anamnesis_reports: {
         Row: {
+          ai_insights: Json | null
           ai_model_used: string | null
           approved_at: string | null
           audio_duration_seconds: number | null
@@ -41,6 +42,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_insights?: Json | null
           ai_model_used?: string | null
           approved_at?: string | null
           audio_duration_seconds?: number | null
@@ -66,6 +68,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_insights?: Json | null
           ai_model_used?: string | null
           approved_at?: string | null
           audio_duration_seconds?: number | null
