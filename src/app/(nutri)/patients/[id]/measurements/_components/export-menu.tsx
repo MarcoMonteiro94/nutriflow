@@ -70,7 +70,11 @@ export function ExportMenu({ measurements, patientName, customTypes, customValue
     // Generate CSV content
     const csvContent = [
       headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+      ...rows.map((row) => row.map((cell) => {
+        // Prevent CSV formula injection
+        const sanitized = /^[=+\-@\t\r]/.test(String(cell)) ? `'${cell}` : String(cell);
+        return `"${sanitized.replace(/"/g, '""')}"`;
+      }).join(",")),
     ].join("\n");
 
     // Create and download file

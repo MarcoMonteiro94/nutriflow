@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { analyzeAnamnesis } from "@/lib/ai/analyze-anamnesis";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { logAuditEvent } from "@/lib/audit";
 import type { AnamnesisReport } from "@/types/anamnesis";
 
 export async function POST(request: NextRequest) {
@@ -12,6 +14,15 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit AI endpoint
+    const rl = checkRateLimit(`ai:${user.id}`, RATE_LIMITS.ai);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em breve." },
+        { status: 429, headers: { "Retry-After": Math.ceil((rl.resetAt - Date.now()) / 1000).toString() } }
+      );
     }
 
     const { reportId } = await request.json();
@@ -67,6 +78,13 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       throw updateError;
     }
+
+    await logAuditEvent({
+      action: "anamnesis.analyze",
+      resourceType: "anamnesis_report",
+      resourceId: reportId,
+      userId: user.id,
+    });
 
     return NextResponse.json({
       success: true,

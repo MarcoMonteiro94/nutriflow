@@ -59,12 +59,18 @@ export function generateMeasurementCSV(measurements: MeasurementWithCustom[]): s
   const csvLines = [headers.join(",")];
 
   rows.forEach((row) => {
-    // Escape values that contain commas, quotes, or newlines
+    // Escape values: CSV injection prevention + standard CSV escaping
     const escapedRow = row.map((value) => {
-      if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-        return `"${value.replace(/"/g, '""')}"`;
+      // Prevent CSV formula injection (Excel/Sheets execute =, +, -, @, \t, \r)
+      let sanitized = value;
+      if (/^[=+\-@\t\r]/.test(sanitized)) {
+        sanitized = `'${sanitized}`;
       }
-      return value;
+      // Standard CSV escaping for commas, quotes, newlines
+      if (sanitized.includes(",") || sanitized.includes('"') || sanitized.includes("\n")) {
+        return `"${sanitized.replace(/"/g, '""')}"`;
+      }
+      return sanitized;
     });
     csvLines.push(escapedRow.join(","));
   });
