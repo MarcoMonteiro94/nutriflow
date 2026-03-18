@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { validateImageMagicBytes } from "@/lib/file-validation";
 
 function validateImageFile(
   filename: string,
@@ -74,12 +75,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file
+    // Validate file extension and size
     const validation = validateImageFile(file.name, file.size);
 
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate file content via magic bytes
+    const fileBuffer = await file.arrayBuffer();
+    if (!validateImageMagicBytes(fileBuffer)) {
+      return NextResponse.json(
+        { error: "Formato de arquivo inválido" },
         { status: 400 }
       );
     }
@@ -92,7 +102,7 @@ export async function POST(request: NextRequest) {
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from("measurement-photos")
-      .upload(filePath, file, {
+      .upload(filePath, fileBuffer, {
         contentType: file.type,
         upsert: false,
       });

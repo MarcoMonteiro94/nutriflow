@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { validateAudioFile } from "@/lib/ai/transcribe";
+import { validateAudioMagicBytes } from "@/lib/file-validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file
+    // Validate file extension and size
     const validation = validateAudioFile(file.name, file.size);
 
     if (!validation.valid) {
@@ -60,15 +61,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate file content via magic bytes
+    const fileBuffer = await file.arrayBuffer();
+    if (!validateAudioMagicBytes(fileBuffer)) {
+      return NextResponse.json(
+        { error: "Formato de arquivo inválido" },
+        { status: 400 }
+      );
+    }
+
     // Generate unique file path
     const timestamp = Date.now();
     const ext = file.name.split(".").pop();
     const filePath = `${user.id}/${patientId}/${timestamp}.${ext}`;
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (use buffer we already read)
     const { error: uploadError } = await supabase.storage
       .from("anamnesis-audio")
-      .upload(filePath, file, {
+      .upload(filePath, fileBuffer, {
         contentType: file.type,
         upsert: false,
       });

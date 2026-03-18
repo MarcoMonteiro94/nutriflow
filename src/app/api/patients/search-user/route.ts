@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +24,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Não autenticado" },
         { status: 401 }
+      );
+    }
+
+    // Rate limit search to prevent email enumeration
+    const rl = checkRateLimit(`search:${user.id}`, RATE_LIMITS.search);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em breve." },
+        { status: 429 }
       );
     }
 
