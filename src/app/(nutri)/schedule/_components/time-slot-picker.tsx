@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -37,16 +37,7 @@ export function TimeSlotPicker({
   const [error, setError] = useState<string | null>(null);
   const [noAvailability, setNoAvailability] = useState(false);
 
-  useEffect(() => {
-    if (date) {
-      loadAvailableSlots();
-    } else {
-      setSlots([]);
-      setNoAvailability(false);
-    }
-  }, [date, duration, excludeAppointmentId, nutriId]);
-
-  async function loadAvailableSlots() {
+  const loadAvailableSlots = useCallback(async () => {
     if (!date) return;
 
     // If nutriId is provided but empty (receptionist hasn't selected yet), don't load
@@ -196,7 +187,16 @@ export function TimeSlotPicker({
     } finally {
       setLoading(false);
     }
-  }
+  }, [date, duration, excludeAppointmentId, nutriId]);
+
+  useEffect(() => {
+    if (date) {
+      loadAvailableSlots();
+    } else {
+      setSlots([]);
+      setNoAvailability(false);
+    }
+  }, [date, duration, excludeAppointmentId, nutriId, loadAvailableSlots]);
 
   // If receptionist hasn't selected a nutri yet
   if (nutriId === "") {

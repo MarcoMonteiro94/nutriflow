@@ -1241,6 +1241,7 @@ export type Database = {
           id: string
           notes: string | null
           nutri_id: string
+          organization_id: string | null
           phone: string | null
           profile_id: string | null
           updated_at: string
@@ -1256,6 +1257,7 @@ export type Database = {
           id?: string
           notes?: string | null
           nutri_id: string
+          organization_id?: string | null
           phone?: string | null
           profile_id?: string | null
           updated_at?: string
@@ -1271,6 +1273,7 @@ export type Database = {
           id?: string
           notes?: string | null
           nutri_id?: string
+          organization_id?: string | null
           phone?: string | null
           profile_id?: string | null
           updated_at?: string

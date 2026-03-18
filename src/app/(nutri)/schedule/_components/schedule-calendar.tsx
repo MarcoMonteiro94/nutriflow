@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar } from "@/components/ui/calendar";
-import type { NutriTimeBlock } from "@/types/database";
 
 interface ScheduleCalendarProps {
   selectedDate: Date;
