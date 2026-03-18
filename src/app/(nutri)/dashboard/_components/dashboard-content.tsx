@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/ui/stats-card";
-import { CalendarDays, Plus, TrendingUp, Users, UtensilsCrossed, Clock, ArrowRight } from "lucide-react";
+import { CalendarDays, Plus, TrendingUp, Users, UtensilsCrossed, Clock, ArrowRight, UserPlus, CalendarCheck } from "lucide-react";
 import Link from "next/link";
 import { PageTransition, StaggerList, StaggerItem, FadeIn } from "@/components/motion";
 
@@ -19,6 +19,9 @@ interface DashboardStats {
   totalPatients: number;
   activePlans: number;
   todayAppointments: number;
+  monthlyAppointments: number;
+  newPatients: number;
+  returnRate: number;
   upcomingAppointments: Appointment[];
 }
 
@@ -53,7 +56,7 @@ export function DashboardContent({ stats }: DashboardContentProps) {
       </FadeIn>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
         <StatsCard
           title="Total Pacientes"
           value={stats.totalPatients}
@@ -78,15 +81,36 @@ export function DashboardContent({ stats }: DashboardContentProps) {
           iconColor="green"
           index={2}
         />
-        <StatsCard
-          title="Taxa de Adesão"
-          value="--%"
-          description="Média dos pacientes"
-          icon={TrendingUp}
-          iconColor="purple"
-          index={3}
-        />
       </div>
+
+      {/* Monthly Metrics */}
+      <FadeIn delay={0.2}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Métricas do Mês</CardTitle>
+            <CardDescription>Resumo de atividade do mês atual</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-lg bg-muted/50 p-4 text-center">
+                <CalendarCheck className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
+                <p className="text-2xl font-semibold">{stats.monthlyAppointments}</p>
+                <p className="text-xs text-muted-foreground">Consultas no mês</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-4 text-center">
+                <UserPlus className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
+                <p className="text-2xl font-semibold">{stats.newPatients}</p>
+                <p className="text-xs text-muted-foreground">Novos pacientes</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-4 text-center">
+                <TrendingUp className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
+                <p className="text-2xl font-semibold">{stats.returnRate}%</p>
+                <p className="text-xs text-muted-foreground">Taxa de retorno</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </FadeIn>
 
       {/* Main Content Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
