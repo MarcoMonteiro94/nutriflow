@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { APPOINTMENT_TRANSITIONS } from "@/lib/constants";
 import type {
   Appointment,
   AppointmentHistory,
@@ -95,6 +96,31 @@ export async function rescheduleAppointment(
   return { data: data as Appointment, error: null };
 }
 
+async function validateTransition(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  appointmentId: string,
+  userId: string,
+  targetStatus: string
+): Promise<string | null> {
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("status")
+    .eq("id", appointmentId)
+    .eq("nutri_id", userId)
+    .single();
+
+  if (!appointment) {
+    return "Agendamento não encontrado";
+  }
+
+  const allowed = APPOINTMENT_TRANSITIONS[appointment.status];
+  if (!allowed || !allowed.includes(targetStatus)) {
+    return `Não é possível alterar status de "${appointment.status}" para "${targetStatus}"`;
+  }
+
+  return null;
+}
+
 export async function cancelAppointment(
   appointmentId: string,
   reason?: string
@@ -107,6 +133,9 @@ export async function cancelAppointment(
   if (!user) {
     return { error: "Usuário não autenticado" };
   }
+
+  const transitionError = await validateTransition(supabase, appointmentId, user.id, "cancelled");
+  if (transitionError) return { error: transitionError };
 
   const { error } = await supabase
     .from("appointments")
@@ -137,6 +166,9 @@ export async function completeAppointment(
     return { error: "Usuário não autenticado" };
   }
 
+  const transitionError = await validateTransition(supabase, appointmentId, user.id, "completed");
+  if (transitionError) return { error: transitionError };
+
   const { error } = await supabase
     .from("appointments")
     .update({
@@ -163,6 +195,9 @@ export async function markNoShow(
   if (!user) {
     return { error: "Usuário não autenticado" };
   }
+
+  const transitionError = await validateTransition(supabase, appointmentId, user.id, "no_show");
+  if (transitionError) return { error: transitionError };
 
   const { error } = await supabase
     .from("appointments")
