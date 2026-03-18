@@ -59,31 +59,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already a member
-    const { data: existingMember } = await serviceClient
-      .from("organization_members")
-      .select("id")
-      .eq("organization_id", invite.organization_id as string)
-      .eq("user_id", user.id)
-      .single();
-
-    if (existingMember) {
-      return NextResponse.json(
-        { error: "Você já é membro desta organização" },
-        { status: 400 }
-      );
-    }
-
-    // Add user as member
+    // Add user as member (upsert to handle race conditions)
+    // The unique constraint (organization_id, user_id) prevents duplicates
     const { error: memberError } = await serviceClient
       .from("organization_members")
-      .insert({
-        organization_id: invite.organization_id as string,
-        user_id: user.id,
-        role: invite.role as "admin" | "nutri" | "receptionist" | "patient",
-        status: "active",
-        accepted_at: new Date().toISOString(),
-      });
+      .upsert(
+        {
+          organization_id: invite.organization_id as string,
+          user_id: user.id,
+          role: invite.role as "admin" | "nutri" | "receptionist" | "patient",
+          status: "active",
+          accepted_at: new Date().toISOString(),
+        },
+        { onConflict: "organization_id,user_id", ignoreDuplicates: true }
+      );
 
     if (memberError) {
       console.error("Error adding member:", memberError);

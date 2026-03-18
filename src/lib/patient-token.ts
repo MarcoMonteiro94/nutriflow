@@ -22,20 +22,17 @@ export async function createPatientToken(patientId: string): Promise<string> {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + TOKEN_EXPIRY_DAYS);
 
-  // Delete any existing tokens for this patient
-  await supabase
-    .from("patient_tokens")
-    .delete()
-    .eq("patient_id", patientId);
-
-  // Create new token
+  // Upsert token (avoids race condition with concurrent delete+insert)
   const { error } = await supabase
     .from("patient_tokens")
-    .insert({
-      patient_id: patientId,
-      token,
-      expires_at: expiresAt.toISOString(),
-    });
+    .upsert(
+      {
+        patient_id: patientId,
+        token,
+        expires_at: expiresAt.toISOString(),
+      },
+      { onConflict: "patient_id" }
+    );
 
   if (error) {
     throw new Error(`Failed to create patient token: ${error.message}`);
