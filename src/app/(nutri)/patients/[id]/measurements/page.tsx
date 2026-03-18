@@ -20,112 +20,39 @@ interface PageProps {
 
 async function getPatient(id: string): Promise<Patient | null> {
   const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
-  }
-
   const { data } = await supabase
     .from("patients")
     .select("*")
     .eq("id", id)
-    .eq("nutri_id", user.id)
     .single();
 
   return data as Patient | null;
 }
 
-async function getMeasurements(patientId: string): Promise<Measurement[]> {
+async function getMeasurementsPageData(patientId: string) {
   const supabase = await createClient();
-
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return [];
+    return { measurements: [], goals: [], customTypes: [], customValues: [], photos: [] };
   }
 
-  const { data } = await supabase
-    .from("measurements")
-    .select("*")
-    .eq("patient_id", patientId)
-    .order("measured_at", { ascending: true });
+  // Single auth check, all queries in parallel
+  const [measurementsRes, goalsRes, typesRes, valuesRes, photosRes] = await Promise.all([
+    supabase.from("measurements").select("*").eq("patient_id", patientId).order("measured_at", { ascending: true }),
+    (supabase as any).from("measurement_goals").select("*").eq("patient_id", patientId).eq("is_active", true).order("created_at", { ascending: false }),
+    (supabase as any).from("custom_measurement_types").select("*").eq("nutri_id", user.id).order("name"),
+    (supabase as any).from("custom_measurement_values").select("*").eq("patient_id", patientId).order("measured_at", { ascending: true }),
+    (supabase as any).from("measurement_photos").select("*").eq("patient_id", patientId).order("uploaded_at", { ascending: false }),
+  ]);
 
-  return (data ?? []) as Measurement[];
-}
-
-async function getMeasurementGoals(patientId: string): Promise<MeasurementGoal[]> {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return [];
-  }
-
-  const { data } = await (supabase as any)
-    .from("measurement_goals")
-    .select("*")
-    .eq("patient_id", patientId)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
-
-  return (data ?? []) as MeasurementGoal[];
-}
-
-async function getCustomMeasurementTypes(): Promise<CustomMeasurementType[]> {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return [];
-  }
-
-  const { data } = await (supabase as any)
-    .from("custom_measurement_types")
-    .select("*")
-    .eq("nutri_id", user.id)
-    .order("name");
-
-  return (data ?? []) as CustomMeasurementType[];
-}
-
-async function getCustomMeasurementValues(patientId: string): Promise<CustomMeasurementValue[]> {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return [];
-  }
-
-  const { data } = await (supabase as any)
-    .from("custom_measurement_values")
-    .select("*")
-    .eq("patient_id", patientId)
-    .order("measured_at", { ascending: true });
-
-  return (data ?? []) as CustomMeasurementValue[];
-}
-
-async function getMeasurementPhotos(patientId: string): Promise<MeasurementPhoto[]> {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return [];
-  }
-
-  const { data } = await (supabase as any)
-    .from("measurement_photos")
-    .select("*")
-    .eq("patient_id", patientId)
-    .order("uploaded_at", { ascending: false });
-
-  return (data ?? []) as MeasurementPhoto[];
+  return {
+    measurements: (measurementsRes.data ?? []) as Measurement[],
+    goals: (goalsRes.data ?? []) as MeasurementGoal[],
+    customTypes: (typesRes.data ?? []) as CustomMeasurementType[],
+    customValues: (valuesRes.data ?? []) as CustomMeasurementValue[],
+    photos: (photosRes.data ?? []) as MeasurementPhoto[],
+  };
 }
 
 function calculateChange(measurements: Measurement[], field: keyof Measurement): { value: number; trend: "up" | "down" | "stable" } | null {
@@ -150,11 +77,7 @@ export default async function MeasurementsPage({ params }: PageProps) {
     notFound();
   }
 
-  const measurements = await getMeasurements(id);
-  const goals = await getMeasurementGoals(id);
-  const customTypes = await getCustomMeasurementTypes();
-  const customValues = await getCustomMeasurementValues(id);
-  const photos = await getMeasurementPhotos(id);
+  const { measurements, goals, customTypes, customValues, photos } = await getMeasurementsPageData(id);
   const latestMeasurement = measurements[measurements.length - 1];
 
   const weightChange = calculateChange(measurements, "weight");

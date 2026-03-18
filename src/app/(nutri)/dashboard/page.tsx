@@ -33,61 +33,26 @@ async function getDashboardStats() {
     .select("*", { count: "exact", head: true })
     .eq("status", "active");
 
-  if (!isReceptionist) {
-    patientsQuery = patientsQuery.eq("nutri_id", user.id);
-    activePlansQuery = activePlansQuery.eq("nutri_id", user.id);
-  }
-
-  // Get total patients count
-  const { count: totalPatients } = await patientsQuery;
-
-  // Get active meal plans count
-  const { count: activePlans } = await activePlansQuery;
-
-  // Get today's appointments
+  // Date ranges
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString();
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
+  // Build queries (apply nutri filter if not receptionist)
   let todayAppointmentsQuery = supabase
     .from("appointments")
     .select("*", { count: "exact", head: true })
     .gte("scheduled_at", startOfDay)
     .lte("scheduled_at", endOfDay);
 
-  if (!isReceptionist) {
-    todayAppointmentsQuery = todayAppointmentsQuery.eq("nutri_id", user.id);
-  }
-
-  const { count: todayAppointments } = await todayAppointmentsQuery;
-
-  // Get upcoming appointments (next 5)
   let upcomingAppointmentsQuery = supabase
     .from("appointments")
-    .select(`
-      id,
-      scheduled_at,
-      duration_minutes,
-      status,
-      patients (
-        id,
-        full_name
-      )
-    `)
+    .select(`id, scheduled_at, duration_minutes, status, patients (id, full_name)`)
     .gte("scheduled_at", new Date().toISOString())
     .order("scheduled_at", { ascending: true })
     .limit(5);
-
-  if (!isReceptionist) {
-    upcomingAppointmentsQuery = upcomingAppointmentsQuery.eq("nutri_id", user.id);
-  }
-
-  const { data: upcomingAppointments } = await upcomingAppointmentsQuery;
-
-  // Monthly stats
-  const currentDate = new Date();
-  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
-  const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
   let monthlyAppointmentsQuery = supabase
     .from("appointments")
@@ -100,7 +65,6 @@ async function getDashboardStats() {
     .select("*", { count: "exact", head: true })
     .gte("created_at", startOfMonth);
 
-  // Return rate: patients with more than 1 appointment
   let returningPatientsQuery = supabase
     .from("appointments")
     .select("patient_id")
@@ -108,14 +72,33 @@ async function getDashboardStats() {
     .lte("scheduled_at", endOfMonth);
 
   if (!isReceptionist) {
+    patientsQuery = patientsQuery.eq("nutri_id", user.id);
+    activePlansQuery = activePlansQuery.eq("nutri_id", user.id);
+    todayAppointmentsQuery = todayAppointmentsQuery.eq("nutri_id", user.id);
+    upcomingAppointmentsQuery = upcomingAppointmentsQuery.eq("nutri_id", user.id);
     monthlyAppointmentsQuery = monthlyAppointmentsQuery.eq("nutri_id", user.id);
     newPatientsQuery = newPatientsQuery.eq("nutri_id", user.id);
     returningPatientsQuery = returningPatientsQuery.eq("nutri_id", user.id);
   }
 
-  const { count: monthlyAppointments } = await monthlyAppointmentsQuery;
-  const { count: newPatients } = await newPatientsQuery;
-  const { data: monthlyPatientVisits } = await returningPatientsQuery;
+  // Execute ALL queries in parallel (7 queries → 1 round trip)
+  const [
+    { count: totalPatients },
+    { count: activePlans },
+    { count: todayAppointments },
+    { data: upcomingAppointments },
+    { count: monthlyAppointments },
+    { count: newPatients },
+    { data: monthlyPatientVisits },
+  ] = await Promise.all([
+    patientsQuery,
+    activePlansQuery,
+    todayAppointmentsQuery,
+    upcomingAppointmentsQuery,
+    monthlyAppointmentsQuery,
+    newPatientsQuery,
+    returningPatientsQuery,
+  ]);
 
   // Calculate return rate from patients with multiple visits this month
   const patientVisitCounts = new Map<string, number>();
