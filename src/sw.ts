@@ -19,7 +19,7 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // Cache patient plan pages for offline access
+    // Cache patient plan pages for offline access (1 day, not 7 — data changes frequently)
     {
       matcher: /^\/patient\/.*/,
       handler: new NetworkFirst({
@@ -28,12 +28,12 @@ const serwist = new Serwist({
         plugins: [
           new ExpirationPlugin({
             maxEntries: 32,
-            maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+            maxAgeSeconds: 60 * 60 * 24, // 1 day
           }),
         ],
       }),
     },
-    // Cache API responses for meal plans
+    // Cache API responses (4 hours — meal plans, measurements change frequently)
     {
       matcher: /\/api\/.*$/,
       handler: new NetworkFirst({
@@ -42,7 +42,7 @@ const serwist = new Serwist({
         plugins: [
           new ExpirationPlugin({
             maxEntries: 16,
-            maxAgeSeconds: 60 * 60 * 24, // 1 day
+            maxAgeSeconds: 60 * 60 * 4, // 4 hours
           }),
         ],
       }),
