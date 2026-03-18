@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Trophy, Award } from "lucide-react";
+import { ArrowLeft, Calendar, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
-import { format, differenceInDays, isAfter, isBefore, eachDayOfInterval } from "date-fns";
+import { format, differenceInDays, isAfter, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CheckinCalendar } from "../_components/checkin-calendar";
 import { ChallengeBadge } from "../_components/challenge-badge";
@@ -23,11 +23,6 @@ import type {
 type ParticipantWithDetails = ChallengeParticipant & {
   challenge: Challenge;
   checkins: ChallengeCheckin[];
-};
-
-// V2 participant type with phases and goals
-type V2ParticipantWithDetails = ChallengeParticipantV2 & {
-  challenge: Challenge;
 };
 
 async function getPatientId(userId: string): Promise<string | null> {
@@ -252,10 +247,6 @@ export default async function PatientChallengeDetailPage({
   // Get today's checkin status
   const todayStr = format(now, "yyyy-MM-dd");
   const todayCheckin = checkins.find((c) => c.checkin_date === todayStr);
-
-  // Get all days in the challenge period
-  const allDays = eachDayOfInterval({ start: startDate, end: endDate });
-  const checkinDates = new Set(checkins.map((c) => c.checkin_date));
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">

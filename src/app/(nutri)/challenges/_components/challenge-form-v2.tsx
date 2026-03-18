@@ -72,11 +72,11 @@ export function ChallengeFormV2({
     if (template.phases.length > 0) {
       setUsePhases(true);
       setPhases(
-        template.phases.map((p, i) => ({
+        template.phases.map((p) => ({
           title: p.title,
           description: p.description,
           completion_threshold: p.completion_threshold,
-          goals: p.goals.map((g, j) => ({
+          goals: p.goals.map((g) => ({
             title: g.title,
             description: g.description,
             type: g.type,

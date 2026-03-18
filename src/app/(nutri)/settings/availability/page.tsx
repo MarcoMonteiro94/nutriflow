@@ -1,4 +1,4 @@
-import { Clock, CalendarClock, Info } from "lucide-react";
+import { CalendarClock, Info } from "lucide-react";
 import { getAvailability } from "@/lib/queries/availability";
 import { WeekSchedule } from "./_components/week-schedule";
 

@@ -40,6 +40,7 @@ export function MealPlanStep() {
     nutri_id: "",
     created_at: "",
     updated_at: "",
+    organization_id: null,
     profile_id: null,
     user_id: null,
   };

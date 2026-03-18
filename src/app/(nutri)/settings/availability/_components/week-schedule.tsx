@@ -135,7 +135,7 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
     groupByDay(initialAvailability)
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  const [, setExpandedDay] = useState<number | null>(null);
 
   const totalHours = getTotalHours(schedule);
   const activeDays = Object.entries(schedule).filter(
@@ -338,7 +338,6 @@ export function WeekSchedule({ initialAvailability }: WeekScheduleProps) {
         {DAYS_OF_WEEK.map((day, index) => {
           const daySlots = schedule[day.value];
           const hasSlotsActive = daySlots.some((slot) => slot.isActive);
-          const isExpanded = expandedDay === day.value || daySlots.length > 0;
           const dayTotalMinutes = daySlots
             .filter((s) => s.isActive)
             .reduce((acc, s) => acc + (timeToMinutes(s.endTime) - timeToMinutes(s.startTime)), 0);

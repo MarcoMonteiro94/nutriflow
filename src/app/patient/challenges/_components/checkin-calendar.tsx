@@ -20,7 +20,6 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { ChallengeCheckin } from "@/types/database";
@@ -37,7 +36,6 @@ interface CheckinCalendarProps {
 
 export function CheckinCalendar({
   participantId,
-  challengeId,
   startDate,
   endDate,
   checkins,

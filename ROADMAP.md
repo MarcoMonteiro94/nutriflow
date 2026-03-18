@@ -34,7 +34,7 @@ Fase 6: Qualidade             ░░░░░░░░░░░░░░░░�
 |-------|--------|--------|--------|
 | [#13](https://github.com/MarcoMonteiro94/nutriflow/issues/13) | fix: corrigir 5 erros críticos de ESLint | `bug` `beta` | 🔄 Em andamento |
 | [#15](https://github.com/MarcoMonteiro94/nutriflow/issues/15) | fix: paciente não consegue ver anamnese | `bug` | ⏳ Pendente |
-| [#16](https://github.com/MarcoMonteiro94/nutriflow/issues/16) | fix: recepcionista sem acesso a tabelas de medições | `bug` | ⏳ Pendente |
+| [#16](https://github.com/MarcoMonteiro94/nutriflow/issues/16) | fix: recepcionista sem acesso a tabelas de medições | `bug` | 🔄 Em andamento |
 
 ### Features Críticas para Beta
 
@@ -63,8 +63,8 @@ Fase 6: Qualidade             ░░░░░░░░░░░░░░░░�
 
 | Issue | Título | Labels | Status |
 |-------|--------|--------|--------|
-| [#18](https://github.com/MarcoMonteiro94/nutriflow/issues/18) | chore: limpar 92 warnings de ESLint | `tech-debt` | ⏳ Pendente |
-| [#23](https://github.com/MarcoMonteiro94/nutriflow/issues/23) | fix: adicionar constraint organização-paciente | `tech-debt` | ⏳ Pendente |
+| [#18](https://github.com/MarcoMonteiro94/nutriflow/issues/18) | chore: limpar 92 warnings de ESLint | `tech-debt` | 🔄 Em andamento |
+| [#23](https://github.com/MarcoMonteiro94/nutriflow/issues/23) | fix: adicionar constraint organização-paciente | `tech-debt` | 🔄 Em andamento |
 
 ---
 
