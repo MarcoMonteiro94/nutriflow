@@ -23,6 +23,8 @@ import {
   Brain,
   Loader2,
 } from "lucide-react";
+import { AnamnesisInsightsPanel } from "../_components/anamnesis-insights";
+import type { AnamnesisInsights } from "@/lib/ai/analyze-anamnesis";
 import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import type {
@@ -113,6 +115,7 @@ export default function AnamnesisReviewPage({ params }: PageProps) {
       ...changes,
       social_history: changes.social_history as any,
       dietary_history: changes.dietary_history as any,
+      ai_insights: changes.ai_insights as any,
     };
 
     const { error } = await supabase
@@ -347,6 +350,12 @@ export default function AnamnesisReviewPage({ params }: PageProps) {
           )}
         </Card>
       )}
+
+      {/* AI Insights */}
+      <AnamnesisInsightsPanel
+        reportId={reportId}
+        initialInsights={(report.ai_insights as unknown as AnamnesisInsights) ?? null}
+      />
 
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-2">
