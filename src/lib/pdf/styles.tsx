@@ -1,0 +1,157 @@
+import { StyleSheet } from "@react-pdf/renderer";
+
+export const commonStyles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+  },
+  header: {
+    marginBottom: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: "#2563eb",
+    paddingBottom: 15,
+  },
+  clinicName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2563eb",
+    marginBottom: 2,
+  },
+  clinicSubtitle: {
+    fontSize: 8,
+    color: "#999",
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 10,
+    color: "#666",
+    marginBottom: 3,
+  },
+  section: {
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#333",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingBottom: 4,
+  },
+  table: {
+    marginTop: 8,
+  },
+  tableHeader: {
+    flexDirection: "row" as const,
+    borderBottomWidth: 2,
+    borderBottomColor: "#333",
+    paddingBottom: 5,
+    marginBottom: 5,
+    backgroundColor: "#f9fafb",
+    padding: 6,
+  },
+  tableRow: {
+    flexDirection: "row" as const,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+  },
+  tableRowAlt: {
+    flexDirection: "row" as const,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    backgroundColor: "#f9fafb",
+  },
+  tableCell: {
+    flex: 1,
+    fontSize: 9,
+  },
+  tableCellHeader: {
+    flex: 1,
+    fontSize: 9,
+    fontWeight: "bold",
+  },
+  statsGrid: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    marginTop: 10,
+    gap: 8,
+  },
+  statBox: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#f0f4ff",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#dbeafe",
+  },
+  statLabel: {
+    fontSize: 8,
+    color: "#666",
+    marginBottom: 3,
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#111",
+  },
+  statDelta: {
+    fontSize: 8,
+    color: "#666",
+    marginTop: 2,
+  },
+  footer: {
+    position: "absolute" as const,
+    bottom: 25,
+    left: 40,
+    right: 40,
+    textAlign: "center" as const,
+    color: "#999",
+    fontSize: 7,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    paddingTop: 8,
+  },
+  badge: {
+    fontSize: 7,
+    color: "#666",
+    backgroundColor: "#f3f4f6",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 4,
+  },
+  row: {
+    flexDirection: "row" as const,
+    gap: 4,
+  },
+  infoGrid: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    gap: 8,
+    marginTop: 6,
+  },
+  infoItem: {
+    width: "48%",
+  },
+  infoLabel: {
+    fontSize: 8,
+    color: "#999",
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 10,
+    color: "#333",
+  },
+});
