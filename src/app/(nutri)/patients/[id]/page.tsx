@@ -28,30 +28,19 @@ async function getPatient(id: string): Promise<Patient | null> {
 async function getPatientStats(patientId: string) {
   const supabase = await createClient();
 
-  const { count: mealPlansCount } = await supabase
-    .from("meal_plans")
-    .select("*", { count: "exact", head: true })
-    .eq("patient_id", patientId);
-
-  const { count: appointmentsCount } = await supabase
-    .from("appointments")
-    .select("*", { count: "exact", head: true })
-    .eq("patient_id", patientId);
-
-  const { count: measurementsCount } = await supabase
-    .from("measurements")
-    .select("*", { count: "exact", head: true })
-    .eq("patient_id", patientId);
-
-  const { count: anamnesisCount } = await supabase
-    .from("anamnesis_reports")
-    .select("*", { count: "exact", head: true })
-    .eq("patient_id", patientId);
-
-  const { count: anthropometryCount } = await supabase
-    .from("anthropometry_assessments")
-    .select("*", { count: "exact", head: true })
-    .eq("patient_id", patientId);
+  const [
+    { count: mealPlansCount },
+    { count: appointmentsCount },
+    { count: measurementsCount },
+    { count: anamnesisCount },
+    { count: anthropometryCount },
+  ] = await Promise.all([
+    supabase.from("meal_plans").select("*", { count: "exact", head: true }).eq("patient_id", patientId),
+    supabase.from("appointments").select("*", { count: "exact", head: true }).eq("patient_id", patientId),
+    supabase.from("measurements").select("*", { count: "exact", head: true }).eq("patient_id", patientId),
+    supabase.from("anamnesis_reports").select("*", { count: "exact", head: true }).eq("patient_id", patientId),
+    supabase.from("anthropometry_assessments").select("*", { count: "exact", head: true }).eq("patient_id", patientId),
+  ]);
 
   return {
     mealPlans: mealPlansCount ?? 0,
