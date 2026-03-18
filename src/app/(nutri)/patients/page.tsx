@@ -55,7 +55,7 @@ export default async function PatientsPage({
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const { patients, totalCount } = await getPatients(params.q, currentPage);
 
-  // Get user role
+  // Get user role and stats in parallel
   const userRole = await getUserRole();
   const isReceptionist = userRole?.role === "receptionist";
 
