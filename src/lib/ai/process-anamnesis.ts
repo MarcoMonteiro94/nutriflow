@@ -53,11 +53,33 @@ TEXTO DA CONSULTA:
 
 Responda APENAS com o JSON, sem texto adicional.`;
 
-const MODEL_ID = "claude-sonnet-4-20250514";
+const MODEL_ID = process.env.AI_ANAMNESIS_MODEL || "claude-sonnet-4-20250514";
+
+// Simple in-memory cache for AI responses (keyed by content hash)
+const responseCache = new Map<string, { result: ProcessingResult; timestamp: number }>();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function getCacheKey(text: string): string {
+  // Simple hash for cache key
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const chr = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr;
+    hash |= 0;
+  }
+  return `anamnesis:${hash}`;
+}
 
 export async function processAnamnesisText(
   transcript: string
 ): Promise<ProcessingResult> {
+  // Check cache first
+  const cacheKey = getCacheKey(transcript);
+  const cached = responseCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.result;
+  }
+
   const anthropic = getAnthropicClient();
 
   const prompt = ANAMNESIS_PROMPT.replace("{transcript}", transcript);
@@ -95,17 +117,27 @@ export async function processAnamnesisText(
     throw new Error(`Failed to parse AI response as JSON: ${jsonStr.substring(0, 200)}...`);
   }
 
+  // Validate required fields exist
+  if (!parsedData || typeof parsedData !== "object") {
+    throw new Error("AI response is not a valid object");
+  }
+
   // Validate and normalize the data
   const normalizedData = normalizeAnamnesisData(parsedData);
 
   // Calculate confidence score based on completeness
   const confidenceScore = calculateConfidenceScore(normalizedData, transcript);
 
-  return {
+  const result: ProcessingResult = {
     data: normalizedData,
     confidence_score: confidenceScore,
     model_used: MODEL_ID,
   };
+
+  // Cache successful result
+  responseCache.set(cacheKey, { result, timestamp: Date.now() });
+
+  return result;
 }
 
 function normalizeAnamnesisData(data: Partial<ProcessedAnamnesisData>): ProcessedAnamnesisData {
