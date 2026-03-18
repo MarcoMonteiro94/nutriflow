@@ -12,6 +12,7 @@ import {
   Mail,
   Phone,
   Target,
+  TrendingUp,
   UtensilsCrossed,
   Activity,
   FileText,
@@ -69,6 +70,11 @@ export function PatientDetailContent({
       label: "Agendar Consulta",
       href: `/schedule/new?patient=${patient.id}`,
       icon: Calendar,
+    },
+    {
+      label: "Evolução Corporal",
+      href: `/patients/${patient.id}/evolution`,
+      icon: TrendingUp,
     },
     {
       label: "Registrar Medidas",
