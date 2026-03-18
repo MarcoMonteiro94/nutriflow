@@ -384,7 +384,7 @@ export function AnthropometryForm({
 
       router.push(`/patients/${patientId}/anthropometry`);
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("Erro ao salvar avaliação antropométrica. Tente novamente.");
     } finally {
       setIsSubmitting(false);

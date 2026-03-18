@@ -24,8 +24,7 @@ import {
   Loader2,
   Trash2,
 } from "lucide-react";
-import { differenceInDays, isAfter, format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { differenceInDays, isAfter } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { ChallengeParticipant, ChallengeCheckin, Patient } from "@/types/database";

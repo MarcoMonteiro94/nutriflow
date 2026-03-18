@@ -63,7 +63,7 @@ Fase 6: Qualidade             ░░░░░░░░░░░░░░░░�
 
 | Issue | Título | Labels | Status |
 |-------|--------|--------|--------|
-| [#18](https://github.com/MarcoMonteiro94/nutriflow/issues/18) | chore: limpar 92 warnings de ESLint | `tech-debt` | ⏳ Pendente |
+| [#18](https://github.com/MarcoMonteiro94/nutriflow/issues/18) | chore: limpar 92 warnings de ESLint | `tech-debt` | 🔄 Em andamento |
 | [#23](https://github.com/MarcoMonteiro94/nutriflow/issues/23) | fix: adicionar constraint organização-paciente | `tech-debt` | ⏳ Pendente |
 
 ---

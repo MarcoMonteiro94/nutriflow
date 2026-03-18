@@ -153,7 +153,7 @@ interface AchievementBadgeProps {
   earnedAt?: string;
 }
 
-function AchievementBadge({ type, config, earned, earnedAt }: AchievementBadgeProps) {
+function AchievementBadge({ config, earned, earnedAt }: AchievementBadgeProps) {
   const Icon = config.icon;
 
   return (

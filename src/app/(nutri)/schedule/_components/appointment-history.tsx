@@ -50,7 +50,7 @@ export function AppointmentHistory({ history }: AppointmentHistoryProps) {
       {/* Timeline line */}
       <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-border" />
 
-      {history.map((entry, index) => {
+      {history.map((entry) => {
         const Icon = ACTION_ICONS[entry.action] || Clock;
         const colorClass = ACTION_COLORS[entry.action] || "bg-muted text-muted-foreground";
 
