@@ -150,32 +150,44 @@ export default async function EvolutionPage({ params }: PageProps) {
             </p>
           </CardContent>
         </Card>
-        {points.length > 0 && points[points.length - 1].weight && (
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">Último Peso</p>
-              <p className="text-2xl font-semibold">{points[points.length - 1].weight}kg</p>
-              {points.length > 1 && points[0].weight && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Inicial: {points[0].weight}kg ({((points[points.length - 1].weight! - points[0].weight!) >= 0 ? "+" : "")}{(points[points.length - 1].weight! - points[0].weight!).toFixed(1)}kg)
-                </p>
+        {(() => {
+          const lastWeight = points[points.length - 1]?.weight;
+          const firstWeight = points[0]?.weight;
+          if (!lastWeight) return null;
+          const delta = firstWeight ? lastWeight - firstWeight : null;
+          return (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">Último Peso</p>
+                <p className="text-2xl font-semibold">{lastWeight}kg</p>
+                {delta !== null && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Inicial: {firstWeight}kg ({delta >= 0 ? "+" : ""}{delta.toFixed(1)}kg)
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
+        {(() => {
+          const lastFat = points[points.length - 1]?.body_fat;
+          const firstFat = points[0]?.body_fat;
+          if (!lastFat) return null;
+          const delta = firstFat ? lastFat - firstFat : null;
+          return (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">Último % Gordura</p>
+                <p className="text-2xl font-semibold">{lastFat}%</p>
+                {delta !== null && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Inicial: {firstFat}% ({delta >= 0 ? "+" : ""}{delta.toFixed(1)}pp)
+                  </p>
               )}
             </CardContent>
           </Card>
-        )}
-        {points.length > 0 && points[points.length - 1].body_fat && (
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">Último % Gordura</p>
-              <p className="text-2xl font-semibold">{points[points.length - 1].body_fat}%</p>
-              {points.length > 1 && points[0].body_fat && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Inicial: {points[0].body_fat}% ({((points[points.length - 1].body_fat! - points[0].body_fat!) >= 0 ? "+" : "")}{(points[points.length - 1].body_fat! - points[0].body_fat!).toFixed(1)}pp)
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+          );
+        })()}
       </div>
 
       {/* Unified Chart */}
