@@ -15,6 +15,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { Patient } from "@/types/database";
 import type { NutriOption } from "@/lib/queries/organization";
+import { ACTIVITY_LEVELS } from "@/lib/nutrition-calculations";
 
 interface PatientFormProps {
   patient?: Patient;
@@ -57,6 +58,7 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [], onSu
       phone: (formData.get("phone") as string) || null,
       birth_date: (formData.get("birth_date") as string) || null,
       gender: (formData.get("gender") as string) || null,
+      activity_level: (formData.get("activity_level") as string) || null,
       goal: (formData.get("goal") as string) || null,
       notes: (formData.get("notes") as string) || null,
     };
@@ -200,6 +202,23 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [], onSu
             <option value="masculino">Masculino</option>
             <option value="feminino">Feminino</option>
             <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="activity_level">Nível de Atividade</Label>
+          <select
+            id="activity_level"
+            name="activity_level"
+            defaultValue={patient?.activity_level ?? ""}
+            className="flex h-10 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            <option value="">Selecione...</option>
+            {ACTIVITY_LEVELS.map((level) => (
+              <option key={level.value} value={level.value}>
+                {level.label} — {level.description}
+              </option>
+            ))}
           </select>
         </div>
 

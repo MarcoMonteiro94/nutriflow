@@ -789,6 +789,10 @@ export type Database = {
           patient_id: string
           starts_at: string | null
           status: Database["public"]["Enums"]["plan_status"]
+          target_calories: number | null
+          target_carbs: number | null
+          target_fat: number | null
+          target_protein: number | null
           title: string | null
           updated_at: string
         }
@@ -801,6 +805,10 @@ export type Database = {
           patient_id: string
           starts_at?: string | null
           status?: Database["public"]["Enums"]["plan_status"]
+          target_calories?: number | null
+          target_carbs?: number | null
+          target_fat?: number | null
+          target_protein?: number | null
           title?: string | null
           updated_at?: string
         }
@@ -813,6 +821,10 @@ export type Database = {
           patient_id?: string
           starts_at?: string | null
           status?: Database["public"]["Enums"]["plan_status"]
+          target_calories?: number | null
+          target_carbs?: number | null
+          target_fat?: number | null
+          target_protein?: number | null
           title?: string | null
           updated_at?: string
         }
@@ -1235,6 +1247,7 @@ export type Database = {
       }
       patients: {
         Row: {
+          activity_level: string | null
           birth_date: string | null
           created_at: string
           email: string | null

@@ -8,7 +8,6 @@ import { WizardComplete } from "./wizard-complete";
 import { PatientInfoStep } from "./steps/patient-info-step";
 import { AnamnesisStep } from "./steps/anamnesis-step";
 import { AnthropometryStep } from "./steps/anthropometry-step";
-import { MeasurementsStep } from "./steps/measurements-step";
 import { MealPlanStep } from "./steps/meal-plan-step";
 import type { NutriOption } from "@/lib/queries/organization";
 
@@ -68,8 +67,7 @@ function WizardContent({ isReceptionist, nutris }: WizardContentProps) {
           )}
           {currentStep === 2 && <AnamnesisStep />}
           {currentStep === 3 && <AnthropometryStep />}
-          {currentStep === 4 && <MeasurementsStep />}
-          {currentStep === 5 && <MealPlanStep />}
+          {currentStep === 4 && <MealPlanStep />}
         </motion.div>
       </AnimatePresence>
     </div>

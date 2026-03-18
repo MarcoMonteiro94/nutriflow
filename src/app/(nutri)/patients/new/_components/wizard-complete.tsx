@@ -9,7 +9,6 @@ import {
   User,
   FileText,
   Ruler,
-  Weight,
   UtensilsCrossed,
   ArrowRight,
 } from "lucide-react";
@@ -18,7 +17,7 @@ import { useWizard, WIZARD_STEPS } from "./wizard-context";
 import { FadeIn } from "@/components/motion";
 import { motion } from "framer-motion";
 
-const stepIcons = [User, FileText, Ruler, Weight, UtensilsCrossed];
+const stepIcons = [User, FileText, Ruler, UtensilsCrossed];
 
 export function WizardComplete() {
   const { patientId, patientData, stepStatuses } = useWizard();

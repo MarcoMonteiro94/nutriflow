@@ -39,14 +39,13 @@ export interface WizardContextValue {
 
 const WizardContext = createContext<WizardContextValue | undefined>(undefined);
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 export const WIZARD_STEPS = [
   { number: 1, label: "Paciente", description: "Dados básicos", required: true },
   { number: 2, label: "Anamnese", description: "Histórico clínico", required: false },
   { number: 3, label: "Antropometria", description: "Composição corporal", required: false },
-  { number: 4, label: "Medidas", description: "Acompanhamento", required: false },
-  { number: 5, label: "Plano Alimentar", description: "Dieta inicial", required: false },
+  { number: 4, label: "Plano Alimentar", description: "Dieta inicial", required: false },
 ] as const;
 
 interface WizardProviderProps {

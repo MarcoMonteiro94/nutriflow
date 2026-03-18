@@ -14,7 +14,7 @@ export function MealPlanStep() {
 
   const handleSuccess = useCallback(
     (planId: string) => {
-      markStepCompleted(5, planId);
+      markStepCompleted(totalSteps, planId);
       // Go to completion (step beyond last)
       goToStep(totalSteps + 1);
     },
@@ -35,6 +35,7 @@ export function MealPlanStep() {
     phone: null,
     birth_date: patientData?.birth_date || null,
     gender: patientData?.gender || null,
+    activity_level: null,
     goal: null,
     notes: null,
     nutri_id: "",

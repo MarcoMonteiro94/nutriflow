@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { AddFoodFormClient } from "./_components/add-food-form";
 import { FoodItemCardWrapper } from "./_components/food-item-card-wrapper";
+import { calculateSingleMealTotals } from "@/lib/nutrition-calculations";
 import type { FoodItem, Meal, MealContent } from "@/types/database";
 
 interface MealPageProps {
@@ -76,22 +77,9 @@ export default async function MealPage({ params }: MealPageProps) {
       substitutionsMap.get(parentId)!.push(sub);
     });
 
-  // Calculate total macros for current meal (main foods only)
-  const totalMacros = mainFoods.reduce(
-    (acc, content) => {
-      if (content.food_items) {
-        const factor = Number(content.amount) / 100;
-        return {
-          calories: acc.calories + Math.round(content.food_items.calories * factor),
-          protein: acc.protein + content.food_items.protein * factor,
-          carbs: acc.carbs + content.food_items.carbs * factor,
-          fat: acc.fat + content.food_items.fat * factor,
-        };
-      }
-      return acc;
-    },
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
+  // Calculate total macros for current meal
+  const totalMacros = calculateSingleMealTotals(meal);
+
 
   async function addFoodToMeal(foodId: string, amount: number) {
     "use server";
@@ -224,19 +212,19 @@ export default async function MealPage({ params }: MealPageProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold text-blue-600">
-                  {Math.round(totalMacros.protein * 10) / 10}
+                  {totalMacros.protein}
                 </p>
                 <p className="text-xs text-muted-foreground">Proteína (g)</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-orange-600">
-                  {Math.round(totalMacros.carbs * 10) / 10}
+                  {totalMacros.carbs}
                 </p>
                 <p className="text-xs text-muted-foreground">Carboidrato (g)</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {Math.round(totalMacros.fat * 10) / 10}
+                  {totalMacros.fat}
                 </p>
                 <p className="text-xs text-muted-foreground">Gordura (g)</p>
               </div>

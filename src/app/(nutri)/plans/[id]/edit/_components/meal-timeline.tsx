@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Clock, Plus, ChevronDown, ChevronUp, Trash2, Loader2, UtensilsCrossed, Pencil } from "lucide-react";
 import { SaveStatusIndicator } from "@/components/save-status-indicator";
 import { useAutoSave } from "@/hooks/use-auto-save";
+import { calculateSingleMealTotals } from "@/lib/nutrition-calculations";
 import type { Meal, MealContent, FoodItem } from "@/types/database";
 
 type MealWithContents = Meal & {
@@ -225,18 +226,6 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
     return time.slice(0, 5);
   };
 
-  const calculateMealCalories = (meal: MealWithContents): number => {
-    let total = 0;
-    for (const content of meal.meal_contents) {
-      if (content.food_items && !content.is_substitution) {
-        const amount = Number(content.amount);
-        const calories = Number(content.food_items.calories);
-        total += (amount / 100) * calories;
-      }
-    }
-    return Math.round(total);
-  };
-
   return (
     <div className="space-y-4">
       {/* Save Status Indicator */}
@@ -263,7 +252,7 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
           <div className="space-y-4">
             {optimisticMeals.map((meal) => {
               const isExpanded = expandedMeals.has(meal.id);
-              const mealCalories = calculateMealCalories(meal);
+              const mealCalories = calculateSingleMealTotals(meal).calories;
               const isEditing = editingMealId === meal.id;
 
               return (

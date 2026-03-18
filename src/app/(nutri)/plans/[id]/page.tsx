@@ -4,6 +4,18 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Calendar, User, UtensilsCrossed, Clock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NutrientCalculator } from "./_components/nutrient-calculator";
+import {
+  calculateMealTotals,
+  calculateSingleMealTotals,
+  calculateTMB,
+  calculateTDEE,
+  calculateAge,
+  mapGenderToSex,
+  suggestMacroTargets,
+  inferGoalFromText,
+} from "@/lib/nutrition-calculations";
+import type { ActivityLevel } from "@/lib/nutrition-calculations";
 import type { MealPlan, Meal, MealContent, FoodItem, Patient } from "@/types/database";
 
 interface PageProps {
@@ -23,12 +35,8 @@ type MealPlanWithDetails = MealPlan & {
 
 async function getMealPlan(id: string): Promise<MealPlanWithDetails | null> {
   const supabase = await createClient();
-
   const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const { data } = await supabase
     .from("meal_plans")
@@ -47,15 +55,10 @@ async function getMealPlan(id: string): Promise<MealPlanWithDetails | null> {
     .eq("nutri_id", user.id)
     .single();
 
-  if (!data) {
-    return null;
-  }
+  if (!data) return null;
 
-  // Sort meals by time
   const meals = (data.meals || []) as MealWithContents[];
-  const sortedMeals = meals.sort((a, b) => {
-    return a.time.localeCompare(b.time);
-  });
+  const sortedMeals = meals.sort((a, b) => a.time.localeCompare(b.time));
 
   return {
     ...(data as unknown as MealPlan),
@@ -64,57 +67,48 @@ async function getMealPlan(id: string): Promise<MealPlanWithDetails | null> {
   };
 }
 
-function calculateTotalCalories(meals: MealWithContents[]): number {
-  let total = 0;
-  for (const meal of meals) {
-    for (const content of meal.meal_contents) {
-      if (content.food_items && !content.is_substitution) {
-        const amount = Number(content.amount);
-        const calories = Number(content.food_items.calories);
-        total += (amount / 100) * calories;
-      }
-    }
-  }
-  return Math.round(total);
-}
+function computeSuggestedTargets(patient: Patient | null, latestWeight: number | null, latestHeight: number | null) {
+  if (!patient) return null;
+  const age = patient.birth_date ? calculateAge(patient.birth_date) : null;
+  const sex = mapGenderToSex(patient.gender);
+  if (!age || !sex || !latestWeight || !latestHeight) return null;
 
-function calculateTotalMacro(meals: MealWithContents[], macro: "protein" | "carbs" | "fat"): number {
-  let total = 0;
-  for (const meal of meals) {
-    for (const content of meal.meal_contents) {
-      if (content.food_items && !content.is_substitution) {
-        const amount = Number(content.amount);
-        const value = Number(content.food_items[macro]);
-        total += (amount / 100) * value;
-      }
-    }
-  }
-  return Math.round(total);
-}
-
-function getMealCalories(meal: MealWithContents): number {
-  let total = 0;
-  for (const content of meal.meal_contents) {
-    if (content.food_items && !content.is_substitution) {
-      const amount = Number(content.amount);
-      const calories = Number(content.food_items.calories);
-      total += (amount / 100) * calories;
-    }
-  }
-  return Math.round(total);
+  const tmb = calculateTMB({ weight: latestWeight, height: latestHeight, age, sex });
+  const activityLevel = (patient.activity_level as ActivityLevel) || "sedentary";
+  const tdee = calculateTDEE(tmb, activityLevel);
+  const goal = inferGoalFromText(patient.goal);
+  return suggestMacroTargets(tdee, goal);
 }
 
 export default async function ViewPlanPage({ params }: PageProps) {
   const { id } = await params;
   const plan = await getMealPlan(id);
+  if (!plan) notFound();
 
-  if (!plan) {
-    notFound();
+  let latestWeight: number | null = null;
+  let latestHeight: number | null = null;
+
+  if (plan.patients?.id) {
+    const supabase = await createClient();
+    const { data: anthropometry } = await supabase
+      .from("anthropometry_assessments")
+      .select("weight, height")
+      .eq("patient_id", plan.patients.id)
+      .order("assessed_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (anthropometry) {
+      latestWeight = anthropometry.weight ? Number(anthropometry.weight) : null;
+      latestHeight = anthropometry.height ? Number(anthropometry.height) : null;
+    }
   }
+
+  const totals = calculateMealTotals(plan.meals);
+  const suggestedTargets = computeSuggestedTargets(plan.patients, latestWeight, latestHeight);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button asChild variant="ghost" size="icon">
@@ -126,9 +120,7 @@ export default async function ViewPlanPage({ params }: PageProps) {
             <h1 className="text-2xl font-semibold tracking-tight">
               {plan.title || "Plano sem título"}
             </h1>
-            <p className="text-muted-foreground">
-              Visualização do plano alimentar
-            </p>
+            <p className="text-muted-foreground">Visualização do plano alimentar</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -142,9 +134,7 @@ export default async function ViewPlanPage({ params }: PageProps) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Plan Details */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Patient & Status Info */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Informações do Plano</CardTitle>
@@ -154,10 +144,7 @@ export default async function ViewPlanPage({ params }: PageProps) {
                 <User className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Paciente</p>
-                  <Link
-                    href={`/patients/${plan.patients?.id}`}
-                    className="hover:underline font-medium"
-                  >
+                  <Link href={`/patients/${plan.patients?.id}`} className="hover:underline font-medium">
                     {plan.patients?.full_name ?? "N/A"}
                   </Link>
                 </div>
@@ -170,9 +157,7 @@ export default async function ViewPlanPage({ params }: PageProps) {
               )}
               <div className="flex items-center gap-4">
                 <div className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                  plan.status === "active"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
+                  plan.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
                 }`}>
                   {plan.status === "active" ? "Ativo" : "Arquivado"}
                 </div>
@@ -189,7 +174,6 @@ export default async function ViewPlanPage({ params }: PageProps) {
             </CardContent>
           </Card>
 
-          {/* Meals List */}
           <Card>
             <CardHeader>
               <CardTitle>Refeições</CardTitle>
@@ -207,85 +191,53 @@ export default async function ViewPlanPage({ params }: PageProps) {
                   </Button>
                 </div>
               ) : (
-                plan.meals.map((meal) => (
-                  <div key={meal.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{meal.time.slice(0, 5)}</span>
-                        <span className="text-lg font-semibold">{meal.title}</span>
+                plan.meals.map((meal) => {
+                  const mealTotals = calculateSingleMealTotals(meal);
+                  return (
+                    <div key={meal.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{meal.time.slice(0, 5)}</span>
+                          <span className="text-lg font-semibold">{meal.title}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{mealTotals.calories} kcal</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {getMealCalories(meal)} kcal
-                      </span>
+                      {meal.meal_contents.filter(c => !c.is_substitution).length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">Sem alimentos adicionados</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {meal.meal_contents
+                            .filter(content => !content.is_substitution)
+                            .map((content) => (
+                              <li key={content.id} className="flex items-center justify-between text-sm">
+                                <span>{content.food_items?.name ?? "Alimento"}</span>
+                                <span className="text-muted-foreground">{content.amount}g</span>
+                              </li>
+                            ))}
+                        </ul>
+                      )}
                     </div>
-                    {meal.meal_contents.filter(c => !c.is_substitution).length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic">
-                        Sem alimentos adicionados
-                      </p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {meal.meal_contents
-                          .filter(content => !content.is_substitution)
-                          .map((content) => (
-                            <li
-                              key={content.id}
-                              className="flex items-center justify-between text-sm"
-                            >
-                              <span>{content.food_items?.name ?? "Alimento"}</span>
-                              <span className="text-muted-foreground">
-                                {content.amount}g
-                              </span>
-                            </li>
-                          ))}
-                      </ul>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Summary Panel */}
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Resumo Diário</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="text-sm text-muted-foreground">Calorias</p>
-                  <p className="text-2xl font-bold">
-                    {calculateTotalCalories(plan.meals)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">kcal</p>
-                </div>
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="text-sm text-muted-foreground">Proteínas</p>
-                  <p className="text-2xl font-bold">
-                    {calculateTotalMacro(plan.meals, "protein")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">g</p>
-                </div>
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="text-sm text-muted-foreground">Carboidratos</p>
-                  <p className="text-2xl font-bold">
-                    {calculateTotalMacro(plan.meals, "carbs")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">g</p>
-                </div>
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="text-sm text-muted-foreground">Gorduras</p>
-                  <p className="text-2xl font-bold">
-                    {calculateTotalMacro(plan.meals, "fat")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">g</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <NutrientCalculator
+            targets={{
+              calories: plan.target_calories ?? null,
+              protein: plan.target_protein ?? null,
+              carbs: plan.target_carbs ?? null,
+              fat: plan.target_fat ?? null,
+            }}
+            totals={totals}
+            suggestedTargets={suggestedTargets}
+            readOnly
+            mealCount={plan.meals.length}
+          />
 
           <Card>
             <CardHeader>
