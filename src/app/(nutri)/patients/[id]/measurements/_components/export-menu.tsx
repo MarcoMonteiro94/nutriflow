@@ -88,19 +88,24 @@ export function ExportMenu({ measurements, patientName, customTypes, customValue
   const handleExportPDF = async () => {
     if (measurements.length === 0) return;
 
-    const { generateMeasurementPDF } = await import("@/lib/measurements/export-pdf");
+    try {
+      const { generateMeasurementPDF } = await import("@/lib/measurements/export-pdf");
 
-    const blob = await generateMeasurementPDF(
-      { full_name: patientName } as Parameters<typeof generateMeasurementPDF>[0],
-      measurements
-    );
+      const blob = await generateMeasurementPDF(
+        { full_name: patientName } as Parameters<typeof generateMeasurementPDF>[0],
+        measurements
+      );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `medidas-${patientName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `medidas-${patientName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      link.click();
+      // Delay revocation to ensure download starts
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   return (

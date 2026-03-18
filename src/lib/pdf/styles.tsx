@@ -128,7 +128,8 @@ export const commonStyles = StyleSheet.create({
     fontSize: 7,
     color: "#666",
     backgroundColor: "#f3f4f6",
-    padding: "2 6",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
     borderRadius: 4,
   },
   row: {
