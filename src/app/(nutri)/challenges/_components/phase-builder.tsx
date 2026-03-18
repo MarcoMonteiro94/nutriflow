@@ -48,12 +48,6 @@ export function PhaseBuilder({ phases, onChange }: PhaseBuilderProps) {
     setExpandedPhases(newExpanded);
   }
 
-  function updatePhase(index: number, phase: PhaseFormData) {
-    const updated = [...phases];
-    updated[index] = phase;
-    onChange(updated);
-  }
-
   function updatePhaseField<K extends keyof PhaseFormData>(
     index: number,
     field: K,
@@ -223,7 +217,7 @@ export function PhaseBuilder({ phases, onChange }: PhaseBuilderProps) {
 
                   {phase.goals.length === 0 ? (
                     <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                      Nenhuma meta adicionada. Clique em "Adicionar Meta" para
+                      Nenhuma meta adicionada. Clique em &quot;Adicionar Meta&quot; para
                       começar.
                     </div>
                   ) : (

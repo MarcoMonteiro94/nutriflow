@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Camera, X, Loader2, ImageIcon } from "lucide-react";
+import { Camera, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 interface PhotoUploadProps {

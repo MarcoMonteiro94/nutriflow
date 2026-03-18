@@ -174,7 +174,7 @@ export function MeasurementForm({
 
         // Insert new custom values
         const customValuesToInsert = Object.entries(customValues)
-          .filter(([_, value]) => value.trim() !== "")
+          .filter(([, value]) => value.trim() !== "")
           .map(([typeId, value]) => ({
             patient_id: patientId,
             type_id: typeId,
@@ -200,7 +200,7 @@ export function MeasurementForm({
 
       router.push(`/patients/${patientId}/measurements`);
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("Erro ao salvar medida. Tente novamente.");
     } finally {
       setIsSubmitting(false);

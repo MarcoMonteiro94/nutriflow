@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -72,13 +72,7 @@ export function AppointmentActionsDialog({
   const [history, setHistory] = useState<AppointmentHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      loadHistory();
-    }
-  }, [open]);
-
-  async function loadHistory() {
+  const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
       const supabase = createClient();
@@ -94,7 +88,13 @@ export function AppointmentActionsDialog({
     } finally {
       setLoadingHistory(false);
     }
-  }
+  }, [appointment.id]);
+
+  useEffect(() => {
+    if (open) {
+      loadHistory();
+    }
+  }, [open, loadHistory]);
 
   async function handleAction() {
     if (!action) return;
