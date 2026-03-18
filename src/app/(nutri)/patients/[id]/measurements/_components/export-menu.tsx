@@ -85,114 +85,22 @@ export function ExportMenu({ measurements, patientName, customTypes, customValue
     document.body.removeChild(link);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (measurements.length === 0) return;
 
-    // For now, create a simple HTML report that can be printed as PDF
-    const reportContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Relatório de Medidas - ${patientName}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 20px;
-              max-width: 1200px;
-              margin: 0 auto;
-            }
-            h1 {
-              color: #333;
-              border-bottom: 2px solid #333;
-              padding-bottom: 10px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-            }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 8px;
-              text-align: left;
-            }
-            th {
-              background-color: #f4f4f4;
-              font-weight: bold;
-            }
-            tr:nth-child(even) {
-              background-color: #f9f9f9;
-            }
-            .header-info {
-              margin-bottom: 20px;
-            }
-            @media print {
-              body {
-                padding: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Relatório de Medidas</h1>
-          <div class="header-info">
-            <p><strong>Paciente:</strong> ${patientName}</p>
-            <p><strong>Data do Relatório:</strong> ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
-            <p><strong>Total de Medidas:</strong> ${measurements.length}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Peso (kg)</th>
-                <th>Altura (cm)</th>
-                <th>% Gordura</th>
-                <th>Massa Muscular (kg)</th>
-                <th>Cintura (cm)</th>
-                <th>Quadril (cm)</th>
-                ${customTypes.map((type) => `<th>${type.name} (${type.unit})</th>`).join("")}
-                <th>Observações</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${measurements.map((measurement) => {
-                const measurementCustomValues = customValues.filter(
-                  (v) => v.measured_at === measurement.measured_at
-                );
-                return `
-                  <tr>
-                    <td>${format(new Date(measurement.measured_at), "dd/MM/yyyy", { locale: ptBR })}</td>
-                    <td>${measurement.weight ?? "-"}</td>
-                    <td>${measurement.height ?? "-"}</td>
-                    <td>${measurement.body_fat_percentage ?? "-"}</td>
-                    <td>${measurement.muscle_mass ?? "-"}</td>
-                    <td>${measurement.waist_circumference ?? "-"}</td>
-                    <td>${measurement.hip_circumference ?? "-"}</td>
-                    ${customTypes.map((type) => {
-                      const customValue = measurementCustomValues.find((v) => v.type_id === type.id);
-                      return `<td>${customValue?.value ?? "-"}</td>`;
-                    }).join("")}
-                    <td>${measurement.notes ?? "-"}</td>
-                  </tr>
-                `;
-              }).join("")}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
+    const { generateMeasurementPDF } = await import("@/lib/measurements/export-pdf");
 
-    // Open in new window for printing
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(reportContent);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-      }, 250);
-    }
+    const blob = await generateMeasurementPDF(
+      { full_name: patientName } as Parameters<typeof generateMeasurementPDF>[0],
+      measurements
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `medidas-${patientName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
