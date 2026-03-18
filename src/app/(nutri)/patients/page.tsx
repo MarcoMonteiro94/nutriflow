@@ -52,15 +52,40 @@ export default async function PatientsPage({
   const params = await searchParams;
   const patients = await getPatients(params.q);
 
-  // Get user role
+  // Get user role and stats in parallel
   const userRole = await getUserRole();
   const isReceptionist = userRole?.role === "receptionist";
 
-  // Calculate stats
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const newThisWeek = patients.filter(p => new Date(p.created_at) > weekAgo).length;
-  const withGoals = patients.filter(p => p.goal).length;
+  // Calculate stats via count queries instead of loading all patients
+  const supabaseForStats = await createClient();
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  let newThisWeekQuery = supabaseForStats
+    .from("patients")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", weekAgo);
+
+  let withGoalsQuery = supabaseForStats
+    .from("patients")
+    .select("*", { count: "exact", head: true })
+    .not("goal", "is", null)
+    .neq("goal", "");
+
+  if (!isReceptionist) {
+    const { data: { user } } = await supabaseForStats.auth.getUser();
+    if (user) {
+      newThisWeekQuery = newThisWeekQuery.eq("nutri_id", user.id);
+      withGoalsQuery = withGoalsQuery.eq("nutri_id", user.id);
+    }
+  }
+
+  const [{ count: newThisWeekCount }, { count: withGoalsCount }] = await Promise.all([
+    newThisWeekQuery,
+    withGoalsQuery,
+  ]);
+
+  const newThisWeek = newThisWeekCount ?? 0;
+  const withGoals = withGoalsCount ?? 0;
 
   return (
     <div className="min-h-[calc(100vh-8rem)]">
