@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       fileName: file.name,
       fileSize: file.size,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Erro interno do servidor" },
       { status: 500 }

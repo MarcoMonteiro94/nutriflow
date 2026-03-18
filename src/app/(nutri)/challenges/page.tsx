@@ -69,7 +69,6 @@ export default async function ChallengesPage() {
 
   const challenges = await getChallenges();
 
-  const now = new Date();
   const activeChallenges = challenges.filter((c) => c.status === "active");
   const completedChallenges = challenges.filter((c) => c.status === "completed");
   const totalParticipants = challenges.reduce(
