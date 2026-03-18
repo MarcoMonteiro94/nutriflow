@@ -11,7 +11,6 @@ import {
   UtensilsCrossed,
   Package,
   Sparkles,
-  ChevronRight,
   LayoutGrid,
   List,
 } from "lucide-react";
@@ -72,8 +71,7 @@ function FoodCard({ food, index }: { food: FoodItem; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.3 }}
     >
-      <Link href={`/foods/${food.id}`}>
-        <Card className="group h-full rounded-2xl border bg-card shadow-soft hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer">
+      <Card className="h-full rounded-2xl border bg-card shadow-soft">
           <CardContent className="p-4 sm:p-5 space-y-4">
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
@@ -136,16 +134,9 @@ function FoodCard({ food, index }: { food: FoodItem; index: number }) {
               />
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-end pt-1">
-              <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors flex items-center gap-1">
-                Ver detalhes
-                <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-              </span>
-            </div>
+
           </CardContent>
         </Card>
-      </Link>
     </motion.div>
   );
 }
@@ -157,8 +148,7 @@ function FoodListItem({ food, index }: { food: FoodItem; index: number }) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.02, duration: 0.2 }}
     >
-      <Link href={`/foods/${food.id}`}>
-        <div className="group flex items-center gap-4 p-4 rounded-xl border bg-card hover:bg-muted/50 hover:border-primary/20 transition-all duration-200">
+      <div className="flex items-center gap-4 p-4 rounded-xl border bg-card">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-medium truncate group-hover:text-primary transition-colors">
@@ -195,9 +185,7 @@ function FoodListItem({ food, index }: { food: FoodItem; index: number }) {
             <span className="text-xs text-muted-foreground ml-0.5">kcal</span>
           </div>
 
-          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
-        </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }
