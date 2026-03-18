@@ -32,6 +32,10 @@ interface MealPlanFormProps {
   defaultPatientId?: string;
   planId?: string;
   initialData?: Partial<MealPlan>;
+  onSuccess?: (planId: string) => void;
+  hideNavigation?: boolean;
+  formId?: string;
+  preselectedPatient?: boolean;
 }
 
 export function MealPlanForm({
@@ -39,6 +43,10 @@ export function MealPlanForm({
   defaultPatientId,
   planId,
   initialData,
+  onSuccess,
+  hideNavigation = false,
+  formId,
+  preselectedPatient = false,
 }: MealPlanFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -115,6 +123,11 @@ export function MealPlanForm({
           throw insertError || new Error("Failed to create plan");
         }
 
+        if (onSuccess) {
+          onSuccess(data.id);
+          return;
+        }
+
         // Redirect to the meal plan editor
         router.push(`/plans/${data.id}/edit`);
       }
@@ -129,37 +142,39 @@ export function MealPlanForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} id={formId} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="patient">Paciente *</Label>
-        <Select value={patientId} onValueChange={setPatientId}>
-          <SelectTrigger id="patient">
-            <SelectValue placeholder="Selecione um paciente" />
-          </SelectTrigger>
-          <SelectContent>
-            {patients.map((patient) => (
-              <SelectItem key={patient.id} value={patient.id}>
-                {patient.full_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {patients.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Nenhum paciente cadastrado.{" "}
-            <Link href="/patients/new" className="text-primary hover:underline">
-              Cadastre um paciente
-            </Link>{" "}
-            primeiro.
-          </p>
-        )}
-      </div>
+      {!preselectedPatient && (
+        <div className="space-y-2">
+          <Label htmlFor="patient">Paciente *</Label>
+          <Select value={patientId} onValueChange={setPatientId}>
+            <SelectTrigger id="patient">
+              <SelectValue placeholder="Selecione um paciente" />
+            </SelectTrigger>
+            <SelectContent>
+              {patients.map((patient) => (
+                <SelectItem key={patient.id} value={patient.id}>
+                  {patient.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {patients.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhum paciente cadastrado.{" "}
+              <Link href="/patients/new" className="text-primary hover:underline">
+                Cadastre um paciente
+              </Link>{" "}
+              primeiro.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="title">Título</Label>
@@ -257,20 +272,22 @@ export function MealPlanForm({
         </div>
       </div>
 
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isSubmitting || patients.length === 0}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEditing ? "Salvar Alterações" : "Criar Plano"}
-        </Button>
-      </div>
+      {!hideNavigation && (
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting || patients.length === 0}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditing ? "Salvar Alterações" : "Criar Plano"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

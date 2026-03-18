@@ -20,9 +20,12 @@ interface PatientFormProps {
   patient?: Patient;
   isReceptionist?: boolean;
   nutris?: NutriOption[];
+  onSuccess?: (patientId: string, patientData: { full_name: string; gender?: string | null; birth_date?: string | null }) => void;
+  hideNavigation?: boolean;
+  formId?: string;
 }
 
-export function PatientForm({ patient, isReceptionist = false, nutris = [] }: PatientFormProps) {
+export function PatientForm({ patient, isReceptionist = false, nutris = [], onSuccess, hideNavigation = false, formId }: PatientFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +100,15 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [] }: Pa
         return;
       }
 
+      if (onSuccess) {
+        onSuccess(data.id, {
+          full_name: patientData.full_name,
+          gender: patientData.gender,
+          birth_date: patientData.birth_date,
+        });
+        return;
+      }
+
       router.push(`/patients/${data.id}`);
     }
 
@@ -104,7 +116,7 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [] }: Pa
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} id={formId} className="space-y-6">
       {error && (
         <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -214,23 +226,25 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [] }: Pa
         </div>
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? "Salvando..."
-            : isEditing
-            ? "Salvar Alterações"
-            : "Cadastrar Paciente"}
-        </Button>
-      </div>
+      {!hideNavigation && (
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading
+              ? "Salvando..."
+              : isEditing
+              ? "Salvar Alterações"
+              : "Cadastrar Paciente"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

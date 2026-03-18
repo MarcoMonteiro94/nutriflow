@@ -23,12 +23,18 @@ interface MeasurementFormProps {
   patientId: string;
   measurementId?: string;
   initialData?: Partial<Measurement>;
+  onSuccess?: (measurementId?: string) => void;
+  hideNavigation?: boolean;
+  formId?: string;
 }
 
 export function MeasurementForm({
   patientId,
   measurementId,
   initialData,
+  onSuccess,
+  hideNavigation = false,
+  formId,
 }: MeasurementFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -187,6 +193,11 @@ export function MeasurementForm({
         }
       }
 
+      if (onSuccess) {
+        onSuccess(measurementId);
+        return;
+      }
+
       router.push(`/patients/${patientId}/measurements`);
       router.refresh();
     } catch (err) {
@@ -197,7 +208,7 @@ export function MeasurementForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} id={formId} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
@@ -365,20 +376,22 @@ export function MeasurementForm({
         />
       </div>
 
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEditing ? "Salvar Alterações" : "Registrar Medida"}
-        </Button>
-      </div>
+      {!hideNavigation && (
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditing ? "Salvar Alterações" : "Registrar Medida"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
