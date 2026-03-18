@@ -2,12 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Trophy,
   Calendar,
   CheckCircle2,
-  Clock,
   ChevronRight,
   Award,
   Flame,
@@ -97,9 +95,6 @@ function ChallengeCard({
   const hasEnded = isAfter(now, endDate);
   const checkedToday = hasCheckedInToday(checkins);
 
-  const daysPassed = hasStarted
-    ? Math.min(differenceInDays(now, startDate) + 1, totalDays)
-    : 0;
   const daysRemaining = hasEnded ? 0 : Math.max(differenceInDays(endDate, now), 0);
   const overallProgress = Math.round((checkins.length / totalDays) * 100);
 

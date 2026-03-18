@@ -191,7 +191,7 @@ export function V2ChallengeView({
   };
 
   // Handle check-in success
-  const handleCheckinSuccess = useCallback(({ streak, achievements: newAchievements }: { streak: number; achievements: string[] }) => {
+  const handleCheckinSuccess = useCallback(({ achievements: newAchievements }: { streak: number; achievements: string[] }) => {
     // Show celebration for new achievements
     if (newAchievements.length > 0) {
       setCelebratingAchievement(newAchievements[0] as AchievementType);

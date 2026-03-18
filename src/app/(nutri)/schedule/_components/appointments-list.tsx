@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Clock, User, MoreHorizontal, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Appointment } from "@/types/database";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { StaggerList, StaggerItem, FadeIn } from "@/components/motion";
 import { motion } from "framer-motion";
 import { RescheduleDialog } from "./reschedule-dialog";
