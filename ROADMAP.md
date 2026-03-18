@@ -32,8 +32,8 @@ Fase 6: Qualidade             ░░░░░░░░░░░░░░░░�
 
 | Issue | Título | Labels | Status |
 |-------|--------|--------|--------|
-| [#13](https://github.com/MarcoMonteiro94/nutriflow/issues/13) | fix: corrigir 5 erros críticos de ESLint | `bug` `beta` | 🔄 Em andamento |
-| [#15](https://github.com/MarcoMonteiro94/nutriflow/issues/15) | fix: paciente não consegue ver anamnese | `bug` | ⏳ Pendente |
+| [#13](https://github.com/MarcoMonteiro94/nutriflow/issues/13) | fix: corrigir 5 erros críticos de ESLint | `bug` `beta` | ✅ Concluído |
+| [#15](https://github.com/MarcoMonteiro94/nutriflow/issues/15) | fix: paciente não consegue ver anamnese | `bug` | 🔄 Em andamento |
 | [#16](https://github.com/MarcoMonteiro94/nutriflow/issues/16) | fix: recepcionista sem acesso a tabelas de medições | `bug` | 🔄 Em andamento |
 
 ### Features Críticas para Beta

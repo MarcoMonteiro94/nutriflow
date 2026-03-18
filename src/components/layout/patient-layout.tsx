@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  FileText,
   LayoutDashboard,
   LogOut,
   Settings,
@@ -51,6 +52,11 @@ const authenticatedNavItems = [
     icon: UtensilsCrossed,
   },
   {
+    title: "Anamnese",
+    href: "/patient/anamnesis",
+    icon: FileText,
+  },
+  {
     title: "Desafios",
     href: "/patient/challenges",
     icon: Trophy,
@@ -76,16 +82,19 @@ interface PatientLayoutProps {
   children: React.ReactNode;
   isAuthenticated?: boolean;
   hasChallenges?: boolean;
+  hasAnamnesis?: boolean;
 }
 
-export function PatientLayout({ children, isAuthenticated, hasChallenges }: PatientLayoutProps) {
+export function PatientLayout({ children, isAuthenticated, hasChallenges, hasAnamnesis }: PatientLayoutProps) {
   const pathname = usePathname();
 
-  // Filter out challenges if patient has no challenges
+  // Filter conditional nav items
   const navItems = isAuthenticated
-    ? authenticatedNavItems.filter(item =>
-        item.href !== "/patient/challenges" || hasChallenges
-      )
+    ? authenticatedNavItems.filter(item => {
+        if (item.href === "/patient/challenges") return hasChallenges;
+        if (item.href === "/patient/anamnesis") return hasAnamnesis;
+        return true;
+      })
     : publicNavItems;
 
   const isActive = (href: string) => {
