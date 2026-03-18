@@ -14,6 +14,7 @@ export default async function PatientRootLayout({
   // Check if user is authenticated and is a patient
   let isAuthenticated = false;
   let hasChallenges = false;
+  let hasAnamnesis = false;
   let patientId: string | null = null;
 
   if (user) {
@@ -27,14 +28,23 @@ export default async function PatientRootLayout({
     isAuthenticated = !!patient;
     patientId = patient?.id || null;
 
-    // Check if patient has any challenge participations
     if (patientId) {
-      const { count } = await supabase
+      // Check if patient has any challenge participations
+      const { count: challengeCount } = await supabase
         .from("challenge_participants")
         .select("id", { count: "exact", head: true })
         .eq("patient_id", patientId);
 
-      hasChallenges = (count ?? 0) > 0;
+      hasChallenges = (challengeCount ?? 0) > 0;
+
+      // Check if patient has any approved anamnesis reports
+      const { count: anamnesisCount } = await supabase
+        .from("anamnesis_reports")
+        .select("id", { count: "exact", head: true })
+        .eq("patient_id", patientId)
+        .eq("status", "approved");
+
+      hasAnamnesis = (anamnesisCount ?? 0) > 0;
     }
   }
 
@@ -51,7 +61,7 @@ export default async function PatientRootLayout({
           : undefined
       }
     >
-      <PatientLayout isAuthenticated={isAuthenticated} hasChallenges={hasChallenges}>
+      <PatientLayout isAuthenticated={isAuthenticated} hasChallenges={hasChallenges} hasAnamnesis={hasAnamnesis}>
         {children}
       </PatientLayout>
       <PWAInstallPrompt />
