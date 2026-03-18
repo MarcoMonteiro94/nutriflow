@@ -107,10 +107,12 @@ function calculateBodyFatFromDensity(
 
   const bodyFatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
 
-  // Clamp to reasonable values (0-70%)
-  const clampedValue = Math.max(0, Math.min(70, bodyFatPercentage));
+  // Return null for out-of-range values (likely bad input data)
+  if (bodyFatPercentage < 0 || bodyFatPercentage > 70) {
+    return null;
+  }
 
-  return Math.round(clampedValue * 100) / 100; // Round to 2 decimal places
+  return Math.round(bodyFatPercentage * 100) / 100;
 }
 
 /**

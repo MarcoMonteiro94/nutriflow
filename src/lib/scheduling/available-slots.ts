@@ -62,7 +62,7 @@ export async function getAvailableSlotsForDate({
       const hasAppointment = appointments.some((appointment) => {
         const appointmentStart = new Date(appointment.scheduled_at);
         const appointmentEnd = new Date(
-          appointmentStart.getTime() + appointment.duration_minutes * 60 * 1000
+          appointmentStart.getTime() + (appointment.duration_minutes ?? 60) * 60 * 1000
         );
         return slot.start < appointmentEnd && slot.end > appointmentStart;
       });
