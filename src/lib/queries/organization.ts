@@ -698,9 +698,9 @@ export async function getOrganizationDashboardStats(
     .is("accepted_at", null);
 
   // Get today's appointments count for the org
-  const today = new Date();
-  const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-  const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+  const now1 = new Date();
+  const startOfDay = new Date(now1.getFullYear(), now1.getMonth(), now1.getDate(), 0, 0, 0).toISOString();
+  const endOfDay = new Date(now1.getFullYear(), now1.getMonth(), now1.getDate(), 23, 59, 59, 999).toISOString();
 
   const { count: totalAppointmentsToday } = await supabase
     .from("appointments")
@@ -751,9 +751,9 @@ export async function getOrganizationNutrisWithSchedule(
   }
 
   // Get today's date range
-  const today = new Date();
-  const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-  const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+  const now2 = new Date();
+  const startOfDay = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate(), 0, 0, 0).toISOString();
+  const endOfDay = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate(), 23, 59, 59, 999).toISOString();
 
   // Get appointments for each nutri
   const nutrisWithAppointments = await Promise.all(
