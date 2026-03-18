@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Clock,
   User,
@@ -56,21 +55,6 @@ const statusConfig = {
     icon: XCircle,
   },
 } as const;
-
-function TimeSlot({ time, isNow }: { time: string; isNow: boolean }) {
-  return (
-    <div className={cn(
-      "flex items-center gap-2 text-sm font-medium tabular-nums",
-      isNow ? "text-primary" : "text-muted-foreground"
-    )}>
-      <div className={cn(
-        "w-2 h-2 rounded-full",
-        isNow ? "bg-primary animate-pulse" : "bg-muted-foreground/30"
-      )} />
-      {time}
-    </div>
-  );
-}
 
 function AppointmentCard({
   appointment,
@@ -233,14 +217,6 @@ export function ScheduleTimeline({ appointments, selectedDate }: ScheduleTimelin
       </motion.div>
     );
   }
-
-  // Group appointments by hour
-  const groupedByHour = appointments.reduce((acc, appointment) => {
-    const hour = new Date(appointment.scheduled_at).getHours();
-    if (!acc[hour]) acc[hour] = [];
-    acc[hour].push(appointment);
-    return acc;
-  }, {} as Record<number, typeof appointments>);
 
   return (
     <div className="relative">

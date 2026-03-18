@@ -39,6 +39,9 @@ interface AnthropometryFormProps {
   patient: Pick<Patient, "gender" | "birth_date">;
   assessmentId?: string;
   initialData?: Partial<AnthropometryAssessment>;
+  onSuccess?: (assessmentId?: string) => void;
+  hideNavigation?: boolean;
+  formId?: string;
 }
 
 export function AnthropometryForm({
@@ -46,6 +49,9 @@ export function AnthropometryForm({
   patient,
   assessmentId,
   initialData,
+  onSuccess,
+  hideNavigation = false,
+  formId,
 }: AnthropometryFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -371,9 +377,14 @@ export function AnthropometryForm({
         }
       }
 
+      if (onSuccess) {
+        onSuccess(assessmentId);
+        return;
+      }
+
       router.push(`/patients/${patientId}/anthropometry`);
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("Erro ao salvar avaliação antropométrica. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -381,7 +392,7 @@ export function AnthropometryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} id={formId} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
@@ -880,20 +891,22 @@ export function AnthropometryForm({
       </div>
 
       {/* Submit Buttons */}
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEditing ? "Salvar Alterações" : "Registrar Avaliação"}
-        </Button>
-      </div>
+      {!hideNavigation && (
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditing ? "Salvar Alterações" : "Registrar Avaliação"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

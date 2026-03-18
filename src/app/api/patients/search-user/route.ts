@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     // If not found in first page, do a more targeted search
     if (!matchingUser) {
       // Try to get user by email directly
-      const { data: userData } = await serviceClient
+      await serviceClient
         .from("profiles")
         .select("id, email:id")
         .or(`id.eq.${email}`)
