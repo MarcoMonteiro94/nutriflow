@@ -27,6 +27,13 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Seed test data
+        run: npx tsx scripts/seed-test-data.ts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Build application
         run: npm run build
         env:
