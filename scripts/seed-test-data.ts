@@ -458,6 +458,186 @@ async function seedMealPlanForPatient(patientId: string, nutriId: string) {
   return plan.id;
 }
 
+async function cleanupE2EData(nutriId: string) {
+  console.log('🧹 Cleaning up E2E test data...\n');
+
+  // Find all patients created by this nutri (except the base seed patient)
+  const { data: testPatients } = await supabase
+    .from('patients')
+    .select('id, full_name, email')
+    .eq('nutri_id', nutriId);
+
+  if (!testPatients || testPatients.length === 0) {
+    console.log('  ✓ No test patients to clean up');
+    return;
+  }
+
+  // Identify E2E-created patients (exclude the base seed patient)
+  const e2ePatients = testPatients.filter(
+    (p) =>
+      p.email !== 'seed-patient@test.com' &&
+      (p.full_name?.includes('E2E') ||
+        p.full_name?.includes('Test') ||
+        p.email?.includes('@test.com') ||
+        p.email?.endsWith('@example.com'))
+  );
+
+  if (e2ePatients.length === 0) {
+    console.log('  ✓ No E2E patients to clean up');
+    return;
+  }
+
+  const patientIds = e2ePatients.map((p) => p.id);
+  console.log(`  Found ${e2ePatients.length} E2E patient(s) to clean up`);
+
+  // Delete in cascade order (children first)
+
+  // 1. Meal contents (via meals via meal_plans)
+  const { data: plans } = await supabase
+    .from('meal_plans')
+    .select('id')
+    .in('patient_id', patientIds);
+  const planIds = plans?.map((p) => p.id) ?? [];
+
+  if (planIds.length > 0) {
+    const { data: meals } = await supabase
+      .from('meals')
+      .select('id')
+      .in('meal_plan_id', planIds);
+    const mealIds = meals?.map((m) => m.id) ?? [];
+
+    if (mealIds.length > 0) {
+      await supabase.from('meal_contents').delete().in('meal_id', mealIds);
+      console.log('  ✓ Cleaned meal_contents');
+    }
+
+    await supabase.from('meals').delete().in('meal_plan_id', planIds);
+    console.log('  ✓ Cleaned meals');
+
+    await supabase.from('meal_plans').delete().in('patient_id', patientIds);
+    console.log('  ✓ Cleaned meal_plans');
+  }
+
+  // 2. Appointments and history
+  const { data: appointments } = await supabase
+    .from('appointments')
+    .select('id')
+    .in('patient_id', patientIds);
+  const appointmentIds = appointments?.map((a) => a.id) ?? [];
+
+  if (appointmentIds.length > 0) {
+    await supabase.from('appointment_history').delete().in('appointment_id', appointmentIds);
+    await supabase.from('appointments').delete().in('patient_id', patientIds);
+    console.log('  ✓ Cleaned appointments');
+  }
+
+  // 3. Measurements and related
+  await supabase.from('measurements').delete().in('patient_id', patientIds);
+  await supabase.from('measurement_goals').delete().in('patient_id', patientIds);
+  await supabase.from('custom_measurement_values').delete().in('patient_id', patientIds);
+  console.log('  ✓ Cleaned measurements');
+
+  // 4. Anamnesis
+  await supabase.from('anamnesis_reports').delete().in('patient_id', patientIds);
+  console.log('  ✓ Cleaned anamnesis_reports');
+
+  // 5. Challenge participation
+  const { data: participants } = await supabase
+    .from('challenge_participants')
+    .select('id')
+    .in('patient_id', patientIds);
+  const participantIds = participants?.map((p) => p.id) ?? [];
+
+  if (participantIds.length > 0) {
+    await supabase.from('goal_checkins').delete().in('participant_id', participantIds);
+    await supabase.from('challenge_checkins').delete().in('participant_id', participantIds);
+    await supabase.from('participant_achievements').delete().in('participant_id', participantIds);
+    await supabase.from('challenge_participants').delete().in('patient_id', patientIds);
+    console.log('  ✓ Cleaned challenge participation');
+  }
+
+  // 6. Patient tokens
+  await supabase.from('patient_tokens').delete().in('patient_id', patientIds);
+  console.log('  ✓ Cleaned patient_tokens');
+
+  // 7. Unlink user accounts before deleting patients
+  await supabase
+    .from('patients')
+    .update({ user_id: null })
+    .in('id', patientIds)
+    .not('user_id', 'is', null);
+
+  // 8. Finally delete the patients themselves
+  await supabase.from('patients').delete().in('id', patientIds);
+  console.log(`  ✓ Deleted ${e2ePatients.length} E2E patient(s)`);
+
+  // 9. Clean up E2E-created food items (custom foods with "Test" or "E2E" in name)
+  await supabase
+    .from('food_items')
+    .delete()
+    .or('name.ilike.%E2E%,name.ilike.%Test %')
+    .eq('source', 'custom');
+  console.log('  ✓ Cleaned custom test food items');
+
+  // 10. Clean up E2E-created challenges
+  const { data: testChallenges } = await supabase
+    .from('challenges')
+    .select('id')
+    .or('title.ilike.%E2E%,title.ilike.%Test%');
+
+  if (testChallenges && testChallenges.length > 0) {
+    const challengeIds = testChallenges.map((c) => c.id);
+    const { data: phases } = await supabase
+      .from('challenge_phases')
+      .select('id')
+      .in('challenge_id', challengeIds);
+    const phaseIds = phases?.map((p) => p.id) ?? [];
+
+    const { data: goals } = await supabase
+      .from('challenge_goals')
+      .select('id')
+      .in('challenge_id', challengeIds);
+    const goalIds = goals?.map((g) => g.id) ?? [];
+
+    if (goalIds.length > 0) {
+      await supabase.from('goal_checkins').delete().in('goal_id', goalIds);
+      await supabase.from('participant_achievements').delete().in('goal_id', goalIds);
+    }
+    if (phaseIds.length > 0) {
+      await supabase.from('participant_achievements').delete().in('phase_id', phaseIds);
+    }
+    await supabase.from('challenge_goals').delete().in('challenge_id', challengeIds);
+    await supabase.from('challenge_phases').delete().in('challenge_id', challengeIds);
+    await supabase.from('challenge_participants').delete().in('challenge_id', challengeIds);
+    await supabase.from('challenges').delete().in('id', challengeIds);
+    console.log('  ✓ Cleaned test challenges');
+  }
+
+  // 11. Clean up meal templates created during tests
+  await supabase
+    .from('meal_templates')
+    .delete()
+    .or('name.ilike.%E2E%,name.ilike.%Test%');
+  console.log('  ✓ Cleaned test meal templates');
+
+  // 12. Clean up test organizations (not the main seed org)
+  const { data: testOrgs } = await supabase
+    .from('organizations')
+    .select('id')
+    .neq('slug', TEST_ORG.slug)
+    .or('name.ilike.%Test%,name.ilike.%E2E%,slug.ilike.%test-e2e%');
+
+  if (testOrgs && testOrgs.length > 0) {
+    const testOrgIds = testOrgs.map((o) => o.id);
+    await supabase.from('organization_invites').delete().in('organization_id', testOrgIds);
+    await supabase.from('organization_members').delete().in('organization_id', testOrgIds);
+    await supabase.from('organizations').delete().in('id', testOrgIds);
+    console.log('  ✓ Cleaned test organizations');
+  }
+
+  console.log('\n✅ E2E cleanup complete\n');
+}
+
 async function main() {
   console.log('\n🌱 Seeding test data...\n');
 
@@ -475,8 +655,11 @@ async function main() {
     process.exit(1);
   }
 
+  // Clean up data from previous E2E test runs
+  await cleanupE2EData(nutriUser.id);
+
   // Create organization (owned by nutri user for backwards compatibility)
-  console.log('\nCreating test organization:');
+  console.log('Creating test organization:');
   const org = await createTestOrganization(nutriUser.id);
 
   if (!org) {
