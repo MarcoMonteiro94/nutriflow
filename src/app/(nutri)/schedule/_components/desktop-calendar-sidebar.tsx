@@ -7,57 +7,48 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { formatDateStr, parseDateStr, computeBlockedDateStrings, extractDateStrings } from "@/lib/date-utils";
 import type { NutriTimeBlock } from "@/types/database";
 
 interface DesktopCalendarSidebarProps {
-  selectedDate: Date;
-  appointmentDates: Date[];
-  blockedDates?: Date[];
+  selectedDateStr: string;
+  appointmentDateIsos: string[];
+  calendarTimeBlocks: NutriTimeBlock[];
   timeBlocksForDay: NutriTimeBlock[];
   appointmentCount: number;
 }
 
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export function DesktopCalendarSidebar({
-  selectedDate,
-  appointmentDates,
-  blockedDates = [],
+  selectedDateStr,
+  appointmentDateIsos,
+  calendarTimeBlocks,
   timeBlocksForDay,
   appointmentCount,
 }: DesktopCalendarSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Parse date locally on client for correct timezone
+  const selectedDate = parseDateStr(selectedDateStr);
   const isToday = new Date().toDateString() === selectedDate.toDateString();
 
   function handleDateSelect(date: Date | undefined) {
     if (!date) return;
     const params = new URLSearchParams(searchParams.toString());
-    params.set("date", formatLocalDate(date));
+    params.set("date", formatDateStr(date));
     router.push(`/schedule?${params.toString()}`);
   }
 
   function goToToday() {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("date", formatLocalDate(new Date()));
+    params.set("date", formatDateStr(new Date()));
     router.push(`/schedule?${params.toString()}`);
   }
 
-  const daysWithAppointments = appointmentDates.map((date) => {
-    const d = new Date(date);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  });
-
-  const daysBlocked = blockedDates.map((date) => {
-    const d = new Date(date);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  });
+  // Compute dates on client for correct timezone interpretation
+  const daysWithAppointments = extractDateStrings(appointmentDateIsos).map((str) => parseDateStr(str));
+  const blockedDateStrs = computeBlockedDateStrings(calendarTimeBlocks);
+  const daysBlocked = blockedDateStrs.map((str) => parseDateStr(str));
 
   return (
     <motion.div
@@ -119,7 +110,7 @@ export function DesktopCalendarSidebar({
                 <span className="font-bold underline decoration-primary decoration-2">15</span>
                 <span>Com consultas</span>
               </div>
-              {blockedDates.length > 0 && (
+              {blockedDateStrs.length > 0 && (
                 <div className="flex items-center gap-1.5">
                   <span className="inline-block w-5 h-5 rounded bg-destructive/10 text-center leading-5 text-destructive text-[10px]">
                     15

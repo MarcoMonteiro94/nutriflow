@@ -165,6 +165,24 @@ export default async function MealPage({ params }: MealPageProps) {
     revalidatePath(`/plans/${planId}/meals/${mealId}`);
   }
 
+  async function updateFoodAmount(contentId: string, amount: number) {
+    "use server";
+
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from("meal_contents")
+      .update({ amount })
+      .eq("id", contentId);
+
+    if (error) {
+      console.error("Error updating amount:", error);
+      throw new Error("Failed to update food amount");
+    }
+
+    revalidatePath(`/plans/${planId}/meals/${mealId}`);
+  }
+
   return (
     <div className="container max-w-4xl py-6">
       {/* Header */}
@@ -256,6 +274,7 @@ export default async function MealPage({ params }: MealPageProps) {
                   onRemove={removeFoodFromMeal}
                   onAddSubstitution={addSubstitution}
                   onRemoveSubstitution={removeSubstitution}
+                  onUpdateAmount={updateFoodAmount}
                 />
               ))}
             </div>

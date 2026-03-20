@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Users, Search } from "lucide-react";
 import Link from "next/link";
 import { PatientCardEnhanced } from "./patient-card-enhanced";
-import type { Patient } from "@/types/database";
+import type { PatientWithProgress } from "../page";
 
 interface PatientsGridProps {
-  patients: Patient[];
+  patients: PatientWithProgress[];
   searchQuery?: string;
   isReceptionist?: boolean;
 }

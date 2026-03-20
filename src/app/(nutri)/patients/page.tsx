@@ -8,6 +8,11 @@ import { PatientsSidebar } from "./_components/patients-sidebar";
 import { getUserRole } from "@/lib/auth/authorization";
 import type { Patient } from "@/types/database";
 
+export type PatientWithProgress = Patient & {
+  appointmentCount: number;
+  measurementCount: number;
+};
+
 const PAGE_SIZE = 50;
 
 interface SearchParams {
@@ -87,6 +92,45 @@ export default async function PatientsPage({
     withGoalsQuery,
   ]);
 
+  // Fetch progress counters for the current page of patients
+  let patientsWithProgress: PatientWithProgress[] = patients.map((p) => ({
+    ...p,
+    appointmentCount: 0,
+    measurementCount: 0,
+  }));
+
+  if (patients.length > 0) {
+    const patientIds = patients.map((p) => p.id);
+    const supabaseProgress = await createClient();
+
+    const [{ data: apptData }, { data: measData }] = await Promise.all([
+      supabaseProgress
+        .from("appointments")
+        .select("patient_id")
+        .in("patient_id", patientIds),
+      supabaseProgress
+        .from("anthropometry_assessments")
+        .select("patient_id")
+        .in("patient_id", patientIds),
+    ]);
+
+    const apptMap = new Map<string, number>();
+    for (const row of apptData ?? []) {
+      apptMap.set(row.patient_id, (apptMap.get(row.patient_id) ?? 0) + 1);
+    }
+
+    const measMap = new Map<string, number>();
+    for (const row of measData ?? []) {
+      measMap.set(row.patient_id, (measMap.get(row.patient_id) ?? 0) + 1);
+    }
+
+    patientsWithProgress = patients.map((p) => ({
+      ...p,
+      appointmentCount: apptMap.get(p.id) ?? 0,
+      measurementCount: measMap.get(p.id) ?? 0,
+    }));
+  }
+
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
@@ -117,7 +161,7 @@ export default async function PatientsPage({
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Patients Grid */}
         <div className="order-2 lg:order-1 space-y-4">
-          <PatientsGrid patients={patients} searchQuery={params.q} isReceptionist={isReceptionist} />
+          <PatientsGrid patients={patientsWithProgress} searchQuery={params.q} isReceptionist={isReceptionist} />
 
           {/* Pagination */}
           {totalPages > 1 && (

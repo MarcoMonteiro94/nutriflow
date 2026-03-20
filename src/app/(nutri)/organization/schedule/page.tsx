@@ -5,25 +5,12 @@ import { Calendar as CalendarIcon, Users } from "lucide-react";
 import { getUserOrganizations, getOrganizationMembers } from "@/lib/queries/organization";
 import { ConsolidatedCalendar } from "./_components/consolidated-calendar";
 import { NutriScheduleList } from "./_components/nutri-schedule-list";
+import { formatDateStr, parseDateStr } from "@/lib/date-utils";
 import type { Appointment } from "@/types/database";
 
 interface SearchParams {
   date?: string;
   nutri?: string;
-}
-
-// Format date to YYYY-MM-DD using local timezone (not UTC)
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Parse YYYY-MM-DD string to Date at local midnight
-function parseLocalDate(dateStr: string): Date {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
 }
 
 type AppointmentWithDetails = Appointment & {
@@ -90,7 +77,8 @@ async function getOrganizationAppointments(
   return (data ?? []) as AppointmentWithDetails[];
 }
 
-async function getAppointmentDatesForOrganization(organizationId: string): Promise<Date[]> {
+// Return raw ISO strings — client extracts local dates
+async function getAppointmentDatesForOrganization(organizationId: string): Promise<string[]> {
   const supabase = await createClient();
 
   const members = await getOrganizationMembers(organizationId);
@@ -110,7 +98,7 @@ async function getAppointmentDatesForOrganization(organizationId: string): Promi
 
   if (!data) return [];
 
-  return data.map((a) => new Date(a.scheduled_at));
+  return data.map((a) => a.scheduled_at);
 }
 
 export default async function OrganizationSchedulePage({
@@ -119,7 +107,7 @@ export default async function OrganizationSchedulePage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const selectedDate = params.date || formatLocalDate(new Date());
+  const selectedDate = params.date || formatDateStr(new Date());
   const selectedNutri = params.nutri || "";
 
   const supabase = await createClient();
@@ -155,10 +143,13 @@ export default async function OrganizationSchedulePage({
       name: m.profiles.full_name,
     }));
 
-  const [appointments, appointmentDates] = await Promise.all([
+  const [appointments, appointmentDateIsos] = await Promise.all([
     getOrganizationAppointments(organization.id, selectedDate, selectedNutri),
     getAppointmentDatesForOrganization(organization.id),
   ]);
+
+  // For server-side rendering only (not passed as Date to client)
+  const parsedSelectedDate = parseDateStr(selectedDate);
 
   return (
     <div className="space-y-6">
@@ -185,8 +176,8 @@ export default async function OrganizationSchedulePage({
           </CardHeader>
           <CardContent>
             <ConsolidatedCalendar
-              selectedDate={parseLocalDate(selectedDate)}
-              appointmentDates={appointmentDates}
+              selectedDateStr={selectedDate}
+              appointmentDateIsos={appointmentDateIsos}
               nutris={nutris}
               selectedNutri={selectedNutri}
             />
@@ -199,7 +190,7 @@ export default async function OrganizationSchedulePage({
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               Atendimentos do dia{" "}
-              {parseLocalDate(selectedDate).toLocaleDateString("pt-BR", {
+              {parsedSelectedDate.toLocaleDateString("pt-BR", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",

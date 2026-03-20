@@ -59,6 +59,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure profile exists (may be missing if user was created before trigger)
+    const { data: existingProfile } = await serviceClient
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .single();
+
+    if (!existingProfile) {
+      const { error: profileError } = await serviceClient
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email: user.email!,
+          full_name:
+            user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Usuário",
+          role: "nutri",
+        });
+
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
+        return NextResponse.json(
+          { error: "Erro ao criar perfil do usuário" },
+          { status: 500 }
+        );
+      }
+    }
+
     // Add user as member (upsert to handle race conditions)
     // The unique constraint (organization_id, user_id) prevents duplicates
     const { error: memberError } = await serviceClient

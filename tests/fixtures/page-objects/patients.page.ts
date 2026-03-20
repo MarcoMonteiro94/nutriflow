@@ -51,8 +51,10 @@ export class PatientsPage {
   }
 
   async expectPatientVisible(patientName: string) {
-    const card = await this.getPatientCard(patientName);
-    await expect(card).toBeVisible();
+    // Patient names are rendered as h3 headings in the patient grid
+    await expect(
+      this.page.getByRole('heading', { level: 3, name: patientName })
+    ).toBeVisible({ timeout: 10000 });
   }
 
   async expectPatientNotVisible(patientName: string) {
@@ -84,14 +86,14 @@ export class PatientFormPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.fullNameInput = page.getByLabel('Nome Completo');
-    this.emailInput = page.getByLabel('Email');
-    this.phoneInput = page.getByLabel('Telefone');
-    this.birthDateInput = page.getByLabel('Data de Nascimento');
-    this.genderSelect = page.locator('select[name="gender"]');
-    this.goalInput = page.getByLabel('Objetivo');
-    this.notesTextarea = page.getByLabel('Observações');
-    this.submitButton = page.getByRole('button', { name: /cadastrar|salvar/i });
+    this.fullNameInput = page.getByRole('textbox', { name: /nome completo/i });
+    this.emailInput = page.getByRole('textbox', { name: /email/i });
+    this.phoneInput = page.getByRole('textbox', { name: /telefone/i });
+    this.birthDateInput = page.getByRole('textbox', { name: /data de nascimento/i });
+    this.genderSelect = page.getByRole('combobox', { name: /gênero/i });
+    this.goalInput = page.getByRole('textbox', { name: /objetivo/i });
+    this.notesTextarea = page.getByRole('textbox', { name: /observações/i });
+    this.submitButton = page.getByRole('button', { name: /cadastrar.*continuar|cadastrar|salvar/i });
     this.cancelButton = page.getByRole('button', { name: /cancelar/i });
     this.errorMessage = page.locator('.bg-destructive\\/10');
   }
@@ -114,7 +116,7 @@ export class PatientFormPage {
     if (data.email) await this.emailInput.fill(data.email);
     if (data.phone) await this.phoneInput.fill(data.phone);
     if (data.birthDate) await this.birthDateInput.fill(data.birthDate);
-    if (data.gender) await this.genderSelect.selectOption(data.gender);
+    if (data.gender) await this.genderSelect.selectOption({ label: data.gender });
     if (data.goal) await this.goalInput.fill(data.goal);
     if (data.notes) await this.notesTextarea.fill(data.notes);
   }
@@ -135,7 +137,8 @@ export class PatientFormPage {
   }
 
   async expectRedirectToPatient() {
-    await this.page.waitForURL(/\/patients\/[a-f0-9-]+$/, { timeout: 10000 });
+    // Patient form may redirect to detail page or wizard step with patientId
+    await this.page.waitForURL(/\/patients\/[a-f0-9-]+|patientId=[a-f0-9-]+/, { timeout: 10000 });
   }
 }
 

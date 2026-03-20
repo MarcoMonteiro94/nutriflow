@@ -18,6 +18,26 @@ export const testUsers = {
     password: 'TestPassword123!',
     fullName: 'Test Recepcionista',
   },
+  admin: {
+    email: 'test-admin@example.com',
+    password: 'TestPassword123!',
+    fullName: 'Test Admin',
+  },
+  noOrg: {
+    email: 'test-noorg@example.com',
+    password: 'TestPassword123!',
+    fullName: 'Test Sem Org',
+  },
+  invitedUser: {
+    email: 'test-invited@example.com',
+    password: 'TestPassword123!',
+    fullName: 'Test Convidado',
+  },
+  patient: {
+    email: 'test-patient@example.com',
+    password: 'TestPassword123!',
+    fullName: 'Test Paciente',
+  },
 };
 
 export const testPatients = {
@@ -26,7 +46,7 @@ export const testPatients = {
     email: 'joao.silva@test.com',
     phone: '(11) 99999-0001',
     birthDate: '1990-05-15',
-    gender: 'masculino',
+    gender: 'Masculino',
     goal: 'Emagrecimento',
     notes: 'Paciente de teste - alergia a amendoim',
   },
@@ -35,7 +55,7 @@ export const testPatients = {
     email: 'maria.santos@test.com',
     phone: '(11) 99999-0002',
     birthDate: '1985-10-20',
-    gender: 'feminino',
+    gender: 'Feminino',
     goal: 'Ganho de massa muscular',
     notes: 'Paciente de teste - vegetariana',
   },
@@ -148,6 +168,37 @@ export const testUsersWithRoles = {
   },
 };
 
+export const testFoods = {
+  food1: {
+    name: 'Arroz Integral Test',
+    category: 'Cereais e derivados',
+    calories: '124',
+    protein: '2.6',
+    carbs: '25.8',
+    fat: '1.0',
+  },
+  foodFull: {
+    name: 'Peito de Frango Grelhado Test',
+    category: 'Carnes e derivados',
+    portionSize: '100',
+    portionUnit: 'g',
+    calories: '165',
+    protein: '31',
+    carbs: '0',
+    fat: '3.6',
+    fiber: '0',
+    sodium: '74',
+  },
+};
+
+export const testChallenges = {
+  challenge1: {
+    title: 'Desafio Hidratação Test',
+    description: 'Beber 2L de água por dia durante 21 dias',
+    goalTitle: 'Beber 2L de água',
+  },
+};
+
 export const invalidCredentials = {
   wrongEmail: 'wrong@email.com',
   wrongPassword: 'WrongPassword123!',
@@ -158,4 +209,17 @@ export const invalidCredentials = {
 export const formValidation = {
   requiredFieldMessage: 'Preencha este campo',
   invalidEmailMessage: 'email',
+};
+
+export const testInviteTokens = {
+  pending: {
+    token: 'test-pending-invite-token-e2e-12345',
+    email: 'test-invited@example.com',
+    role: 'nutri' as const,
+  },
+  expired: {
+    token: 'test-expired-invite-token-e2e-99999',
+    email: 'test-expired@example.com',
+    role: 'receptionist' as const,
+  },
 };
