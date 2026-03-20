@@ -44,15 +44,15 @@ export class OrganizationPage {
     this.settingsLink = page.getByRole('link', { name: /configurações/i });
 
     // Members
-    this.inviteButton = page.getByRole('button', { name: /convidar/i });
-    this.membersList = page.locator('[data-testid="members-list"]');
-    this.pendingInvitesList = page.locator('[data-testid="pending-invites"]');
+    this.inviteButton = page.getByRole('button', { name: /convidar membro/i });
+    this.membersList = page.locator('main');
+    this.pendingInvitesList = page.locator('text=/convites pendentes/i').locator('..');
 
     // Invite Dialog
     this.inviteDialog = page.locator('[role="dialog"]');
-    this.inviteEmailInput = page.locator('input[name="email"]');
-    this.inviteRoleSelect = page.locator('[data-testid="role-select"]');
-    this.sendInviteButton = page.getByRole('button', { name: /enviar.*convite/i });
+    this.inviteEmailInput = this.inviteDialog.getByRole('textbox', { name: /email/i });
+    this.inviteRoleSelect = this.inviteDialog.locator('button[role="combobox"]').first();
+    this.sendInviteButton = this.inviteDialog.getByRole('button', { name: /enviar convite/i });
     this.copyLinkButton = page.locator('[data-testid="copy-link"]');
     this.whatsappButton = page.locator('[data-testid="whatsapp-share"]');
   }
@@ -89,9 +89,8 @@ export class OrganizationPage {
     await this.openInviteDialog();
     await this.inviteEmailInput.fill(email);
 
-    // Select role from dropdown
-    const roleButton = this.page.locator('button[role="combobox"]').first();
-    await roleButton.click();
+    // Select role from shadcn Select inside dialog
+    await this.inviteRoleSelect.click();
     await this.page.getByRole('option', { name: new RegExp(role, 'i') }).click();
 
     await this.sendInviteButton.click();

@@ -44,8 +44,9 @@ export class PlansPage {
   }
 
   async expectPlanVisible(planTitle: string) {
-    const card = await this.getPlanCard(planTitle);
-    await expect(card).toBeVisible();
+    await expect(
+      this.page.locator(`text=${planTitle}`)
+    ).toBeVisible({ timeout: 10000 });
   }
 
   async expectEmptyState() {

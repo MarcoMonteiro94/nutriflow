@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,86 +35,117 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [], onSu
   );
 
   const isEditing = !!patient;
+  const isSubmittingRef = useRef(false);
+
+  // Phone mask: (00) 00000-0000 or (00) 0000-0000
+  function formatPhone(value: string): string {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10)
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+
+  const [phone, setPhone] = useState(() => formatPhone(patient?.phone ?? ""));
+  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhone(e.target.value));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    // Synchronous guard against double-submit (covers rapid double-clicks
+    // before the async setState disables the button)
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const supabase = createClient();
+    try {
+      const formData = new FormData(e.currentTarget);
+      const supabase = createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      setError("Você precisa estar logado para cadastrar pacientes.");
+      if (!user) {
+        setError("Você precisa estar logado para cadastrar pacientes.");
+        return;
+      }
+
+      const patientData = {
+        full_name: formData.get("full_name") as string,
+        email: (formData.get("email") as string) || null,
+        phone: (formData.get("phone") as string) || null,
+        birth_date: (formData.get("birth_date") as string) || null,
+        gender: (formData.get("gender") as string) || null,
+        activity_level: (formData.get("activity_level") as string) || null,
+        goal: (formData.get("goal") as string) || null,
+        notes: (formData.get("notes") as string) || null,
+      };
+
+      if (isEditing) {
+        const { error: updateError } = await supabase
+          .from("patients")
+          .update(patientData)
+          .eq("id", patient.id);
+
+        if (updateError) {
+          if (updateError.code === "23505") {
+            setError("Já existe um paciente com este email.");
+          } else {
+            setError(updateError.message);
+          }
+          return;
+        }
+
+        router.push(`/patients/${patient.id}`);
+      } else {
+        // For receptionists, use the selected nutri_id
+        // For nutris/admins, use their own user.id
+        const nutriIdToUse = isReceptionist && selectedNutriId ? selectedNutriId : user.id;
+
+        if (isReceptionist && !selectedNutriId) {
+          setError("Selecione um nutricionista para o paciente.");
+          return;
+        }
+
+        const { data, error: insertError } = await supabase
+          .from("patients")
+          .insert({
+            ...patientData,
+            nutri_id: nutriIdToUse,
+          })
+          .select("id")
+          .single();
+
+        if (insertError || !data) {
+          if (insertError?.code === "23505") {
+            setError("Já existe um paciente com este email.");
+          } else {
+            setError(insertError?.message ?? "Erro ao criar paciente");
+          }
+          return;
+        }
+
+        if (onSuccess) {
+          onSuccess(data.id, {
+            full_name: patientData.full_name,
+            gender: patientData.gender,
+            birth_date: patientData.birth_date,
+          });
+          return;
+        }
+
+        router.push(`/patients/${data.id}`);
+      }
+
+      router.refresh();
+    } finally {
       setIsLoading(false);
-      return;
+      isSubmittingRef.current = false;
     }
-
-    const patientData = {
-      full_name: formData.get("full_name") as string,
-      email: (formData.get("email") as string) || null,
-      phone: (formData.get("phone") as string) || null,
-      birth_date: (formData.get("birth_date") as string) || null,
-      gender: (formData.get("gender") as string) || null,
-      activity_level: (formData.get("activity_level") as string) || null,
-      goal: (formData.get("goal") as string) || null,
-      notes: (formData.get("notes") as string) || null,
-    };
-
-    if (isEditing) {
-      const { error: updateError } = await supabase
-        .from("patients")
-        .update(patientData)
-        .eq("id", patient.id);
-
-      if (updateError) {
-        setError(updateError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      router.push(`/patients/${patient.id}`);
-    } else {
-      // For receptionists, use the selected nutri_id
-      // For nutris/admins, use their own user.id
-      const nutriIdToUse = isReceptionist && selectedNutriId ? selectedNutriId : user.id;
-
-      if (isReceptionist && !selectedNutriId) {
-        setError("Selecione um nutricionista para o paciente.");
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error: insertError } = await supabase
-        .from("patients")
-        .insert({
-          ...patientData,
-          nutri_id: nutriIdToUse,
-        })
-        .select("id")
-        .single();
-
-      if (insertError || !data) {
-        setError(insertError?.message ?? "Erro ao criar paciente");
-        setIsLoading(false);
-        return;
-      }
-
-      if (onSuccess) {
-        onSuccess(data.id, {
-          full_name: patientData.full_name,
-          gender: patientData.gender,
-          birth_date: patientData.birth_date,
-        });
-        return;
-      }
-
-      router.push(`/patients/${data.id}`);
-    }
-
-    router.refresh();
   }
 
   return (
@@ -175,7 +206,8 @@ export function PatientForm({ patient, isReceptionist = false, nutris = [], onSu
             id="phone"
             name="phone"
             type="tel"
-            defaultValue={patient?.phone ?? ""}
+            value={phone}
+            onChange={handlePhoneChange}
             placeholder="(00) 00000-0000"
           />
         </div>

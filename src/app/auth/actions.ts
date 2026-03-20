@@ -39,6 +39,42 @@ export async function login(
     redirect(redirectTo);
   }
 
+  // Check if user has an organization to avoid double redirect
+  // (login → /dashboard → layout redirect → /organization/create causes RSC loop)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: membership } = await supabase
+      .from("organization_members")
+      .select("organization_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .single();
+
+    if (!membership) {
+      // Check if user owns any organization
+      const { data: ownedOrg } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("owner_id", user.id)
+        .limit(1)
+        .single();
+
+      if (!ownedOrg) {
+        const userType = user.user_metadata?.user_type;
+        if (userType === "patient") {
+          redirect("/patient/dashboard");
+        }
+        // For invite users and nutris without org, go to org create
+        // (invite users will be redirected to /invite/[token] by the layout)
+        redirect("/organization/create");
+      }
+    }
+  }
+
   redirect("/dashboard");
 }
 

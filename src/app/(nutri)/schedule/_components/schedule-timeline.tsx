@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { parseDateStr } from "@/lib/date-utils";
 import type { Appointment } from "@/types/database";
 import { RescheduleDialog } from "./reschedule-dialog";
 import { AppointmentActionsDialog } from "./appointment-actions-dialog";
@@ -26,7 +27,7 @@ interface ScheduleTimelineProps {
       full_name: string;
     } | null;
   })[];
-  selectedDate: Date;
+  selectedDateStr: string;
 }
 
 const statusConfig = {
@@ -186,7 +187,9 @@ function AppointmentCard({
   );
 }
 
-export function ScheduleTimeline({ appointments, selectedDate }: ScheduleTimelineProps) {
+export function ScheduleTimeline({ appointments, selectedDateStr }: ScheduleTimelineProps) {
+  // Parse date locally on client for correct timezone
+  const selectedDate = parseDateStr(selectedDateStr);
   const isToday = new Date().toDateString() === selectedDate.toDateString();
 
   if (appointments.length === 0) {

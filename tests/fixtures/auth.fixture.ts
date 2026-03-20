@@ -65,7 +65,7 @@ async function waitForAuth(page: Page, timeout = 5000): Promise<boolean> {
   }
 }
 
-async function login(page: Page, email: string, password: string): Promise<boolean> {
+export async function login(page: Page, email: string, password: string): Promise<boolean> {
   await page.goto('/auth/login', { timeout: 5000 });
   await page.waitForLoadState('domcontentloaded');
 
@@ -170,4 +170,39 @@ export async function logout(page: Page): Promise<void> {
     await page.goto('/auth/logout');
   }
   await page.waitForURL(/\/auth\/login|\/$/, { timeout: 5000 });
+}
+
+/**
+ * Login as any test role.
+ * Unlike login(), this waits for any redirect away from /auth/login,
+ * supporting noOrg → /organization/create and invited → /invite/[token].
+ */
+export async function loginAs(
+  page: Page,
+  role: 'nutri' | 'admin' | 'receptionist' | 'patient' | 'noOrg' | 'invited',
+): Promise<boolean> {
+  const userMap: Record<string, { email: string; password: string }> = {
+    nutri: testUsers.nutritionist,
+    admin: testUsers.admin,
+    receptionist: testUsers.receptionist,
+    patient: testUsers.patient,
+    noOrg: testUsers.noOrg,
+    invited: testUsers.invitedUser,
+  };
+  const user = userMap[role];
+  if (!user) throw new Error(`Unknown role: ${role}`);
+
+  await page.goto('/auth/login', { timeout: 5000 });
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForSelector('input[name="email"]', { state: 'visible', timeout: 3000 });
+  await page.fill('input[name="email"]', user.email);
+  await page.fill('input[name="password"]', user.password);
+  await page.click('button[type="submit"]');
+
+  try {
+    await page.waitForURL(url => !url.toString().includes('/auth/login'), { timeout: 15000 });
+    return true;
+  } catch {
+    return false;
+  }
 }

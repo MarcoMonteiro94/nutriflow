@@ -10,36 +10,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { formatDateStr, parseDateStr, extractDateStrings } from "@/lib/date-utils";
 
 interface ConsolidatedCalendarProps {
-  selectedDate: Date;
-  appointmentDates: Date[];
+  selectedDateStr: string;
+  appointmentDateIsos: string[];
   nutris: { id: string; name: string }[];
   selectedNutri: string;
 }
 
-// Format date to YYYY-MM-DD using local timezone
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export function ConsolidatedCalendar({
-  selectedDate,
-  appointmentDates,
+  selectedDateStr,
+  appointmentDateIsos,
   nutris,
   selectedNutri,
 }: ConsolidatedCalendarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Parse date locally on client for correct timezone
+  const selectedDate = parseDateStr(selectedDateStr);
+
   function handleDateSelect(date: Date | undefined) {
     if (!date) return;
 
     const params = new URLSearchParams(searchParams.toString());
-    params.set("date", formatLocalDate(date));
+    params.set("date", formatDateStr(date));
     router.push(`/organization/schedule?${params.toString()}`);
   }
 
@@ -53,10 +49,8 @@ export function ConsolidatedCalendar({
     router.push(`/organization/schedule?${params.toString()}`);
   }
 
-  // Create a set of date strings for quick lookup
-  const appointmentDateSet = new Set(
-    appointmentDates.map((d) => formatLocalDate(d))
-  );
+  // Compute dates on client for correct timezone interpretation
+  const appointmentDateSet = new Set(extractDateStrings(appointmentDateIsos));
 
   return (
     <div className="space-y-4">
@@ -84,7 +78,7 @@ export function ConsolidatedCalendar({
         className="rounded-md border"
         modifiers={{
           hasAppointment: (date) =>
-            appointmentDateSet.has(formatLocalDate(date)),
+            appointmentDateSet.has(formatDateStr(date)),
         }}
         modifiersStyles={{
           hasAppointment: {

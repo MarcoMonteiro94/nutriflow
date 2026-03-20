@@ -13,6 +13,7 @@ interface FoodItemCardWrapperProps {
   onRemove: (contentId: string) => Promise<void>;
   onAddSubstitution: (foodId: string, amount: number, parentContentId: string) => Promise<void>;
   onRemoveSubstitution: (contentId: string) => Promise<void>;
+  onUpdateAmount: (contentId: string, amount: number) => Promise<void>;
 }
 
 export function FoodItemCardWrapper({
@@ -21,6 +22,7 @@ export function FoodItemCardWrapper({
   onRemove,
   onAddSubstitution,
   onRemoveSubstitution,
+  onUpdateAmount,
 }: FoodItemCardWrapperProps) {
   return (
     <FoodItemCard
@@ -29,6 +31,7 @@ export function FoodItemCardWrapper({
       onRemove={onRemove}
       onAddSubstitution={onAddSubstitution}
       onRemoveSubstitution={onRemoveSubstitution}
+      onUpdateAmount={onUpdateAmount}
     />
   );
 }

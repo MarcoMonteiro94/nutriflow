@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { NutriSidebar } from "@/components/layout/nutri-sidebar";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { RoleProvider } from "@/contexts/role-context";
 import type { OrgRole } from "@/types/database";
 
@@ -82,16 +82,40 @@ export default async function NutriLayout({
         redirect("/patient/dashboard");
       } else if (userType === "invite") {
         // User signed up via invite but hasn't accepted yet
-        // They shouldn't be here - redirect to home
-        redirect("/");
+        // Fetch pending invite by email — uses service client because
+        // organization_invites has no SELECT policy for the invitee
+        const serviceClient = createServiceClient();
+        const { data: pendingInvite } = await serviceClient
+          .from("organization_invites")
+          .select("token")
+          .eq("email", user.email!)
+          .is("accepted_at", null)
+          .limit(1)
+          .single();
+
+        if (pendingInvite) {
+          redirect(`/invite/${pendingInvite.token}`);
+        } else {
+          // No pending invite — treat as nutri without org
+          const headersList = await headers();
+          const pathname = headersList.get("x-pathname") || "";
+          const isOrgRoute = pathname.startsWith("/organization");
+          const isSettingsRoute = pathname.startsWith("/settings");
+          if (!isOrgRoute && !isSettingsRoute) {
+            redirect("/organization/create");
+          }
+          role = "nutri";
+        }
       } else {
         // User is a nutri without an organization
         // Redirect to create organization page (unless already there)
         const headersList = await headers();
         const pathname = headersList.get("x-pathname") || "";
 
-        // Allow access to organization/create without redirect loop
-        if (!pathname.includes("/organization/create")) {
+        // Allow access to organization routes and settings without redirect loop
+        const isOrgRoute = pathname.startsWith("/organization");
+        const isSettingsRoute = pathname.startsWith("/settings");
+        if (!isOrgRoute && !isSettingsRoute) {
           redirect("/organization/create");
         }
 

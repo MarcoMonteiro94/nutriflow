@@ -8,12 +8,14 @@ import {
   Phone,
   Target,
   ChevronRight,
-  Clock
+  Clock,
+  CalendarCheck,
+  Ruler,
 } from "lucide-react";
-import type { Patient } from "@/types/database";
+import type { PatientWithProgress } from "../page";
 
 interface PatientCardEnhancedProps {
-  patient: Patient;
+  patient: PatientWithProgress;
   index?: number;
   isReceptionist?: boolean;
 }
@@ -41,6 +43,8 @@ export function PatientCardEnhanced({ patient, index = 0, isReceptionist }: Pati
   function handleCardClick() {
     router.push(`/patients/${patient.id}`);
   }
+
+  const hasProgress = patient.appointmentCount > 0 || patient.measurementCount > 0;
 
   return (
     <motion.div
@@ -85,7 +89,7 @@ export function PatientCardEnhanced({ patient, index = 0, isReceptionist }: Pati
                     </span>
                   )}
                   {age !== null && patient.gender && (
-                    <span className="text-muted-foreground/50">•</span>
+                    <span className="text-muted-foreground/50">&bull;</span>
                   )}
                   {patient.gender && (
                     <span className="text-xs sm:text-sm text-muted-foreground capitalize">
@@ -121,15 +125,24 @@ export function PatientCardEnhanced({ patient, index = 0, isReceptionist }: Pati
 
             {/* Footer */}
             <div className="mt-3 pt-3 border-t flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>
-                  {new Date(patient.created_at).toLocaleDateString("pt-BR", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric"
-                  })}
-                </span>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                {hasProgress ? (
+                  <>
+                    <div className="flex items-center gap-1" title="Consultas">
+                      <CalendarCheck className="h-3 w-3" />
+                      <span>{patient.appointmentCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1" title="Medições">
+                      <Ruler className="h-3 w-3" />
+                      <span>{patient.measurementCount}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    <span>Sem registros ainda</span>
+                  </div>
+                )}
               </div>
               <div className="flex gap-1.5">
                 <Button

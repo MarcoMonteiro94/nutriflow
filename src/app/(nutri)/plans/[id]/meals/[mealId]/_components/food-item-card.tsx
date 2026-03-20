@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Plus, Repeat, Trash2, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Repeat, Trash2, Loader2, Check, X, Pencil } from "lucide-react";
 import type { FoodItem, MealContent } from "@/types/database";
 import { SubstitutionSearch } from "./substitution-search";
 
@@ -21,6 +22,92 @@ interface FoodItemCardProps {
   onRemove: (contentId: string) => Promise<void>;
   onAddSubstitution: (foodId: string, amount: number, parentContentId: string) => Promise<void>;
   onRemoveSubstitution: (contentId: string) => Promise<void>;
+  onUpdateAmount: (contentId: string, amount: number) => Promise<void>;
+}
+
+function InlineAmountEditor({
+  contentId,
+  currentAmount,
+  onSave,
+  disabled,
+}: {
+  contentId: string;
+  currentAmount: number;
+  onSave: (contentId: string, amount: number) => void;
+  disabled: boolean;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editAmount, setEditAmount] = useState(String(currentAmount));
+
+  function handleSave() {
+    const parsed = parseFloat(editAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      setEditAmount(String(currentAmount));
+      setIsEditing(false);
+      return;
+    }
+    onSave(contentId, parsed);
+    setIsEditing(false);
+  }
+
+  function handleCancel() {
+    setEditAmount(String(currentAmount));
+    setIsEditing(false);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") handleSave();
+    if (e.key === "Escape") handleCancel();
+  }
+
+  if (isEditing) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Input
+          type="number"
+          value={editAmount}
+          onChange={(e) => setEditAmount(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="h-6 w-16 px-1 text-sm text-center"
+          min={1}
+          step="any"
+          autoFocus
+          disabled={disabled}
+        />
+        <span className="text-sm">g</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-emerald-600 hover:text-emerald-700"
+          onClick={handleSave}
+          disabled={disabled}
+        >
+          <Check className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-muted-foreground"
+          onClick={handleCancel}
+          disabled={disabled}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setIsEditing(true)}
+      className="inline-flex items-center gap-1 rounded px-1 -mx-1 hover:bg-muted/60 transition-colors group"
+      title="Clique para editar gramatura"
+    >
+      <span>{currentAmount}g</span>
+      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  );
 }
 
 export function FoodItemCard({
@@ -29,6 +116,7 @@ export function FoodItemCard({
   onRemove,
   onAddSubstitution,
   onRemoveSubstitution,
+  onUpdateAmount,
 }: FoodItemCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingSubstitution, setIsAddingSubstitution] = useState(false);
@@ -51,6 +139,12 @@ export function FoodItemCard({
     });
   };
 
+  const handleUpdateAmount = (contentId: string, amount: number) => {
+    startTransition(async () => {
+      await onUpdateAmount(contentId, amount);
+    });
+  };
+
   const handleAddSubstitution = (selectedFood: FoodItem, amount: number) => {
     startTransition(async () => {
       await onAddSubstitution(selectedFood.id, amount, content.id);
@@ -61,6 +155,12 @@ export function FoodItemCard({
   const handleRemoveSubstitution = (substitutionId: string) => {
     startTransition(async () => {
       await onRemoveSubstitution(substitutionId);
+    });
+  };
+
+  const handleUpdateSubstitutionAmount = (subContentId: string, amount: number) => {
+    startTransition(async () => {
+      await onUpdateAmount(subContentId, amount);
     });
   };
 
@@ -80,7 +180,13 @@ export function FoodItemCard({
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {content.amount}g &bull; {macros.calories} kcal &bull; P: {macros.protein}g &bull; C: {macros.carbs}g &bull; G: {macros.fat}g
+              <InlineAmountEditor
+                contentId={content.id}
+                currentAmount={Number(content.amount)}
+                onSave={handleUpdateAmount}
+                disabled={isPending}
+              />
+              {" "}&bull; {macros.calories} kcal &bull; P: {macros.protein}g &bull; C: {macros.carbs}g &bull; G: {macros.fat}g
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -175,7 +281,13 @@ export function FoodItemCard({
                           <p className="text-sm font-medium">{subFood.name}</p>
                         </div>
                         <p className="text-xs text-muted-foreground ml-5">
-                          {sub.amount}g &bull; {subMacros.calories} kcal &bull; P: {subMacros.protein}g &bull; C: {subMacros.carbs}g &bull; G: {subMacros.fat}g
+                          <InlineAmountEditor
+                            contentId={sub.id}
+                            currentAmount={Number(sub.amount)}
+                            onSave={handleUpdateSubstitutionAmount}
+                            disabled={isPending}
+                          />
+                          {" "}&bull; {subMacros.calories} kcal &bull; P: {subMacros.protein}g &bull; C: {subMacros.carbs}g &bull; G: {subMacros.fat}g
                         </p>
                       </div>
                       <Button

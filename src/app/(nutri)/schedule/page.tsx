@@ -6,24 +6,11 @@ import { ScheduleTimeline } from "./_components/schedule-timeline";
 import { MobileCalendarDrawer } from "./_components/mobile-calendar-drawer";
 import { DesktopCalendarSidebar } from "./_components/desktop-calendar-sidebar";
 import { getUserRole } from "@/lib/auth/authorization";
+import { formatDateStr, parseDateStr } from "@/lib/date-utils";
 import type { Appointment, NutriTimeBlock } from "@/types/database";
 
 interface SearchParams {
   date?: string;
-}
-
-// Format date to YYYY-MM-DD using local timezone (not UTC)
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Parse YYYY-MM-DD string to Date at local midnight
-function parseLocalDate(dateStr: string): Date {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
 }
 
 type AppointmentWithPatient = Appointment & {
@@ -78,7 +65,8 @@ async function getAppointments(selectedDate?: string): Promise<AppointmentWithPa
   return (data ?? []) as AppointmentWithPatient[];
 }
 
-async function getAppointmentDates(): Promise<Date[]> {
+// Return raw ISO strings — client extracts local dates
+async function getAppointmentDates(): Promise<string[]> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -102,10 +90,11 @@ async function getAppointmentDates(): Promise<Date[]> {
 
   if (!data) return [];
 
-  return data.map((a) => new Date(a.scheduled_at));
+  return data.map((a) => a.scheduled_at);
 }
 
-async function getBlockedDates(): Promise<Date[]> {
+// Return raw time blocks — client computes blocked dates in local timezone
+async function getCalendarTimeBlocks(): Promise<NutriTimeBlock[]> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -126,26 +115,7 @@ async function getBlockedDates(): Promise<Date[]> {
     .gte("end_datetime", now.toISOString())
     .lte("start_datetime", futureDate.toISOString());
 
-  const blocks = (data ?? []) as NutriTimeBlock[];
-
-  // Generate all dates that fall within time blocks
-  const blockedDates: Date[] = [];
-
-  for (const block of blocks) {
-    const blockStart = new Date(block.start_datetime);
-    const blockEnd = new Date(block.end_datetime);
-
-    // Iterate through each day in the block range
-    const currentDate = new Date(blockStart);
-    currentDate.setHours(0, 0, 0, 0);
-
-    while (currentDate <= blockEnd) {
-      blockedDates.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-  }
-
-  return blockedDates;
+  return (data ?? []) as NutriTimeBlock[];
 }
 
 async function getTimeBlocksForDate(dateStr: string): Promise<NutriTimeBlock[]> {
@@ -177,17 +147,18 @@ export default async function SchedulePage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const selectedDate = params.date || formatLocalDate(new Date());
+  const selectedDate = params.date || formatDateStr(new Date());
 
-  const [appointments, appointmentDates, blockedDates, timeBlocksForDay] = await Promise.all([
+  const [appointments, appointmentDateIsos, calendarTimeBlocks, timeBlocksForDay] = await Promise.all([
     getAppointments(selectedDate),
     getAppointmentDates(),
-    getBlockedDates(),
+    getCalendarTimeBlocks(),
     getTimeBlocksForDate(selectedDate),
   ]);
 
-  const parsedSelectedDate = parseLocalDate(selectedDate);
-  const isToday = new Date().toDateString() === parsedSelectedDate.toDateString();
+  // For server-side rendering only (not passed as Date to client components)
+  const parsedSelectedDate = parseDateStr(selectedDate);
+  const isToday = selectedDate === formatDateStr(new Date());
 
   return (
     <div className="min-h-[calc(100vh-8rem)]">
@@ -210,9 +181,9 @@ export default async function SchedulePage({
 
       {/* Mobile Calendar Drawer */}
       <MobileCalendarDrawer
-        selectedDate={parsedSelectedDate}
-        appointmentDates={appointmentDates}
-        blockedDates={blockedDates}
+        selectedDateStr={selectedDate}
+        appointmentDateIsos={appointmentDateIsos}
+        calendarTimeBlocks={calendarTimeBlocks}
       />
 
       {/* Main Content Grid */}
@@ -269,7 +240,7 @@ export default async function SchedulePage({
             {/* Timeline */}
             <ScheduleTimeline
               appointments={appointments}
-              selectedDate={parsedSelectedDate}
+              selectedDateStr={selectedDate}
             />
           </div>
         </div>
@@ -277,9 +248,9 @@ export default async function SchedulePage({
         {/* Desktop Calendar Sidebar */}
         <div className="order-1 lg:order-2">
           <DesktopCalendarSidebar
-            selectedDate={parsedSelectedDate}
-            appointmentDates={appointmentDates}
-            blockedDates={blockedDates}
+            selectedDateStr={selectedDate}
+            appointmentDateIsos={appointmentDateIsos}
+            calendarTimeBlocks={calendarTimeBlocks}
             timeBlocksForDay={timeBlocksForDay}
             appointmentCount={appointments.length}
           />

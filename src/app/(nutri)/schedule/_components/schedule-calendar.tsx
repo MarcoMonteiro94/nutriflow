@@ -2,48 +2,38 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar } from "@/components/ui/calendar";
+import { formatDateStr, parseDateStr, computeBlockedDateStrings, extractDateStrings } from "@/lib/date-utils";
+import type { NutriTimeBlock } from "@/types/database";
 
 interface ScheduleCalendarProps {
-  selectedDate: Date;
-  appointmentDates: Date[];
-  blockedDates?: Date[];
-}
-
-// Format date to YYYY-MM-DD using local timezone (not UTC)
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  selectedDateStr: string;
+  appointmentDateIsos: string[];
+  calendarTimeBlocks?: NutriTimeBlock[];
 }
 
 export function ScheduleCalendar({
-  selectedDate,
-  appointmentDates,
-  blockedDates = [],
+  selectedDateStr,
+  appointmentDateIsos,
+  calendarTimeBlocks = [],
 }: ScheduleCalendarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Parse date locally on client for correct timezone
+  const selectedDate = parseDateStr(selectedDateStr);
 
   function handleDateSelect(date: Date | undefined) {
     if (!date) return;
 
     const params = new URLSearchParams(searchParams.toString());
-    params.set("date", formatLocalDate(date));
+    params.set("date", formatDateStr(date));
     router.push(`/schedule?${params.toString()}`);
   }
 
-  // Create modifiers for days with appointments
-  const daysWithAppointments = appointmentDates.map((date) => {
-    const d = new Date(date);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  });
-
-  // Create modifiers for blocked days
-  const daysBlocked = blockedDates.map((date) => {
-    const d = new Date(date);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  });
+  // Compute dates on client for correct timezone interpretation
+  const daysWithAppointments = extractDateStrings(appointmentDateIsos).map((str) => parseDateStr(str));
+  const blockedDateStrs = computeBlockedDateStrings(calendarTimeBlocks);
+  const daysBlocked = blockedDateStrs.map((str) => parseDateStr(str));
 
   return (
     <div className="flex flex-col items-center space-y-3">
@@ -68,7 +58,7 @@ export function ScheduleCalendar({
           <span className="font-bold underline">15</span>
           <span>Com consultas</span>
         </div>
-        {blockedDates.length > 0 && (
+        {blockedDateStrs.length > 0 && (
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-4 h-4 rounded bg-destructive/10 text-center leading-4 text-destructive text-[10px]">
               15

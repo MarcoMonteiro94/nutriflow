@@ -22,10 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Clock, Plus, ChevronDown, ChevronUp, Trash2, Loader2, UtensilsCrossed, Pencil } from "lucide-react";
+import { Clock, Plus, ChevronDown, ChevronUp, Trash2, Loader2, UtensilsCrossed, Pencil, Copy, BookmarkPlus, Bookmark } from "lucide-react";
 import { SaveStatusIndicator } from "@/components/save-status-indicator";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { calculateSingleMealTotals } from "@/lib/nutrition-calculations";
+import { CopyMealsDialog } from "./copy-meals-dialog";
+import { TemplateMealsDialog, saveMealAsTemplate } from "./template-meals-dialog";
 import type { Meal, MealContent, FoodItem } from "@/types/database";
 
 type MealWithContents = Meal & {
@@ -87,6 +89,7 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
   );
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   const [editingMealData, setEditingMealData] = useState<{ title: string; time: string } | null>(null);
+  const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null);
 
   // Auto-save for meal edits
   const saveMealUpdate = useCallback(async (data: { mealId: string; title: string; time: string } | null) => {
@@ -210,6 +213,27 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
     setEditingMealData(null);
   };
 
+  const handleSaveAsTemplate = async (meal: MealWithContents) => {
+    const contents = meal.meal_contents.map((c) => ({
+      id: c.id,
+      food_id: c.food_items?.id ?? c.food_id,
+      amount: Number(c.amount),
+      is_substitution: c.is_substitution,
+      parent_content_id: c.parent_content_id,
+    }));
+
+    const success = await saveMealAsTemplate({
+      title: meal.title,
+      time: meal.time,
+      meal_contents: contents,
+    });
+
+    if (success) {
+      setSavedTemplateId(meal.id);
+      setTimeout(() => setSavedTemplateId(null), 2000);
+    }
+  };
+
   const toggleMealExpanded = (mealId: string) => {
     setExpandedMeals((prev) => {
       const next = new Set(prev);
@@ -309,17 +333,36 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         {!isEditing && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEditingMeal(meal);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Salvar como modelo"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveAsTemplate(meal);
+                              }}
+                              disabled={isPending || meal.meal_contents.length === 0}
+                            >
+                              {savedTemplateId === meal.id ? (
+                                <Bookmark className="h-4 w-4 text-primary" />
+                              ) : (
+                                <BookmarkPlus className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditingMeal(meal);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                         <Button
                           variant="ghost"
@@ -378,6 +421,23 @@ export function MealTimeline({ planId, initialMeals }: MealTimelineProps) {
             })}
           </div>
         )}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <CopyMealsDialog currentPlanId={planId}>
+          <Button variant="outline" className="flex-1">
+            <Copy className="mr-2 h-4 w-4" />
+            Copiar de Outro Plano
+          </Button>
+        </CopyMealsDialog>
+
+        <TemplateMealsDialog planId={planId}>
+          <Button variant="outline" className="flex-1">
+            <BookmarkPlus className="mr-2 h-4 w-4" />
+            Usar Modelo
+          </Button>
+        </TemplateMealsDialog>
       </div>
 
       {/* Add Meal Button */}
