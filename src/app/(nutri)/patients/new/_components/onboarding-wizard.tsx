@@ -4,11 +4,11 @@ import { Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useWizard, WizardProvider } from "./wizard-context";
 import { WizardStepper } from "./wizard-stepper";
+import { WizardComplete } from "./wizard-complete";
 import { PatientInfoStep } from "./steps/patient-info-step";
 import { AnamnesisStep } from "./steps/anamnesis-step";
 import { AnthropometryStep } from "./steps/anthropometry-step";
 import { MealPlanStep } from "./steps/meal-plan-step";
-import { ReviewStep } from "./steps/review-step";
 import type { NutriOption } from "@/lib/queries/organization";
 
 const slideVariants = {
@@ -37,7 +37,13 @@ interface WizardContentProps {
 }
 
 function WizardContent({ isReceptionist, nutris }: WizardContentProps) {
-  const { currentStep, direction } = useWizard();
+  const { currentStep, totalSteps, direction } = useWizard();
+
+  const isComplete = currentStep > totalSteps;
+
+  if (isComplete) {
+    return <WizardComplete />;
+  }
 
   return (
     <div className="space-y-8">
@@ -62,7 +68,6 @@ function WizardContent({ isReceptionist, nutris }: WizardContentProps) {
           {currentStep === 2 && <AnamnesisStep />}
           {currentStep === 3 && <AnthropometryStep />}
           {currentStep === 4 && <MealPlanStep />}
-          {currentStep === 5 && <ReviewStep />}
         </motion.div>
       </AnimatePresence>
     </div>
