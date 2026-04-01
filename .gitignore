@@ -48,6 +48,12 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 
+# Playwright MCP
+.playwright-mcp/
+
+# Notes
+QUESTIONS.md
+
 # Auto Claude data directory
 .auto-claude/
 

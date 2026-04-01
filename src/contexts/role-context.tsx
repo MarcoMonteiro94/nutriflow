@@ -130,9 +130,9 @@ export function RoleProvider({ children, initialRole }: RoleProviderProps) {
         return;
       }
 
-      // User has no organization - default to nutri role for backwards compatibility
+      // User has no organization
       setOrganizationId(null);
-      setRole("nutri");
+      setRole(null);
       setIsOwner(false);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch role"));

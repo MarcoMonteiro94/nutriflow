@@ -104,30 +104,17 @@ export const test = base.extend<AuthFixtures>({
       return;
     }
 
-    // Auth seems available, try proper login
+    // Auth seems available, try login (signup is invite-only, not a fallback)
     let authSuccess = false;
 
     try {
       authSuccess = await login(page, testUsers.nutritionist.email, testUsers.nutritionist.password);
     } catch {
-      // Login failed, try signup
+      // Login failed
     }
 
     if (!authSuccess) {
-      try {
-        authSuccess = await signup(
-          page,
-          testUsers.nutritionist.fullName,
-          testUsers.nutritionist.email,
-          testUsers.nutritionist.password
-        );
-      } catch {
-        // Signup failed too
-      }
-    }
-
-    if (!authSuccess) {
-      testInfo.skip(true, 'Authentication failed after login and signup attempts.');
+      testInfo.skip(true, 'Authentication failed. Ensure test users are seeded via seed-test-data.ts.');
       return;
     }
 

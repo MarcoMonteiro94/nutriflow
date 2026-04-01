@@ -523,56 +523,6 @@ export async function getInviteByToken(
   } as OrganizationInvite & { organization: Organization };
 }
 
-export async function acceptInvite(
-  token: string
-): Promise<{ error: string | null }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "Usuário não autenticado" };
-  }
-
-  // Get invite
-  const invite = await getInviteByToken(token);
-
-  if (!invite) {
-    return { error: "Convite inválido ou expirado" };
-  }
-
-  // Add user as member
-  const { error: memberError } = await supabase
-    .from("organization_members")
-    .insert({
-      organization_id: invite.organization_id,
-      user_id: user.id,
-      role: invite.role,
-      invited_by: invite.invited_by,
-      status: "active",
-      accepted_at: new Date().toISOString(),
-    });
-
-  if (memberError) {
-    console.error("Error adding member:", memberError);
-    return { error: memberError.message };
-  }
-
-  // Mark invite as accepted
-  const { error: updateError } = await supabase
-    .from("organization_invites")
-    .update({ accepted_at: new Date().toISOString() })
-    .eq("id", invite.id);
-
-  if (updateError) {
-    console.error("Error updating invite:", updateError);
-    // Member was added, so don't return error
-  }
-
-  return { error: null };
-}
-
 // ============================================
 // Get Organization Nutris (for receptionist forms)
 // ============================================

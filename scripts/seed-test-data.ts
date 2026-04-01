@@ -38,7 +38,7 @@ interface TestUser {
   email: string;
   password: string;
   full_name: string;
-  profile_role: 'nutri' | 'patient';
+  profile_role: 'nutri' | 'patient' | null;
   user_type?: 'invite' | 'patient';
 }
 
@@ -47,7 +47,8 @@ const TEST_USERS: Record<string, TestUser> = {
     email: 'test-admin@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Admin',
-    profile_role: 'nutri',
+    profile_role: null,
+    user_type: 'invite',
   },
   nutri: {
     email: 'test-nutri@example.com',
@@ -59,26 +60,28 @@ const TEST_USERS: Record<string, TestUser> = {
     email: 'test-receptionist@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Recepcionista',
-    profile_role: 'nutri',
+    profile_role: null,
+    user_type: 'invite',
   },
   patient: {
     email: 'test-patient@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Paciente',
-    profile_role: 'patient',
+    profile_role: null,
     user_type: 'patient',
   },
   noOrg: {
     email: 'test-noorg@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Sem Org',
-    profile_role: 'nutri',
+    profile_role: null,
+    user_type: 'invite',
   },
   invited: {
     email: 'test-invited@example.com',
     password: 'TestPassword123!',
     full_name: 'Test Convidado',
-    profile_role: 'nutri',
+    profile_role: null,
     user_type: 'invite',
   },
 };
@@ -100,6 +103,30 @@ const TEST_INVITES = {
     role: 'receptionist',
     token: 'test-expired-invite-token-e2e-99999',
     expires_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  },
+  adminInvite: {
+    email: 'test-admin-invite@example.com',
+    role: 'admin',
+    token: 'test-admin-invite-token-e2e-admin',
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  nutriInvite: {
+    email: 'test-nutri-invite@example.com',
+    role: 'nutri',
+    token: 'test-nutri-invite-token-e2e-nutri',
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  receptionistInvite: {
+    email: 'test-recep-invite@example.com',
+    role: 'receptionist',
+    token: 'test-recep-invite-token-e2e-recep',
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  patientInvite: {
+    email: 'test-patient-invite@example.com',
+    role: 'patient',
+    token: 'test-patient-invite-token-e2e-patient',
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   },
 };
 
@@ -124,7 +151,7 @@ async function createTestUser(userData: TestUser) {
       id: existingUser.id,
       email: userData.email,
       full_name: userData.full_name,
-      role: userData.profile_role,
+      ...(userData.profile_role !== null ? { role: userData.profile_role } : {}),
     }, {
       onConflict: 'id',
     });
@@ -160,7 +187,7 @@ async function createTestUser(userData: TestUser) {
       id: data.user.id,
       email: userData.email,
       full_name: userData.full_name,
-      role: userData.profile_role,
+      ...(userData.profile_role !== null ? { role: userData.profile_role } : {}),
     });
 
     if (profileError) {
@@ -703,6 +730,10 @@ async function main() {
   console.log('\nCreating test invites:');
   await createTestInvite(org.id, nutriUser.id, TEST_INVITES.pending);
   await createTestInvite(org.id, nutriUser.id, TEST_INVITES.expired);
+  await createTestInvite(org.id, nutriUser.id, TEST_INVITES.adminInvite);
+  await createTestInvite(org.id, nutriUser.id, TEST_INVITES.nutriInvite);
+  await createTestInvite(org.id, nutriUser.id, TEST_INVITES.receptionistInvite);
+  await createTestInvite(org.id, nutriUser.id, TEST_INVITES.patientInvite);
 
   console.log('\n✅ Test data seeded successfully!\n');
   console.log('Test credentials:');
