@@ -2,7 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getInviteByToken } from "@/lib/queries/organization";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, AlertCircle } from "lucide-react";
+import type { OrgRole } from "@/types/database";
 import { AcceptInviteButton } from "./_components/accept-invite-button";
+import { AutoAcceptInvite } from "./_components/auto-accept-invite";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -76,12 +78,21 @@ export default async function InvitePage({ params }: InvitePageProps) {
           </div>
 
           {isLoggedIn ? (
-            <div className="space-y-4">
-              <p className="text-sm text-center text-muted-foreground">
-                Logado como <strong>{user.email}</strong>
-              </p>
-              <AcceptInviteButton token={token} role={invite.role as any} />
-            </div>
+            user.email?.toLowerCase() === invite.email.toLowerCase() ? (
+              <div className="space-y-4">
+                <p className="text-sm text-center text-muted-foreground">
+                  Logado como <strong>{user.email}</strong>
+                </p>
+                <AutoAcceptInvite token={token} role={invite.role as OrgRole} />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-center text-muted-foreground">
+                  Logado como <strong>{user.email}</strong>
+                </p>
+                <AcceptInviteButton token={token} role={invite.role as OrgRole} />
+              </div>
+            )
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-center text-muted-foreground">

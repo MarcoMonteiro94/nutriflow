@@ -12,7 +12,7 @@ import { testUsers, testInviteTokens } from '../fixtures/test-data';
  * Run `npx tsx scripts/seed-test-data.ts` before each test run to reset state.
  */
 test.describe('Invite Acceptance - Full Flow', () => {
-  test('invited user should be redirected to invite page and accept successfully', async ({ page }) => {
+  test('invited user should be redirected to invite page and auto-accepted', async ({ page }) => {
     // Login as the invited user (user_type='invite')
     await page.goto('/auth/login');
     await page.waitForSelector('input[name="email"]', { state: 'visible', timeout: 5000 });
@@ -21,18 +21,13 @@ test.describe('Invite Acceptance - Full Flow', () => {
     await page.click('button[type="submit"]');
 
     // Layout detects user_type='invite' + pending invite → redirects to /invite/[token]
+    // Auto-accept kicks in → redirects to dashboard automatically
     // If invite was already consumed, user may go to dashboard or org create instead
-    await page.waitForURL(/\/(invite|dashboard|organization|patients)/, { timeout: 15000 });
+    await page.waitForURL(/\/(invite|dashboard|organization|patients|plans|schedule)/, { timeout: 15000 });
 
     if (page.url().includes('/invite/')) {
-      // Should see the accept button
-      const acceptButton = page.getByRole('button', { name: /aceitar/i });
-      await expect(acceptButton).toBeVisible({ timeout: 10000 });
-
-      // Accept the invite
-      await acceptButton.click();
-
-      // Should redirect to dashboard after acceptance
+      // Auto-accept should fire automatically (no manual click needed)
+      // Wait for redirect to dashboard
       await page.waitForURL(/\/(dashboard|patients|plans|schedule|organization)/, { timeout: 15000 });
     }
 

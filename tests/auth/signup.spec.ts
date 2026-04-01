@@ -95,10 +95,9 @@ test.describe('Signup (Invite-Only Mode)', () => {
       expect(minLength).toBe('6');
     });
 
-    test('should submit signup form', async ({ page }) => {
-      // This test just verifies the form can be submitted
-      // Actual signup depends on Supabase being available
-      const uniqueEmail = `test-${Date.now()}@example.com`;
+    test('should reject signup when email has no pending invite', async ({ page }) => {
+      // Invite-only guard: signup without a matching invite should be rejected
+      const uniqueEmail = `test-no-invite-${Date.now()}@example.com`;
 
       await loginPage.fullNameInput.fill('New Test User');
       await loginPage.emailInput.fill(uniqueEmail);
@@ -107,12 +106,19 @@ test.describe('Signup (Invite-Only Mode)', () => {
       const submitButton = page.getByRole('button', { name: /criar conta/i }).first();
       await submitButton.click();
 
-      // Wait a bit and check result - either redirects or shows error/stays on page
+      // Should show invite-required error or stay on page
       await page.waitForTimeout(3000);
       const url = page.url();
+      const hasError = await loginPage.errorMessage.isVisible().catch(() => false);
 
-      // Either succeeded (redirect) or Supabase not available (stays on login)
-      expect(url.includes('/dashboard') || url.includes('/auth/login')).toBeTruthy();
+      // Must stay on login page (signup rejected) or show error
+      expect(hasError || url.includes('/auth/login')).toBeTruthy();
+
+      // If error is visible, verify it mentions invite
+      if (hasError) {
+        const errorText = await loginPage.errorMessage.textContent();
+        expect(errorText?.toLowerCase()).toContain('convite');
+      }
     });
 
     test('should show error or stay on page when email exists', async ({ page }) => {

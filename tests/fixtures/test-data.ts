@@ -222,4 +222,24 @@ export const testInviteTokens = {
     email: 'test-expired@example.com',
     role: 'receptionist' as const,
   },
+  adminInvite: {
+    token: 'test-admin-invite-token-e2e-admin',
+    email: 'test-admin-invite@example.com',
+    role: 'admin' as const,
+  },
+  nutriInvite: {
+    token: 'test-nutri-invite-token-e2e-nutri',
+    email: 'test-nutri-invite@example.com',
+    role: 'nutri' as const,
+  },
+  receptionistInvite: {
+    token: 'test-recep-invite-token-e2e-recep',
+    email: 'test-recep-invite@example.com',
+    role: 'receptionist' as const,
+  },
+  patientInvite: {
+    token: 'test-patient-invite-token-e2e-patient',
+    email: 'test-patient-invite@example.com',
+    role: 'patient' as const,
+  },
 };

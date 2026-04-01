@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export type AuthState = {
   error?: string;
@@ -87,7 +87,6 @@ export async function signup(
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const fullName = formData.get("full_name") as string;
-  const userType = formData.get("user_type") as string | null;
 
   if (!email || !password || !fullName) {
     return { error: "Todos os campos são obrigatórios" };
@@ -97,13 +96,28 @@ export async function signup(
     return { error: "A senha deve ter pelo menos 6 caracteres" };
   }
 
+  // Invite-only guard: verify email has a pending invite
+  const serviceClient = createServiceClient();
+  const { data: pendingInvite } = await serviceClient
+    .from("organization_invites")
+    .select("id, token")
+    .eq("email", email.toLowerCase())
+    .is("accepted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .limit(1)
+    .single();
+
+  if (!pendingInvite) {
+    return { error: "Cadastro disponível apenas por convite. Solicite um convite ao administrador da sua clínica." };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: fullName,
-        ...(userType && { user_type: userType }),
+        user_type: "invite",
       },
     },
   });
@@ -133,26 +147,19 @@ export async function signup(
   }
 
   // Profile is created automatically by database trigger (handle_new_user)
-  // No need to manually insert here
 
   // Check if email confirmation is required (user exists but session is null)
   if (!data.session) {
-    // Email confirmation is required - don't redirect, show success message
     return {
       success: true,
       error: undefined
     };
   }
 
-  const redirectTo = formData.get("redirect") as string;
   revalidatePath("/", "layout");
 
-  // Handle redirect if provided
-  if (redirectTo && redirectTo.startsWith("/")) {
-    redirect(redirectTo);
-  }
-
-  redirect("/dashboard");
+  // Redirect to the invite page for auto-accept
+  redirect(`/invite/${pendingInvite.token}`);
 }
 
 export async function logout() {
