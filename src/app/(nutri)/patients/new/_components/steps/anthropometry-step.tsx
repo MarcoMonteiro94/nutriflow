@@ -1,27 +1,33 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { AnthropometryForm } from "@/app/(nutri)/patients/[id]/anthropometry/_components/anthropometry-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { useWizard } from "../wizard-context";
 import { WizardNavigation } from "../wizard-navigation";
+import { WizardAnthropometryForm } from "./wizard-anthropometry-form";
+import type { WizardAnthropometryData } from "../../_lib/types";
 
 const FORM_ID = "wizard-anthropometry";
 
 export function AnthropometryStep() {
-  const { patientId, patientData, markStepCompleted, nextStep } = useWizard();
-  const [isSubmitting] = useState(false);
+  const { patientData, markStepCompleted, nextStep, setStepData, wizardData } =
+    useWizard();
 
-  const handleSuccess = useCallback(
-    (assessmentId?: string) => {
-      markStepCompleted(3, assessmentId);
+  const handleSubmit = useCallback(
+    (data: WizardAnthropometryData) => {
+      setStepData(3, data);
+      markStepCompleted(3);
       nextStep();
     },
-    [markStepCompleted, nextStep]
+    [setStepData, markStepCompleted, nextStep]
   );
-
-  if (!patientId) return null;
 
   const hasGenderAndBirthDate = patientData?.gender && patientData?.birth_date;
 
@@ -33,8 +39,8 @@ export function AnthropometryStep() {
           <div className="text-sm text-amber-800 dark:text-amber-200">
             <p className="font-medium">Dados incompletos do paciente</p>
             <p className="mt-1 text-amber-700 dark:text-amber-300">
-              Para cálculos automáticos (% gordura corporal), defina o gênero e a data de
-              nascimento na ficha do paciente.
+              Para cálculos automáticos (% gordura corporal), defina o gênero e
+              a data de nascimento na ficha do paciente.
             </p>
           </div>
         </div>
@@ -44,28 +50,22 @@ export function AnthropometryStep() {
         <CardHeader>
           <CardTitle>Avaliação Antropométrica</CardTitle>
           <CardDescription>
-            Registre as medidas de composição corporal. Dobras cutâneas e circunferências
-            são opcionais.
+            Registre as medidas de composição corporal. Dobras cutâneas e
+            circunferências são opcionais.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AnthropometryForm
-            patientId={patientId}
-            patient={{
-              gender: patientData?.gender ?? null,
-              birth_date: patientData?.birth_date ?? null,
-            }}
-            onSuccess={handleSuccess}
-            hideNavigation
+          <WizardAnthropometryForm
+            patientGender={patientData?.gender ?? null}
+            patientBirthDate={patientData?.birth_date ?? null}
+            initialData={wizardData.anthropometry}
+            onSubmit={handleSubmit}
             formId={FORM_ID}
           />
         </CardContent>
       </Card>
 
-      <WizardNavigation
-        formId={FORM_ID}
-        isSubmitting={isSubmitting}
-      />
+      <WizardNavigation formId={FORM_ID} />
     </div>
   );
 }
