@@ -6,7 +6,7 @@ import { useWizard, WIZARD_STEPS } from "./wizard-context";
 import { motion } from "framer-motion";
 
 export function WizardStepper() {
-  const { currentStep, stepStatuses, goToStep, patientId } = useWizard();
+  const { currentStep, stepStatuses, goToStep, wizardData } = useWizard();
 
   return (
     <nav aria-label="Progresso do cadastro" className="w-full">
@@ -19,7 +19,7 @@ export function WizardStepper() {
           const isSkipped = status?.skipped;
           const isAccessible =
             step.number === 1 ||
-            (patientId && (step.number <= currentStep || status?.completed || status?.skipped));
+            (wizardData.patient && (step.number <= currentStep || status?.completed || status?.skipped));
 
           return (
             <li key={step.number} className="flex items-center flex-1">

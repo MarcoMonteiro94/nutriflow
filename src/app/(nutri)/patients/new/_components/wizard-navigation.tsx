@@ -23,7 +23,8 @@ export function WizardNavigation({
 
   const stepConfig = WIZARD_STEPS[currentStep - 1];
   const isFirstStep = currentStep === 1;
-  const isLastStep = currentStep === totalSteps;
+  // Step before review (step 5 handles its own navigation)
+  const isLastDataStep = currentStep === totalSteps - 1;
   const showSkip = canSkip && !stepConfig.required;
 
   const handleSkip = () => {
@@ -71,8 +72,8 @@ export function WizardNavigation({
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {submitLabel
             ? submitLabel
-            : isLastStep
-              ? "Concluir"
+            : isLastDataStep
+              ? "Revisar"
               : (
                 <>
                   Continuar
