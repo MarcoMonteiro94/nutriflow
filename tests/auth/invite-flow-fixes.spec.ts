@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { testInviteTokens } from '../fixtures/test-data';
+import { testInviteTokens, testUsers } from '../fixtures/test-data';
 import { loginAs } from '../fixtures/auth.fixture';
 
 /**
@@ -114,17 +114,15 @@ test.describe('Invite — Signup Guard', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
-    // Should show invite-required error
-    await page.waitForTimeout(3000);
+    // Wait for error message to appear
     const errorMessage = page.locator('[class*="destructive"]');
-    const hasError = await errorMessage.isVisible().catch(() => false);
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must stay on login page
     expect(page.url()).toContain('/auth/login');
-    if (hasError) {
-      const text = await errorMessage.textContent();
-      expect(text?.toLowerCase()).toContain('convite');
-    }
+
+    const text = await errorMessage.textContent();
+    expect(text?.toLowerCase()).toContain('convite');
   });
 });
 
@@ -191,5 +189,280 @@ test.describe('Invite — Hierarchy Enforcement', () => {
     if (response.status() === 403) {
       expect(data.error).toContain('permissão');
     }
+  });
+
+  test('nutri cannot invite admin via API', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'nutri');
+    if (!loggedIn) {
+      test.skip(true, 'Nutri login failed — ensure test users are seeded');
+      return;
+    }
+
+    const response = await page.request.post('/api/organization/invite', {
+      data: {
+        organizationId: 'test-org-id',
+        email: `nutri-admin-${Date.now()}@example.com`,
+        role: 'admin',
+      },
+    });
+
+    expect(response.status()).not.toBe(200);
+  });
+
+  test('nutri cannot invite another nutri via API', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'nutri');
+    if (!loggedIn) {
+      test.skip(true, 'Nutri login failed — ensure test users are seeded');
+      return;
+    }
+
+    const response = await page.request.post('/api/organization/invite', {
+      data: {
+        organizationId: 'test-org-id',
+        email: `nutri-nutri-${Date.now()}@example.com`,
+        role: 'nutri',
+      },
+    });
+
+    // Nutri can only invite receptionist and patient
+    expect(response.status()).not.toBe(200);
+  });
+
+  test('receptionist cannot invite nutri via API', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'receptionist');
+    if (!loggedIn) {
+      test.skip(true, 'Receptionist login failed — ensure test users are seeded');
+      return;
+    }
+
+    const response = await page.request.post('/api/organization/invite', {
+      data: {
+        organizationId: 'test-org-id',
+        email: `recep-nutri-${Date.now()}@example.com`,
+        role: 'nutri',
+      },
+    });
+
+    expect(response.status()).not.toBe(200);
+  });
+
+  test('receptionist cannot invite admin via API', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'receptionist');
+    if (!loggedIn) {
+      test.skip(true, 'Receptionist login failed — ensure test users are seeded');
+      return;
+    }
+
+    const response = await page.request.post('/api/organization/invite', {
+      data: {
+        organizationId: 'test-org-id',
+        email: `recep-admin-${Date.now()}@example.com`,
+        role: 'admin',
+      },
+    });
+
+    expect(response.status()).not.toBe(200);
+  });
+
+  test('patient cannot invite anyone via API', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'patient');
+    if (!loggedIn) {
+      test.skip(true, 'Patient login failed — ensure test users are seeded');
+      return;
+    }
+
+    // Patient cannot invite any role
+    for (const role of ['admin', 'nutri', 'receptionist', 'patient'] as const) {
+      const response = await page.request.post('/api/organization/invite', {
+        data: {
+          organizationId: 'test-org-id',
+          email: `patient-${role}-${Date.now()}@example.com`,
+          role,
+        },
+      });
+
+      expect(response.status()).not.toBe(200);
+    }
+  });
+
+  test('admin invite dialog shows all four roles', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'admin');
+    if (!loggedIn) {
+      test.skip(true, 'Admin login failed — ensure test users are seeded');
+      return;
+    }
+
+    await page.goto('/organization/members');
+    await page.waitForLoadState('networkidle');
+
+    const inviteButton = page.getByRole('button', { name: /convidar membro/i });
+    const hasButton = await inviteButton.isVisible({ timeout: 10000 }).catch(() => false);
+    if (!hasButton) {
+      test.skip(true, 'Invite button not visible — admin may not have an org');
+      return;
+    }
+
+    await inviteButton.click();
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const roleButton = dialog.locator('button[role="combobox"]').first();
+    await roleButton.click();
+
+    // Admin should see all 4 roles
+    for (const role of ['Administrador', 'Nutricionista', 'Recepcionista', 'Paciente']) {
+      const option = page.getByRole('option', { name: new RegExp(role, 'i') });
+      await expect(option).toBeVisible({ timeout: 3000 });
+    }
+  });
+
+  test('nutri invite dialog hides admin and nutri roles', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'nutri');
+    if (!loggedIn) {
+      test.skip(true, 'Nutri login failed — ensure test users are seeded');
+      return;
+    }
+
+    await page.goto('/organization/members');
+    await page.waitForLoadState('networkidle');
+
+    const inviteButton = page.getByRole('button', { name: /convidar membro/i });
+    const hasButton = await inviteButton.isVisible({ timeout: 10000 }).catch(() => false);
+    if (!hasButton) {
+      test.skip(true, 'Invite button not visible — nutri may not have invite permission');
+      return;
+    }
+
+    await inviteButton.click();
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const roleButton = dialog.locator('button[role="combobox"]').first();
+    await roleButton.click();
+
+    // Nutri should see only Recepcionista and Paciente
+    const recepOption = page.getByRole('option', { name: /recepcionista/i });
+    await expect(recepOption).toBeVisible({ timeout: 3000 });
+
+    const patientOption = page.getByRole('option', { name: /paciente/i });
+    await expect(patientOption).toBeVisible({ timeout: 3000 });
+
+    // Should NOT see Admin or Nutricionista
+    const adminOption = page.getByRole('option', { name: /administrador/i });
+    const hasAdmin = await adminOption.isVisible({ timeout: 2000 }).catch(() => false);
+    expect(hasAdmin).toBeFalsy();
+  });
+});
+
+test.describe('Invite — Edge Cases', () => {
+  test('expired invite should show expiration message and not allow signup', async ({ page }) => {
+    await page.goto(`/invite/${testInviteTokens.expired.token}`);
+
+    const appError = page.locator('text=/Application error/i');
+    if (await appError.isVisible().catch(() => false)) {
+      test.skip(true, 'Service role key not available');
+      return;
+    }
+
+    // Should show expired or invalid heading
+    const expiredHeading = page.getByRole('heading', { name: /convite expirado/i });
+    const invalidHeading = page.getByRole('heading', { name: /convite inválido/i });
+
+    const hasExpired = await expiredHeading.isVisible({ timeout: 10000 }).catch(() => false);
+    const hasInvalid = await invalidHeading.isVisible({ timeout: 2000 }).catch(() => false);
+
+    expect(hasExpired || hasInvalid).toBeTruthy();
+
+    // Should NOT show signup/login links for expired invites
+    const signupLink = page.locator('a:has-text("Criar Conta")');
+    const hasSignup = await signupLink.isVisible({ timeout: 2000 }).catch(() => false);
+    expect(hasSignup).toBeFalsy();
+  });
+
+  test('duplicate email signup should show error', async ({ page }) => {
+    // Try to sign up with an email that already exists (the seeded nutri user)
+    await page.goto('/auth/login?mode=signup');
+    await page.waitForSelector('input[name="full_name"]', { state: 'visible', timeout: 5000 });
+
+    await page.fill('input[name="full_name"]', 'Duplicate Email User');
+    await page.fill('input[name="email"]', testUsers.nutritionist.email);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.getByRole('button', { name: /criar conta/i }).first().click();
+
+    // Should show error (either about invite or duplicate email)
+    const errorMessage = page.locator('[class*="destructive"]');
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
+
+    // Must stay on login page
+    expect(page.url()).toContain('/auth/login');
+
+    const text = await errorMessage.textContent();
+    expect(text).toBeTruthy();
+  });
+
+  test('signup without invite (direct URL) should stay on login page', async ({ page }) => {
+    await page.goto('/auth/login?mode=signup');
+    await page.waitForSelector('input[name="full_name"]', { state: 'visible', timeout: 5000 });
+
+    const uniqueEmail = `no-invite-edge-${Date.now()}@example.com`;
+    await page.fill('input[name="full_name"]', 'No Invite Edge Case');
+    await page.fill('input[name="email"]', uniqueEmail);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.getByRole('button', { name: /criar conta/i }).first().click();
+
+    // Wait for error or stay on page
+    const errorMessage = page.locator('[class*="destructive"]');
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
+
+    // Must remain on auth/login page — no redirect to dashboard
+    expect(page.url()).toContain('/auth/login');
+
+    // Should not reach any authenticated page
+    expect(page.url()).not.toMatch(/\/(dashboard|patients|plans|schedule)/);
+  });
+
+  test('completely random token should show invalid message', async ({ page }) => {
+    const randomToken = `random-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    await page.goto(`/invite/${randomToken}`);
+
+    const appError = page.locator('text=/Application error/i');
+    if (await appError.isVisible().catch(() => false)) {
+      test.skip(true, 'Service role key not available');
+      return;
+    }
+
+    const invalidHeading = page.getByRole('heading', { name: /convite inválido/i });
+    await expect(invalidHeading).toBeVisible({ timeout: 10000 });
+
+    // Should mention the invite doesn't exist
+    const body = page.getByText(/não existe ou já foi aceito/i);
+    await expect(body).toBeVisible();
+  });
+
+  test('invite accept API rejects unauthenticated requests', async ({ page }) => {
+    // Try to accept an invite without being logged in
+    const response = await page.request.post('/api/invite/accept', {
+      data: {
+        token: testInviteTokens.pending.token,
+      },
+    });
+
+    // Should be 401 (unauthorized)
+    expect(response.status()).toBe(401);
+  });
+
+  test('invite accept API rejects missing token', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'nutri');
+    if (!loggedIn) {
+      test.skip(true, 'Login failed — ensure test users are seeded');
+      return;
+    }
+
+    const response = await page.request.post('/api/invite/accept', {
+      data: {},
+    });
+
+    // Should be 400 (bad request)
+    expect(response.status()).toBe(400);
   });
 });

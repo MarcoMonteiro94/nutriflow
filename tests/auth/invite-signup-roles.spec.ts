@@ -197,16 +197,117 @@ test.describe('Invite Signup - Per Role', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
-    // Should show error about needing an invite
-    await page.waitForTimeout(3000);
+    // Wait for error message to appear
     const errorMessage = page.locator('[class*="destructive"]');
-    const hasError = await errorMessage.isVisible().catch(() => false);
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must stay on login page
     expect(page.url()).toContain('/auth/login');
-    if (hasError) {
-      const text = await errorMessage.textContent();
-      expect(text?.toLowerCase()).toContain('convite');
+
+    const text = await errorMessage.textContent();
+    expect(text?.toLowerCase()).toContain('convite');
+  });
+});
+
+test.describe('Invite Signup — UX Verification', () => {
+  test('invite page should show role badge for each role token', async ({ page }) => {
+    const ROLE_LABELS: Record<string, string> = {
+      adminInvite: 'Administrador',
+      nutriInvite: 'Nutricionista',
+      receptionistInvite: 'Recepcionista',
+      patientInvite: 'Paciente',
+    };
+
+    for (const [key, label] of Object.entries(ROLE_LABELS)) {
+      const invite = testInviteTokens[key as keyof typeof testInviteTokens];
+      await page.goto(`/invite/${invite.token}`);
+
+      const appError = page.locator('text=/Application error/i');
+      if (await appError.isVisible().catch(() => false)) {
+        test.skip(true, 'Service role key not available');
+        return;
+      }
+
+      const inviteHeading = page.getByRole('heading', { name: /convidado/i });
+      const hasInvite = await inviteHeading.isVisible({ timeout: 10000 }).catch(() => false);
+      if (!hasInvite) continue; // token consumed, skip this role
+
+      // Role badge should be visible with correct label
+      const roleBadge = page.locator('[data-testid="invite-role-badge"]');
+      await expect(roleBadge).toBeVisible();
+      await expect(roleBadge).toContainText(label);
     }
+  });
+
+  test('invite signup link should carry email and role to signup form', async ({ page }) => {
+    const invite = testInviteTokens.pending;
+    await page.goto(`/invite/${invite.token}`);
+
+    const appError = page.locator('text=/Application error/i');
+    if (await appError.isVisible().catch(() => false)) {
+      test.skip(true, 'Service role key not available');
+      return;
+    }
+
+    const inviteHeading = page.getByRole('heading', { name: /convidado/i });
+    const hasInvite = await inviteHeading.isVisible({ timeout: 10000 }).catch(() => false);
+    if (!hasInvite) {
+      test.skip(true, 'Invite token not available — re-seed test data');
+      return;
+    }
+
+    // "Criar Conta" link should include email and role params
+    const signupLink = page.locator('a:has-text("Criar Conta")');
+    const href = await signupLink.getAttribute('href');
+    expect(href).toContain('email=');
+    expect(href).toContain('role=');
+    expect(href).toContain('mode=signup');
+
+    // Click to navigate and verify email is pre-filled
+    await signupLink.click();
+    await page.waitForSelector('input[name="email"]', { state: 'visible', timeout: 5000 });
+
+    const emailInput = page.locator('input[name="email"]');
+    const emailValue = await emailInput.inputValue();
+    expect(emailValue).toBe(invite.email);
+
+    // Email should be read-only when pre-filled from invite
+    const isReadOnly = await emailInput.getAttribute('readonly');
+    expect(isReadOnly).not.toBeNull();
+  });
+
+  test('signup form should show role badge when arriving from invite', async ({ page }) => {
+    const invite = testInviteTokens.nutriInvite;
+    await page.goto(
+      `/auth/login?mode=signup&redirect=/invite/${invite.token}&email=${encodeURIComponent(invite.email)}&role=${invite.role}`
+    );
+    await page.waitForLoadState('networkidle');
+
+    // Role badge should show Nutricionista
+    const roleBadge = page.locator('[data-testid="invite-role-badge"]');
+    await expect(roleBadge).toBeVisible({ timeout: 5000 });
+    await expect(roleBadge).toContainText('Nutricionista');
+  });
+
+  test('signup error should show contextual message for missing invite', async ({ page }) => {
+    await page.goto('/auth/login?mode=signup');
+    await page.waitForSelector('input[name="full_name"]', { state: 'visible', timeout: 5000 });
+
+    const uniqueEmail = `missing-invite-${Date.now()}@example.com`;
+    await page.fill('input[name="full_name"]', 'Missing Invite User');
+    await page.fill('input[name="email"]', uniqueEmail);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.getByRole('button', { name: /criar conta/i }).first().click();
+
+    // Wait for error message to appear (invite-required)
+    const errorMessage = page.locator('[class*="destructive"]');
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
+
+    // Must stay on login page
+    expect(page.url()).toContain('/auth/login');
+
+    // Error should mention invite/convite
+    const text = await errorMessage.textContent();
+    expect(text?.toLowerCase()).toMatch(/convite|invite/);
   });
 });
