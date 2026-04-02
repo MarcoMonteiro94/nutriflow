@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if expired
-    if (new Date(invite.expires_at as string) < new Date()) {
+    if (new Date(invite.expires_at) < new Date()) {
       return NextResponse.json(
         { error: "Este convite expirou. Solicite um novo convite ao administrador.", code: "expired" },
         { status: 400 }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user email matches invite email
-    if (user.email?.toLowerCase() !== (invite.email as string).toLowerCase()) {
+    if (user.email?.toLowerCase() !== invite.email.toLowerCase()) {
       return NextResponse.json(
         { error: "Este convite foi enviado para outro email. Faça logout e entre com o email correto.", code: "email_mismatch" },
         { status: 403 }
@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
       .from("organization_members")
       .upsert(
         {
-          organization_id: invite.organization_id as string,
+          organization_id: invite.organization_id,
           user_id: user.id,
-          role: invite.role as "admin" | "nutri" | "receptionist" | "patient",
+          role: invite.role,
           status: "active",
           accepted_at: new Date().toISOString(),
         },
@@ -109,10 +109,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark invite as accepted
-    await serviceClient
+    const { error: updateError } = await serviceClient
       .from("organization_invites")
       .update({ accepted_at: new Date().toISOString() })
-      .eq("id", invite.id as string);
+      .eq("id", invite.id);
+
+    if (updateError) {
+      console.error("Error marking invite as accepted:", updateError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

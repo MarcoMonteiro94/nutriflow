@@ -19,15 +19,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { organizationId, email, role } = body as {
-      organizationId: string;
-      email: string;
-      role: OrgRole;
-    };
+    const { organizationId, email, role } = body;
 
     if (!organizationId || !email || !role) {
       return NextResponse.json(
         { error: "Dados incompletos" },
+        { status: 400 }
+      );
+    }
+
+    const validRoles: OrgRole[] = ["admin", "nutri", "receptionist", "patient"];
+    if (!validRoles.includes(role)) {
+      return NextResponse.json(
+        { error: "Cargo inválido" },
         { status: 400 }
       );
     }
@@ -59,26 +63,22 @@ export async function POST(request: NextRequest) {
 
     const { data: invite, error } = await createInvite(organizationId, email, role);
 
-    if (error) {
-      return NextResponse.json({ error }, { status: 400 });
+    if (error || !invite) {
+      return NextResponse.json({ error: error ?? "Erro ao criar convite" }, { status: 400 });
     }
 
     // Generate invite URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const inviteUrl = `${baseUrl}/invite/${invite!.token}`;
-
-    // TODO: Send email with invite URL
-    // For now, just return the invite URL for manual sharing
-    // In production, integrate with email service (Resend, SendGrid, etc.)
+    const inviteUrl = `${baseUrl}/invite/${invite.token}`;
 
     return NextResponse.json({
       success: true,
       invite: {
-        id: invite!.id,
-        email: invite!.email,
-        role: invite!.role,
+        id: invite.id,
+        email: invite.email,
+        role: invite.role,
         inviteUrl,
-        expiresAt: invite!.expires_at,
+        expiresAt: invite.expires_at,
       },
     });
   } catch (error) {
