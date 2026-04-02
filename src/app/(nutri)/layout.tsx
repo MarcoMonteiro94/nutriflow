@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { NutriSidebar } from "@/components/layout/nutri-sidebar";
+import { OnboardingBanner } from "@/components/onboarding-banner";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { RoleProvider } from "@/contexts/role-context";
 import type { OrgRole } from "@/types/database";
@@ -154,6 +155,7 @@ export default async function NutriLayout({
         role={role}
         isOwner={isOwner}
       >
+        {role && <OnboardingBanner userId={user.id} role={role} />}
         {children}
       </NutriSidebar>
     </RoleProvider>

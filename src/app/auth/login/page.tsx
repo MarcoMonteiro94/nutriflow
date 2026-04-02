@@ -4,6 +4,7 @@ import { Suspense, useActionState, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -17,11 +18,20 @@ import { login, signup, type AuthState } from "../actions";
 
 const initialState: AuthState = {};
 
+const roleLabels: Record<string, string> = {
+  admin: "Administrador",
+  nutri: "Nutricionista",
+  receptionist: "Recepcionista",
+  patient: "Paciente",
+};
+
 function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "";
   // Signup mode is ONLY available via invite link (mode=signup parameter)
   const inviteMode = searchParams.get("mode") === "signup";
+  const prefillEmail = searchParams.get("email") || "";
+  const inviteRole = searchParams.get("role") || "";
   const [isSignup, setIsSignup] = useState(inviteMode);
 
   const [loginState, loginAction, loginPending] = useActionState(
@@ -54,6 +64,13 @@ function LoginForm() {
             ? "Crie sua conta para aceitar o convite"
             : "Entre com seu email para acessar"}
         </CardDescription>
+        {inviteMode && inviteRole && roleLabels[inviteRole] && (
+          <div className="flex justify-center pt-2">
+            <Badge variant="secondary" data-testid="invite-role-badge">
+              Convidado como {roleLabels[inviteRole]}
+            </Badge>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <form action={action} className="space-y-4">
@@ -94,6 +111,8 @@ function LoginForm() {
               placeholder="seu@email.com"
               required
               disabled={isPending}
+              defaultValue={prefillEmail}
+              readOnly={isSignup && !!prefillEmail}
             />
           </div>
 

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import type { OrgRole } from "@/types/database";
 import { getDefaultRedirectPath } from "@/lib/auth/authorization-client";
 
@@ -15,6 +16,7 @@ interface AcceptInviteButtonProps {
 export function AcceptInviteButton({ token, role }: AcceptInviteButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleAccept() {
@@ -38,15 +40,29 @@ export function AcceptInviteButton({ token, role }: AcceptInviteButtonProps) {
         return;
       }
 
-      // Redirect based on role
-      const redirectPath = getDefaultRedirectPath(role ?? null);
-      router.push(redirectPath);
-      router.refresh();
+      setIsSuccess(true);
+      toast.success("Convite aceito com sucesso!");
+
+      // Brief delay to show success state before redirect
+      setTimeout(() => {
+        const redirectPath = getDefaultRedirectPath(role ?? null, true);
+        router.push(redirectPath);
+        router.refresh();
+      }, 800);
     } catch (err) {
       console.error("Error accepting invite:", err);
-      setError("Erro ao aceitar convite");
+      setError("Erro ao aceitar convite. Tente novamente.");
       setIsLoading(false);
     }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-4">
+        <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+        <p className="text-sm text-muted-foreground">Convite aceito! Redirecionando...</p>
+      </div>
+    );
   }
 
   return (

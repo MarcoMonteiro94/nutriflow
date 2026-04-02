@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getInviteByToken } from "@/lib/queries/organization";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, AlertCircle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { OrgRole } from "@/types/database";
 import { AutoAcceptInvite } from "./_components/auto-accept-invite";
 import Link from "next/link";
@@ -92,11 +93,13 @@ export default async function InvitePage({ params }: InvitePageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-center">
+          <div className="text-center space-y-3">
             <h3 className="text-xl font-semibold">{invite.organization.name}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Função: <span className="font-medium">{roleLabels[invite.role]}</span>
-            </p>
+            <div className="flex justify-center">
+              <Badge variant="secondary" className="text-sm" data-testid="invite-role-badge">
+                {roleLabels[invite.role]}
+              </Badge>
+            </div>
           </div>
 
           {isLoggedIn ? (
@@ -125,10 +128,10 @@ export default async function InvitePage({ params }: InvitePageProps) {
                 Faça login ou crie uma conta para aceitar o convite.
               </p>
               <div className="flex flex-col gap-2">
-                <Link href={`/auth/login?redirect=/invite/${token}`}>
+                <Link href={`/auth/login?redirect=/invite/${token}&email=${encodeURIComponent(invite.email)}`}>
                   <Button className="w-full">Fazer Login</Button>
                 </Link>
-                <Link href={`/auth/login?mode=signup&redirect=/invite/${token}`}>
+                <Link href={`/auth/login?mode=signup&redirect=/invite/${token}&email=${encodeURIComponent(invite.email)}&role=${invite.role}`}>
                   <Button variant="outline" className="w-full">
                     Criar Conta
                   </Button>

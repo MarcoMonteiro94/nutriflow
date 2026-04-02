@@ -37,8 +37,23 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (inviteError || !invite) {
+      // Check if invite exists but was already accepted
+      const { data: acceptedInvite } = await serviceClient
+        .from("organization_invites")
+        .select("id, accepted_at")
+        .eq("token", token)
+        .not("accepted_at", "is", null)
+        .single();
+
+      if (acceptedInvite) {
+        return NextResponse.json(
+          { error: "Este convite já foi aceito", code: "already_accepted" },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { error: "Convite não encontrado ou já aceito" },
+        { error: "Convite não encontrado ou token inválido", code: "not_found" },
         { status: 404 }
       );
     }
@@ -46,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Check if expired
     if (new Date(invite.expires_at as string) < new Date()) {
       return NextResponse.json(
-        { error: "Este convite expirou" },
+        { error: "Este convite expirou. Solicite um novo convite ao administrador.", code: "expired" },
         { status: 400 }
       );
     }
@@ -54,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Check if user email matches invite email
     if (user.email?.toLowerCase() !== (invite.email as string).toLowerCase()) {
       return NextResponse.json(
-        { error: "Este convite foi enviado para outro email" },
+        { error: "Este convite foi enviado para outro email. Faça logout e entre com o email correto.", code: "email_mismatch" },
         { status: 403 }
       );
     }
