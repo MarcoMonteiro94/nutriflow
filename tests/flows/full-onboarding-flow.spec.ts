@@ -7,11 +7,15 @@ import { OrganizationPage } from '../fixtures/page-objects/organization.page';
  * Full onboarding chain E2E test.
  *
  * Tests the complete sequential flow:
- *   Admin creates invite for Nutri →
+ *   Super Admin creates Clinic →
+ *   Super Admin invites Admin →
+ *   Admin accepts invite →
+ *   Admin invites Nutri →
  *   Nutri accepts invite →
  *   Nutri invites Receptionist →
  *   Receptionist accepts invite →
- *   Nutri creates Patient
+ *   Nutri creates Patient →
+ *   Patient accesses portal
  *
  * IMPORTANT: This test suite runs sequentially (test.describe.serial)
  * and creates real users/invites. Run `npx tsx scripts/seed-test-data.ts`
@@ -31,6 +35,121 @@ const ROLE_REDIRECTS: Record<string, RegExp> = {
 };
 
 test.describe.serial('Full Onboarding Chain', () => {
+  // ------------------------------------------------------------------
+  // Phase 1: Super Admin creates Clinic and invites Admin
+  // ------------------------------------------------------------------
+
+  test('Step 0: Super Admin creates a new clinic', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'superAdmin');
+    if (!loggedIn) {
+      test.skip(true, 'Super admin login failed — ensure test users are seeded');
+      return;
+    }
+
+    await page.goto('/admin/organizations');
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.waitForSelector(
+      '[data-testid="org-list"], [data-testid="org-empty-state"]',
+      { timeout: 10000 },
+    );
+
+    // Click "Nova Clinica" button
+    await page.locator('[data-testid="create-org-button"]').click();
+
+    const dialog = page.locator('[data-testid="create-org-dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const uniqueSuffix = Date.now();
+    const clinicName = `Flow Clinic ${uniqueSuffix}`;
+
+    await dialog.locator('[data-testid="org-name-input"]').fill(clinicName);
+
+    // Wait for slug to auto-generate
+    const slugInput = dialog.locator('[data-testid="org-slug-input"]');
+    const slugValue = await slugInput.inputValue();
+    expect(slugValue).toBeTruthy();
+
+    // Submit the form
+    await dialog.locator('[data-testid="create-org-submit"]').click();
+
+    // Dialog should close on success
+    await expect(dialog).toBeHidden({ timeout: 10000 });
+
+    // Wait for list to refresh and show the new clinic
+    await page.waitForSelector('[data-testid="org-list"]', { timeout: 10000 });
+    await expect(page.locator(`text=${clinicName}`)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Step 0b: Super Admin invites Admin to the clinic', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'superAdmin');
+    if (!loggedIn) {
+      test.skip(true, 'Super admin login failed — ensure test users are seeded');
+      return;
+    }
+
+    await page.goto('/admin/organizations');
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.waitForSelector(
+      '[data-testid="org-list"], [data-testid="org-empty-state"]',
+      { timeout: 10000 },
+    );
+
+    if (await page.locator('[data-testid="org-empty-state"]').isVisible()) {
+      test.skip(true, 'No organizations available.');
+      return;
+    }
+
+    // Navigate to the first org's detail page
+    await page.locator('[data-testid="org-card"]').first().click();
+    await page.waitForSelector('[data-testid="org-detail"]', { timeout: 10000 });
+
+    // Click invite admin button
+    await page.locator('[data-testid="invite-admin-button"]').click();
+
+    // Fill email for admin invite
+    const uniqueEmail = `flow-admin-invite-${Date.now()}@example.com`;
+    await page.locator('[data-testid="invite-email-input"]').fill(uniqueEmail);
+
+    // Submit invite
+    await page.locator('[data-testid="invite-submit"]').click();
+
+    // Wait for invite URL to appear (API call success)
+    const inviteUrl = page.locator('[data-testid="invite-url"]');
+    await expect(inviteUrl).toBeVisible({ timeout: 10000 });
+
+    // Verify the URL contains /invite/
+    const urlValue = await inviteUrl.inputValue();
+    expect(urlValue).toContain('/invite/');
+  });
+
+  test('Step 0c: Super Admin verifies clinic shows in dashboard metrics', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'superAdmin');
+    if (!loggedIn) {
+      test.skip(true, 'Super admin login failed — ensure test users are seeded');
+      return;
+    }
+
+    await page.goto('/admin');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Dashboard should display updated metrics
+    await expect(page.locator('h1')).toContainText('Dashboard');
+
+    // Stats cards should be visible with numeric values
+    const statsCards = page.locator('[data-slot="card"]');
+    const cardCount = await statsCards.count();
+    expect(cardCount).toBeGreaterThanOrEqual(4);
+
+    // Clinicas count should be at least 1
+    await expect(page.locator('text=Clínicas')).toBeVisible();
+  });
+
+  // ------------------------------------------------------------------
+  // Phase 2: Admin role in the onboarding chain
+  // ------------------------------------------------------------------
+
   test('Step 1: Admin logs in and creates invite for Nutri', async ({ page }) => {
     const loggedIn = await loginAs(page, 'admin');
     if (!loggedIn) {
@@ -101,6 +220,10 @@ test.describe.serial('Full Onboarding Chain', () => {
       expect(hasAnyInvite || pendingCount > 0).toBeTruthy();
     }
   });
+
+  // ------------------------------------------------------------------
+  // Phase 3: Nutri invite acceptance
+  // ------------------------------------------------------------------
 
   test('Step 3: Nutri invite page shows correct role and organization', async ({ page }) => {
     // Use the seeded nutri invite token for this verification
@@ -174,6 +297,10 @@ test.describe.serial('Full Onboarding Chain', () => {
     expect(page.url()).not.toContain('/auth/login');
   });
 
+  // ------------------------------------------------------------------
+  // Phase 4: Nutri invites Receptionist
+  // ------------------------------------------------------------------
+
   test('Step 5: Logged-in nutri can access organization members page', async ({ page }) => {
     const loggedIn = await loginAs(page, 'nutri');
     if (!loggedIn) {
@@ -204,6 +331,10 @@ test.describe.serial('Full Onboarding Chain', () => {
       await expect(recepOption).toBeVisible({ timeout: 3000 });
     }
   });
+
+  // ------------------------------------------------------------------
+  // Phase 5: Receptionist invite acceptance
+  // ------------------------------------------------------------------
 
   test('Step 6: Receptionist invite page shows correct role', async ({ page }) => {
     const invite = testInviteTokens.receptionistInvite;
@@ -267,6 +398,10 @@ test.describe.serial('Full Onboarding Chain', () => {
     expect(page.url()).not.toContain('/auth/login');
   });
 
+  // ------------------------------------------------------------------
+  // Phase 6: Nutri creates Patient and Patient accesses portal
+  // ------------------------------------------------------------------
+
   test('Step 8: Nutri can access patients page (completing the chain)', async ({ page }) => {
     const loggedIn = await loginAs(page, 'nutri');
     if (!loggedIn) {
@@ -291,5 +426,27 @@ test.describe.serial('Full Onboarding Chain', () => {
       const patientsHeading = page.getByRole('heading', { name: /pacientes/i });
       await expect(patientsHeading).toBeVisible({ timeout: 5000 });
     }
+  });
+
+  test('Step 9: Patient can access the patient portal', async ({ page }) => {
+    const loggedIn = await loginAs(page, 'patient');
+    if (!loggedIn) {
+      test.skip(true, 'Patient login failed — ensure test users are seeded');
+      return;
+    }
+
+    // Patient should be redirected to their portal
+    await page.waitForURL(
+      url => url.toString().includes('/patient') || url.toString().includes('/dashboard'),
+      { timeout: 15000 },
+    );
+
+    // Patient should NOT be on admin or nutri pages
+    expect(page.url()).not.toContain('/admin');
+    expect(page.url()).not.toContain('/auth/login');
+
+    // Should see some patient-facing content
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 });

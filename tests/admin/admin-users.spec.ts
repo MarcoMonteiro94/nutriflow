@@ -284,4 +284,94 @@ test.describe('Admin Users', () => {
     const errorEl = page.locator('[data-testid="user-error"]');
     await expect(errorEl).not.toBeVisible();
   });
+
+  test.describe('User deactivation', () => {
+    test('deactivate user toggle shows confirmation dialog', async ({ page }) => {
+      const success = await loginAs(page, 'superAdmin');
+      test.skip(!success, 'Super admin login failed.');
+
+      await page.goto('/admin/users');
+      await page.waitForLoadState('domcontentloaded');
+
+      await page.waitForSelector(
+        '[data-testid="user-list"], [data-testid="user-empty-state"]',
+        { timeout: 10000 },
+      );
+
+      if (await page.locator('[data-testid="user-empty-state"]').isVisible()) {
+        test.skip(true, 'No users seeded.');
+        return;
+      }
+
+      const toggleButton = page.locator('[data-testid="user-toggle-active"]').first();
+
+      if ((await toggleButton.count()) === 0) {
+        test.skip(true, 'No non-super-admin users available for deactivation.');
+        return;
+      }
+
+      await toggleButton.click();
+
+      // Confirmation dialog should appear
+      const dialog = page.locator('[data-testid="user-toggle-dialog"]');
+      await expect(dialog).toBeVisible({ timeout: 5000 });
+      await expect(dialog).toContainText(/Desativar usuário|Reativar usuário/);
+
+      // Cancel button should be present
+      await expect(dialog.locator('button:has-text("Cancelar")')).toBeVisible();
+
+      // Close the dialog without confirming
+      await dialog.locator('button:has-text("Cancelar")').click();
+      await expect(dialog).toBeHidden({ timeout: 5000 });
+    });
+
+    test('deactivated user shows inactive status badge', async ({ page }) => {
+      const success = await loginAs(page, 'superAdmin');
+      test.skip(!success, 'Super admin login failed.');
+
+      await page.goto('/admin/users');
+      await page.waitForLoadState('domcontentloaded');
+
+      await page.waitForSelector(
+        '[data-testid="user-list"], [data-testid="user-empty-state"]',
+        { timeout: 10000 },
+      );
+
+      if (await page.locator('[data-testid="user-empty-state"]').isVisible()) {
+        test.skip(true, 'No users seeded.');
+        return;
+      }
+
+      // Find an active user's toggle button
+      const activeUserCard = page.locator(
+        '[data-testid="user-card"]:has([data-testid="user-status-badge"]:has-text("Ativo"))',
+      );
+
+      const toggleButton = activeUserCard
+        .first()
+        .locator('[data-testid="user-toggle-active"]');
+
+      if ((await toggleButton.count()) === 0) {
+        test.skip(true, 'No active non-super-admin users available.');
+        return;
+      }
+
+      await toggleButton.click();
+
+      // Confirm deactivation
+      const dialog = page.locator('[data-testid="user-toggle-dialog"]');
+      await expect(dialog).toBeVisible({ timeout: 5000 });
+      await dialog.locator('[data-testid="user-toggle-confirm"]').click();
+      await expect(dialog).toBeHidden({ timeout: 10000 });
+
+      // Wait for the optimistic UI update
+      await page.waitForTimeout(500);
+
+      // Verify at least one card shows "Inativo"
+      const inactiveBadge = page.locator(
+        '[data-testid="user-status-badge"]:has-text("Inativo")',
+      );
+      expect(await inactiveBadge.count()).toBeGreaterThan(0);
+    });
+  });
 });
