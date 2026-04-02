@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createInvite, isUserOrgAdmin } from "@/lib/queries/organization";
+import { createInvite } from "@/lib/queries/organization";
+import { canInviteRole } from "@/lib/auth/authorization";
 import type { OrgRole } from "@/types/database";
 
 export async function POST(request: NextRequest) {
@@ -31,11 +32,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user is admin
-    const canInvite = await isUserOrgAdmin(organizationId);
-    if (!canInvite) {
+    // Get user's role in the organization
+    const { data: membership } = await supabase
+      .from("organization_members")
+      .select("role")
+      .eq("organization_id", organizationId)
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("owner_id")
+      .eq("id", organizationId)
+      .single();
+
+    const isOwner = org?.owner_id === user.id;
+    const userRole = (membership?.role as OrgRole) ?? (isOwner ? "admin" : null);
+
+    if (!canInviteRole(userRole, role, isOwner)) {
       return NextResponse.json(
-        { error: "Sem permissão para convidar membros" },
+        { error: "Você não tem permissão para convidar membros com esse cargo" },
         { status: 403 }
       );
     }

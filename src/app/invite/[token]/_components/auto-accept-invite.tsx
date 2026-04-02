@@ -4,22 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import type { OrgRole } from "@/types/database";
+import { getDefaultRedirectPath } from "@/lib/auth/authorization-client";
 import { AcceptInviteButton } from "./accept-invite-button";
 
 interface AutoAcceptInviteProps {
   token: string;
   role: OrgRole;
-}
-
-function getRedirectPath(role: OrgRole): string {
-  switch (role) {
-    case "receptionist":
-      return "/schedule";
-    case "patient":
-      return "/patient/dashboard";
-    default:
-      return "/dashboard";
-  }
 }
 
 export function AutoAcceptInvite({ token, role }: AutoAcceptInviteProps) {
@@ -44,7 +34,7 @@ export function AutoAcceptInvite({ token, role }: AutoAcceptInviteProps) {
           return;
         }
 
-        router.push(getRedirectPath(role));
+        router.push(getDefaultRedirectPath(role));
         router.refresh();
       } catch {
         if (!cancelled) setFailed(true);

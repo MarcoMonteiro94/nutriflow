@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getInviteByToken } from "@/lib/queries/organization";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, AlertCircle } from "lucide-react";
+import { Building2, AlertCircle, Clock } from "lucide-react";
 import type { OrgRole } from "@/types/database";
-import { AcceptInviteButton } from "./_components/accept-invite-button";
 import { AutoAcceptInvite } from "./_components/auto-accept-invite";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,9 +22,9 @@ const roleLabels: Record<string, string> = {
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { token } = await params;
-  const invite = await getInviteByToken(token);
+  const result = await getInviteByToken(token);
 
-  if (!invite) {
+  if (result.status === "not_found") {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -35,7 +34,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
             </div>
             <h3 className="text-lg font-semibold mb-2">Convite Inválido</h3>
             <p className="text-muted-foreground mb-6">
-              Este convite não existe, já foi aceito ou expirou.
+              Este convite não existe ou já foi aceito.
             </p>
             <Link href="/auth/login">
               <Button variant="outline">Ir para Login</Button>
@@ -45,6 +44,29 @@ export default async function InvitePage({ params }: InvitePageProps) {
       </div>
     );
   }
+
+  if (result.status === "expired") {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/10 mb-4">
+              <Clock className="h-8 w-8 text-amber-600 dark:text-amber-500" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Convite Expirado</h3>
+            <p className="text-muted-foreground mb-6">
+              Este convite expirou. Solicite um novo convite ao administrador da sua clínica.
+            </p>
+            <Link href="/auth/login">
+              <Button variant="outline">Ir para Login</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const invite = result.invite;
 
   const supabase = await createClient();
   const {
@@ -87,10 +109,14 @@ export default async function InvitePage({ params }: InvitePageProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-center text-muted-foreground">
-                  Logado como <strong>{user.email}</strong>
-                </p>
-                <AcceptInviteButton token={token} role={invite.role as OrgRole} />
+                <div className="rounded-xl bg-amber-100 dark:bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-400 text-center">
+                  <p>
+                    Você está logado como <strong>{user.email}</strong>, mas este convite foi enviado para <strong>{invite.email}</strong>.
+                  </p>
+                  <p className="mt-2">
+                    Faça logout e entre com o email correto para aceitar o convite.
+                  </p>
+                </div>
               </div>
             )
           ) : (

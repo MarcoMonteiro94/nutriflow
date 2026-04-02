@@ -374,9 +374,12 @@ export async function getUserOrgMembership(
 export async function getOrganizationInvites(
   organizationId: string
 ): Promise<OrganizationInvite[]> {
-  const supabase = await createClient();
+  // Use service client — RLS on organization_invites only allows admin/owner SELECT,
+  // but nutris/receptionists who can invite also need to see pending invites.
+  // Access to this data is gated by the page-level auth (org membership required).
+  const serviceClient = createServiceClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await serviceClient
     .from("organization_invites")
     .select("*")
     .eq("organization_id", organizationId)
@@ -405,8 +408,12 @@ export async function createInvite(
     return { data: null, error: "Usuário não autenticado" };
   }
 
+  // Use service client for all invite operations — RLS on organization_invites
+  // only allows admin/owner SELECT, but authorization is enforced at the API level
+  const serviceClient = createServiceClient();
+
   // Check if email is already invited
-  const { data: existingInvite } = await supabase
+  const { data: existingInvite } = await serviceClient
     .from("organization_invites")
     .select("id")
     .eq("organization_id", organizationId)
@@ -419,14 +426,14 @@ export async function createInvite(
   }
 
   // Check if user is already a member
-  const { data: existingProfile } = await supabase
+  const { data: existingProfile } = await serviceClient
     .from("profiles")
     .select("id")
     .eq("email", email.toLowerCase())
     .single();
 
   if (existingProfile) {
-    const { data: existingMember } = await supabase
+    const { data: existingMember } = await serviceClient
       .from("organization_members")
       .select("id")
       .eq("organization_id", organizationId)
@@ -442,7 +449,7 @@ export async function createInvite(
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
 
-  const { data, error } = await supabase
+  const { data, error } = await serviceClient
     .from("organization_invites")
     .insert({
       organization_id: organizationId,
@@ -481,9 +488,14 @@ export async function deleteInvite(
   return { error: null };
 }
 
+export type InviteResult =
+  | { status: "valid"; invite: OrganizationInvite & { organization: Organization } }
+  | { status: "expired"; invite: OrganizationInvite & { organization: Organization } }
+  | { status: "not_found" };
+
 export async function getInviteByToken(
   token: string
-): Promise<(OrganizationInvite & { organization: Organization }) | null> {
+): Promise<InviteResult> {
   // Use service client to bypass RLS - invites need to be accessible for unauthenticated users
   const supabase = createServiceClient();
 
@@ -501,15 +513,10 @@ export async function getInviteByToken(
 
   if (error) {
     console.error("Error fetching invite by token:", error);
-    return null;
+    return { status: "not_found" };
   }
 
-  // Check if expired
-  if (new Date(data.expires_at as string) < new Date()) {
-    return null;
-  }
-
-  return {
+  const invite = {
     id: data.id,
     organization_id: data.organization_id,
     email: data.email,
@@ -521,6 +528,13 @@ export async function getInviteByToken(
     created_at: data.created_at,
     organization: data.organization as unknown as Organization,
   } as OrganizationInvite & { organization: Organization };
+
+  // Check if expired
+  if (new Date(data.expires_at as string) < new Date()) {
+    return { status: "expired", invite };
+  }
+
+  return { status: "valid", invite };
 }
 
 // ============================================

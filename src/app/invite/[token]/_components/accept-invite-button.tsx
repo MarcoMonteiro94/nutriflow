@@ -5,21 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import type { OrgRole } from "@/types/database";
+import { getDefaultRedirectPath } from "@/lib/auth/authorization-client";
 
 interface AcceptInviteButtonProps {
   token: string;
   role?: OrgRole;
-}
-
-function getRedirectPath(role?: OrgRole): string {
-  switch (role) {
-    case "receptionist":
-      return "/schedule";
-    case "patient":
-      return "/patient/dashboard";
-    default:
-      return "/dashboard";
-  }
 }
 
 export function AcceptInviteButton({ token, role }: AcceptInviteButtonProps) {
@@ -49,7 +39,7 @@ export function AcceptInviteButton({ token, role }: AcceptInviteButtonProps) {
       }
 
       // Redirect based on role
-      const redirectPath = getRedirectPath(role);
+      const redirectPath = getDefaultRedirectPath(role ?? null);
       router.push(redirectPath);
       router.refresh();
     } catch (err) {
