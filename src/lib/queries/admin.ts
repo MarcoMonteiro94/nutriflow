@@ -9,6 +9,11 @@ import type {
   AuditLogEntry,
 } from "@/types/admin";
 
+/** Sanitize search input for use in PostgREST .or() filter strings */
+function sanitizeSearch(input: string): string {
+  return input.replace(/[,().]/g, "");
+}
+
 // ============================================
 // Read Queries
 // ============================================
@@ -16,7 +21,6 @@ import type {
 export async function getAllOrganizations(
   filters?: { isActive?: boolean; search?: string }
 ): Promise<OrganizationWithStats[]> {
-  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   let query = supabase
@@ -34,8 +38,9 @@ export async function getAllOrganizations(
   }
 
   if (filters?.search) {
+    const search = sanitizeSearch(filters.search);
     query = query.or(
-      `name.ilike.%${filters.search}%,slug.ilike.%${filters.search}%`
+      `name.ilike.%${search}%,slug.ilike.%${search}%`
     );
   }
 
@@ -86,7 +91,6 @@ export async function getAllOrganizations(
 export async function getAllUsers(
   filters?: { role?: OrgRole; orgId?: string; search?: string }
 ): Promise<UserWithMembership[]> {
-  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   let query = supabase
@@ -95,8 +99,9 @@ export async function getAllUsers(
     .order("created_at", { ascending: false });
 
   if (filters?.search) {
+    const search = sanitizeSearch(filters.search);
     query = query.or(
-      `full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`
+      `full_name.ilike.%${search}%,email.ilike.%${search}%`
     );
   }
 
@@ -164,7 +169,6 @@ export async function getAllUsers(
 export async function getAuditLogs(
   filters?: { action?: string; dateFrom?: string; dateTo?: string }
 ): Promise<AuditLogEntry[]> {
-  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   // Use type assertion since audit_logs may not be in generated types yet
@@ -232,7 +236,6 @@ export async function getPlatformStatsForPage(): Promise<PlatformStats> {
 }
 
 export async function getPlatformStats(): Promise<PlatformStats> {
-  await requireSuperAdminApi();
   return getPlatformStatsInternal();
 }
 
@@ -358,6 +361,28 @@ export async function deactivateUser(id: string): Promise<void> {
 
   await logAuditEvent({
     action: "user.deactivate",
+    resourceType: "user",
+    resourceId: id,
+    userId: userRole.userId,
+    metadata: { target_user_id: id },
+  });
+}
+
+export async function reactivateUser(id: string): Promise<void> {
+  const userRole = await requireSuperAdminApi();
+  const supabase = createServiceClient();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_active: true })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(`Failed to reactivate user: ${error.message}`);
+  }
+
+  await logAuditEvent({
+    action: "user.reactivate",
     resourceType: "user",
     resourceId: id,
     userId: userRole.userId,

@@ -134,7 +134,7 @@ describe("admin queries - getAllOrganizations", () => {
 
     const result = await getAllOrganizations();
 
-    expect(mockRequireSuperAdmin).toHaveBeenCalled();
+    // Auth check is done at the route layer, not the query layer
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe("Clinic A");
     expect(result[0].is_active).toBe(true);
@@ -155,7 +155,6 @@ describe("admin queries - getAllOrganizations", () => {
 
     await getAllOrganizations({ isActive: true, search: "clinic" });
 
-    expect(mockRequireSuperAdmin).toHaveBeenCalled();
     // Verify eq and or were called (filter methods)
     expect(orgsChain.eq).toHaveBeenCalled();
     expect(orgsChain.or).toHaveBeenCalled();
@@ -201,8 +200,6 @@ describe("admin queries - getAllUsers", () => {
     });
 
     const result = await getAllUsers();
-
-    expect(mockRequireSuperAdmin).toHaveBeenCalled();
     expect(result).toHaveLength(1);
     expect(result[0].full_name).toBe("John Doe");
     expect(result[0].organization?.name).toBe("Clinic A");
@@ -245,7 +242,6 @@ describe("admin queries - getPlatformStats", () => {
 
     const result = await getPlatformStats();
 
-    expect(mockRequireSuperAdmin).toHaveBeenCalled();
     expect(result.totalOrganizations).toBe(10);
     expect(result.activeOrganizations).toBe(8);
     expect(result.totalUsers).toBe(50);

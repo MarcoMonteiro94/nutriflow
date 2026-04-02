@@ -36,6 +36,7 @@ const mockGetAuditLogs = vi.fn();
 const mockDeactivateOrganization = vi.fn();
 const mockReactivateOrganization = vi.fn();
 const mockDeactivateUser = vi.fn();
+const mockReactivateUser = vi.fn();
 
 vi.mock("@/lib/queries/admin", () => ({
   getPlatformStats: (...args: unknown[]) => mockGetPlatformStats(...args),
@@ -45,6 +46,7 @@ vi.mock("@/lib/queries/admin", () => ({
   deactivateOrganization: (...args: unknown[]) => mockDeactivateOrganization(...args),
   reactivateOrganization: (...args: unknown[]) => mockReactivateOrganization(...args),
   deactivateUser: (...args: unknown[]) => mockDeactivateUser(...args),
+  reactivateUser: (...args: unknown[]) => mockReactivateUser(...args),
 }));
 
 // Audit mock
@@ -790,14 +792,8 @@ describe("PATCH /api/admin/users/[id]", () => {
       },
       error: null,
     });
-    // For reactivation: first call is profile fetch, second is update
-    const updateChain = createQueryChain({ data: null, error: null });
-    let callCount = 0;
-    mockServiceFrom.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return profileChain;
-      return updateChain;
-    });
+    mockServiceFrom.mockReturnValue(profileChain);
+    mockReactivateUser.mockResolvedValue(undefined);
 
     const { PATCH } = await import("@/app/api/admin/users/[id]/route");
     const request = createRequest("http://localhost:3000/api/admin/users/user-99", {
@@ -811,13 +807,7 @@ describe("PATCH /api/admin/users/[id]", () => {
 
     expect(response.status).toBe(200);
     expect(json.data.is_active).toBe(true);
-    expect(mockLogAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: "user.reactivate",
-        resourceType: "user",
-        resourceId: "user-99",
-      })
-    );
+    expect(mockReactivateUser).toHaveBeenCalledWith("user-99");
   });
 
   it("prevents self-deactivation", async () => {

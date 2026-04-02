@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdminApi } from "@/lib/auth/authorization";
-import { deactivateUser } from "@/lib/queries/admin";
-import { logAuditEvent } from "@/lib/audit";
+import { deactivateUser, reactivateUser } from "@/lib/queries/admin";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function PATCH(
@@ -49,23 +48,7 @@ export async function PATCH(
     if (!is_active) {
       await deactivateUser(id);
     } else {
-      // Reactivate user
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ is_active: true })
-        .eq("id", id);
-
-      if (updateError) {
-        throw new Error(`Failed to reactivate user: ${updateError.message}`);
-      }
-
-      await logAuditEvent({
-        action: "user.reactivate",
-        resourceType: "user",
-        resourceId: id,
-        userId: userRole.userId,
-        metadata: { target_user_id: id },
-      });
+      await reactivateUser(id);
     }
 
     return NextResponse.json({
