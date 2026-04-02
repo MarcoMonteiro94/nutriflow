@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth/authorization";
+import { requireSuperAdminApi } from "@/lib/auth/authorization";
 import { logAuditEvent } from "@/lib/audit";
 import type { OrgRole } from "@/types/database";
 import type {
@@ -16,7 +16,7 @@ import type {
 export async function getAllOrganizations(
   filters?: { isActive?: boolean; search?: string }
 ): Promise<OrganizationWithStats[]> {
-  await requireSuperAdmin();
+  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   let query = supabase
@@ -86,7 +86,7 @@ export async function getAllOrganizations(
 export async function getAllUsers(
   filters?: { role?: OrgRole; orgId?: string; search?: string }
 ): Promise<UserWithMembership[]> {
-  await requireSuperAdmin();
+  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   let query = supabase
@@ -164,7 +164,7 @@ export async function getAllUsers(
 export async function getAuditLogs(
   filters?: { action?: string; dateFrom?: string; dateTo?: string }
 ): Promise<AuditLogEntry[]> {
-  await requireSuperAdmin();
+  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   // Use type assertion since audit_logs may not be in generated types yet
@@ -221,7 +221,7 @@ export async function getAuditLogs(
 }
 
 export async function getPlatformStats(): Promise<PlatformStats> {
-  await requireSuperAdmin();
+  await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   const [
@@ -285,7 +285,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
 // ============================================
 
 export async function deactivateOrganization(id: string): Promise<void> {
-  const userRole = await requireSuperAdmin();
+  const userRole = await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   const { error } = await supabase
@@ -307,7 +307,7 @@ export async function deactivateOrganization(id: string): Promise<void> {
 }
 
 export async function reactivateOrganization(id: string): Promise<void> {
-  const userRole = await requireSuperAdmin();
+  const userRole = await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   const { error } = await supabase
@@ -329,7 +329,7 @@ export async function reactivateOrganization(id: string): Promise<void> {
 }
 
 export async function deactivateUser(id: string): Promise<void> {
-  const userRole = await requireSuperAdmin();
+  const userRole = await requireSuperAdminApi();
   const supabase = createServiceClient();
 
   const { error } = await supabase

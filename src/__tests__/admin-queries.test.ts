@@ -14,9 +14,10 @@ vi.mock("next/headers", () => ({
   })),
 }));
 
-// Track requireSuperAdmin mock
+// Track requireSuperAdminApi mock
 const mockRequireSuperAdmin = vi.fn();
 vi.mock("@/lib/auth/authorization", () => ({
+  requireSuperAdminApi: (...args: unknown[]) => mockRequireSuperAdmin(...args),
   requireSuperAdmin: (...args: unknown[]) => mockRequireSuperAdmin(...args),
   getUserRole: vi.fn(),
 }));
