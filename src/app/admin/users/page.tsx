@@ -1,15 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Search, Shield, Building2, Calendar } from "lucide-react";
+import { Users, Search, Shield, Building2, Calendar, Power } from "lucide-react";
 
 import type { UserWithMembership, OrganizationWithStats } from "@/types/admin";
 import type { OrgRole } from "@/types/database";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -81,6 +92,11 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [orgFilter, setOrgFilter] = useState("all");
 
+  // Deactivation state
+  const [confirmUser, setConfirmUser] = useState<UserWithMembership | null>(null);
+  const [toggling, setToggling] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
+
   const debouncedSearch = useDebounce(search, 300);
 
   // Fetch organizations for the filter dropdown (once on mount)
@@ -120,6 +136,40 @@ export default function AdminUsersPage() {
 
     fetchUsers();
   }, [roleFilter, orgFilter, debouncedSearch]);
+
+  async function handleToggleActive() {
+    if (!confirmUser) return;
+    setToggling(true);
+    setToggleError(null);
+
+    try {
+      const res = await fetch(`/api/admin/users/${confirmUser.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !confirmUser.is_active }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        setToggleError(json?.error ?? "Erro ao atualizar usuário");
+        return;
+      }
+
+      // Update user in-place
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === confirmUser.id
+            ? { ...u, is_active: !confirmUser.is_active }
+            : u
+        )
+      );
+      setConfirmUser(null);
+    } catch {
+      setToggleError("Erro de conexão. Tente novamente.");
+    } finally {
+      setToggling(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -271,6 +321,7 @@ export default function AdminUsersPage() {
                     {/* Status badge */}
                     {user.is_active ? (
                       <Badge
+                        data-testid="user-status-badge"
                         variant="secondary"
                         className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                       >
@@ -278,6 +329,7 @@ export default function AdminUsersPage() {
                       </Badge>
                     ) : (
                       <Badge
+                        data-testid="user-status-badge"
                         variant="secondary"
                         className="border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400"
                       >
@@ -301,6 +353,24 @@ export default function AdminUsersPage() {
                       <Calendar className="h-3 w-3" />
                       {formatDate(user.created_at)}
                     </span>
+
+                    {/* Toggle active button */}
+                    {!user.is_super_admin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        data-testid="user-toggle-active"
+                        className="h-7 w-7"
+                        onClick={() => setConfirmUser(user)}
+                        title={user.is_active ? "Desativar usuário" : "Ativar usuário"}
+                      >
+                        <Power
+                          className={`h-3.5 w-3.5 ${
+                            user.is_active ? "text-emerald-600" : "text-rose-500"
+                          }`}
+                        />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -308,6 +378,52 @@ export default function AdminUsersPage() {
           ))}
         </div>
       )}
+
+      {/* Confirmation dialog for activate/deactivate */}
+      <AlertDialog
+        open={!!confirmUser}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmUser(null);
+            setToggleError(null);
+          }
+        }}
+      >
+        <AlertDialogContent data-testid="user-toggle-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmUser?.is_active ? "Desativar usuário" : "Reativar usuário"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmUser?.is_active
+                ? `Tem certeza que deseja desativar "${confirmUser?.full_name}"? O usuário não poderá acessar a plataforma enquanto estiver inativo.`
+                : `Tem certeza que deseja reativar "${confirmUser?.full_name}"? O usuário poderá acessar a plataforma novamente.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {toggleError && (
+            <p className="text-sm text-destructive">{toggleError}</p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={toggling}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="user-toggle-confirm"
+              disabled={toggling}
+              onClick={handleToggleActive}
+              className={
+                confirmUser?.is_active
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {toggling
+                ? "Processando..."
+                : confirmUser?.is_active
+                  ? "Desativar"
+                  : "Reativar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
