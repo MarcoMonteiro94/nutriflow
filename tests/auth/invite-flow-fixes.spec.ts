@@ -434,12 +434,12 @@ test.describe('Invite — Edge Cases', () => {
     await expect(body).toBeVisible();
   });
 
-  test('invite accept API rejects unauthenticated requests', async ({ browser }) => {
-    // Use a fresh browser context without any cookies
-    const context = await browser.newContext();
-    const freshPage = await context.newPage();
+  test('invite accept API rejects unauthenticated requests', async ({ playwright }) => {
+    // Use a standalone API request context without any browser cookies
+    const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+    const apiContext = await playwright.request.newContext({ baseURL });
 
-    const response = await freshPage.request.post('/api/invite/accept', {
+    const response = await apiContext.post('/api/invite/accept', {
       data: {
         token: testInviteTokens.pending.token,
       },
@@ -447,7 +447,7 @@ test.describe('Invite — Edge Cases', () => {
 
     // Should be 401 (unauthorized)
     expect(response.status()).toBe(401);
-    await context.close();
+    await apiContext.dispose();
   });
 
   test('invite accept API rejects missing token', async ({ page }) => {

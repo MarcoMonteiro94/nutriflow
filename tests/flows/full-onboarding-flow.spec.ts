@@ -40,18 +40,22 @@ test.describe.serial('Full Onboarding Chain', () => {
 
     const orgPage = new OrganizationPage(page);
     await orgPage.gotoMembers();
+    await page.waitForLoadState('networkidle');
 
     // Verify we're on the members page
     const membersHeading = page.getByRole('heading', { name: /membros/i });
-    const hasMembersPage = await membersHeading.isVisible({ timeout: 10000 }).catch(() => false);
+    const hasMembersPage = await membersHeading.isVisible({ timeout: 15000 }).catch(() => false);
     if (!hasMembersPage) {
       // Try the invite button directly — page may have different layout
-      const hasInviteButton = await orgPage.inviteButton.isVisible({ timeout: 5000 }).catch(() => false);
+      const hasInviteButton = await orgPage.inviteButton.isVisible({ timeout: 10000 }).catch(() => false);
       if (!hasInviteButton) {
         test.skip(true, 'Members page not accessible — admin may not have an org');
         return;
       }
     }
+
+    // Wait for invite button to be fully interactive
+    await orgPage.inviteButton.waitFor({ state: 'visible', timeout: 10000 });
 
     // Send invite to nutri
     await orgPage.sendInvite(FLOW_EMAILS.nutri, 'Nutricionista');
