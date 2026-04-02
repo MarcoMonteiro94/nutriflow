@@ -84,6 +84,12 @@ const TEST_USERS: Record<string, TestUser> = {
     profile_role: null,
     user_type: 'invite',
   },
+  superAdmin: {
+    email: 'test-superadmin@example.com',
+    password: 'TestPassword123!',
+    full_name: 'Test Super Admin',
+    profile_role: 'nutri',
+  },
 };
 
 const TEST_ORG = {
@@ -676,6 +682,16 @@ async function main() {
   const patientUser = await createTestUser(TEST_USERS.patient);
   const noOrgUser = await createTestUser(TEST_USERS.noOrg);
   const invitedUser = await createTestUser(TEST_USERS.invited);
+  const superAdminUser = await createTestUser(TEST_USERS.superAdmin);
+
+  // Set is_super_admin flag for super admin user
+  if (superAdminUser) {
+    await supabase
+      .from('profiles')
+      .update({ is_super_admin: true })
+      .eq('id', superAdminUser.id);
+    console.log(`  ✓ Set is_super_admin for ${TEST_USERS.superAdmin.email}`);
+  }
 
   if (!nutriUser) {
     console.error('\n✗ Failed to create primary test user. Aborting.');
@@ -743,6 +759,7 @@ async function main() {
   console.log('  Patient:      test-patient@example.com / TestPassword123!');
   console.log('  No Org:       test-noorg@example.com / TestPassword123!');
   console.log('  Invited:      test-invited@example.com / TestPassword123!');
+  console.log('  Super Admin:  test-superadmin@example.com / TestPassword123!');
   console.log('');
   console.log('Test invite tokens:');
   console.log(`  Pending: ${TEST_INVITES.pending.token}`);
