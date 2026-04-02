@@ -220,8 +220,23 @@ export async function getAuditLogs(
   }));
 }
 
+/**
+ * Server-component-safe version of getPlatformStats.
+ * Uses requireSuperAdmin() (redirect) instead of requireSuperAdminApi() (throw).
+ * Call this from Server Components (pages/layouts) where redirect() is safe.
+ */
+export async function getPlatformStatsForPage(): Promise<PlatformStats> {
+  const { requireSuperAdmin } = await import("@/lib/auth/authorization");
+  await requireSuperAdmin();
+  return getPlatformStatsInternal();
+}
+
 export async function getPlatformStats(): Promise<PlatformStats> {
   await requireSuperAdminApi();
+  return getPlatformStatsInternal();
+}
+
+async function getPlatformStatsInternal(): Promise<PlatformStats> {
   const supabase = createServiceClient();
 
   const [

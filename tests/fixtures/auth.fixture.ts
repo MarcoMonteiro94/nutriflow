@@ -166,7 +166,7 @@ export async function logout(page: Page): Promise<void> {
  */
 export async function loginAs(
   page: Page,
-  role: 'nutri' | 'admin' | 'receptionist' | 'patient' | 'noOrg' | 'invited',
+  role: 'nutri' | 'admin' | 'receptionist' | 'patient' | 'noOrg' | 'invited' | 'superAdmin',
 ): Promise<boolean> {
   const userMap: Record<string, { email: string; password: string }> = {
     nutri: testUsers.nutritionist,
@@ -175,6 +175,7 @@ export async function loginAs(
     patient: testUsers.patient,
     noOrg: testUsers.noOrg,
     invited: testUsers.invitedUser,
+    superAdmin: testUsers.superAdmin,
   };
   const user = userMap[role];
   if (!user) throw new Error(`Unknown role: ${role}`);
