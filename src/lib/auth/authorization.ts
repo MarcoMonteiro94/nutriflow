@@ -265,6 +265,26 @@ export async function requireSuperAdmin(): Promise<UserRole> {
 }
 
 /**
+ * API-specific super admin guard.
+ * Throws a plain Error instead of calling redirect(), so API route
+ * handlers can catch it and return a proper JSON 403 response.
+ */
+export async function requireSuperAdminApi(): Promise<UserRole> {
+  const role = await getUserRole();
+  if (!role) {
+    const err = new Error("Unauthorized");
+    (err as any).status = 401;
+    throw err;
+  }
+  if (!role.isSuperAdmin) {
+    const err = new Error("Forbidden");
+    (err as any).status = 403;
+    throw err;
+  }
+  return role;
+}
+
+/**
  * Get the default redirect path based on role
  * @param afterInviteAccept - If true, returns the path for first visit after accepting invite
  */

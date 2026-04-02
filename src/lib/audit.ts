@@ -16,7 +16,8 @@ export type AuditAction =
   | "org.create"
   | "org.deactivate"
   | "org.reactivate"
-  | "user.deactivate";
+  | "user.deactivate"
+  | "user.reactivate";
 
 interface AuditLogParams {
   action: AuditAction;
