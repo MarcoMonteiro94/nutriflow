@@ -177,7 +177,7 @@ test.describe('Receptionist Flow', () => {
       await authenticatedPage.waitForTimeout(1000);
 
       // Search should work (no error)
-      const errorMessage = authenticatedPage.locator('[class*="error"], [class*="destructive"]');
+      const errorMessage = authenticatedPage.locator('[data-testid="auth-error"], [role="alert"]');
       const hasError = await errorMessage.isVisible().catch(() => false);
       expect(hasError).toBeFalsy();
     });

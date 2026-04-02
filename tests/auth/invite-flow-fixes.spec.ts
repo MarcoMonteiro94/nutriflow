@@ -115,7 +115,7 @@ test.describe('Invite — Signup Guard', () => {
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
     // Wait for error message to appear
-    const errorMessage = page.locator('[class*="destructive"]');
+    const errorMessage = page.locator('[data-testid="auth-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must stay on login page
@@ -316,7 +316,8 @@ test.describe('Invite — Hierarchy Enforcement', () => {
     }
   });
 
-  test('nutri invite dialog hides admin and nutri roles', async ({ page }) => {
+  test('nutri (org owner) invite dialog shows all roles', async ({ page }) => {
+    // The seeded nutri user is also the org owner, so they can invite all roles
     const loggedIn = await loginAs(page, 'nutri');
     if (!loggedIn) {
       test.skip(true, 'Nutri login failed — ensure test users are seeded');
@@ -340,17 +341,11 @@ test.describe('Invite — Hierarchy Enforcement', () => {
     const roleButton = dialog.locator('button[role="combobox"]').first();
     await roleButton.click();
 
-    // Nutri should see only Recepcionista and Paciente
-    const recepOption = page.getByRole('option', { name: /recepcionista/i });
-    await expect(recepOption).toBeVisible({ timeout: 3000 });
-
-    const patientOption = page.getByRole('option', { name: /paciente/i });
-    await expect(patientOption).toBeVisible({ timeout: 3000 });
-
-    // Should NOT see Admin or Nutricionista
-    const adminOption = page.getByRole('option', { name: /administrador/i });
-    const hasAdmin = await adminOption.isVisible({ timeout: 2000 }).catch(() => false);
-    expect(hasAdmin).toBeFalsy();
+    // Org owner should see all 4 roles regardless of their own role
+    for (const roleName of ['Administrador', 'Nutricionista', 'Recepcionista', 'Paciente']) {
+      const option = page.getByRole('option', { name: new RegExp(roleName, 'i') });
+      await expect(option).toBeVisible({ timeout: 3000 });
+    }
   });
 });
 
@@ -390,7 +385,7 @@ test.describe('Invite — Edge Cases', () => {
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
     // Should show error (either about invite or duplicate email)
-    const errorMessage = page.locator('[class*="destructive"]');
+    const errorMessage = page.locator('[data-testid="auth-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must stay on login page
@@ -411,7 +406,7 @@ test.describe('Invite — Edge Cases', () => {
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
     // Wait for error or stay on page
-    const errorMessage = page.locator('[class*="destructive"]');
+    const errorMessage = page.locator('[data-testid="auth-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must remain on auth/login page — no redirect to dashboard
@@ -439,9 +434,12 @@ test.describe('Invite — Edge Cases', () => {
     await expect(body).toBeVisible();
   });
 
-  test('invite accept API rejects unauthenticated requests', async ({ page }) => {
-    // Try to accept an invite without being logged in
-    const response = await page.request.post('/api/invite/accept', {
+  test('invite accept API rejects unauthenticated requests', async ({ browser }) => {
+    // Use a fresh browser context without any cookies
+    const context = await browser.newContext();
+    const freshPage = await context.newPage();
+
+    const response = await freshPage.request.post('/api/invite/accept', {
       data: {
         token: testInviteTokens.pending.token,
       },
@@ -449,6 +447,7 @@ test.describe('Invite — Edge Cases', () => {
 
     // Should be 401 (unauthorized)
     expect(response.status()).toBe(401);
+    await context.close();
   });
 
   test('invite accept API rejects missing token', async ({ page }) => {

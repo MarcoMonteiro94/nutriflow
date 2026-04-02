@@ -78,7 +78,7 @@ function LoginForm() {
           {redirectTo && <input type="hidden" name="redirect" value={redirectTo} />}
 
           {state.error && (
-            <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
+            <div data-testid="auth-error" role="alert" className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
               {state.error}
             </div>
           )}

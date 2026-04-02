@@ -40,7 +40,7 @@ async function checkAuthAvailable(page: Page): Promise<boolean> {
     }
 
     // Check if there's an error message (means Supabase responded)
-    const errorMsg = await page.locator('[class*="destructive"], [class*="error"]').isVisible().catch(() => false);
+    const errorMsg = await page.locator('[data-testid="auth-error"], [class*="error"]').isVisible().catch(() => false);
     if (errorMsg) {
       // Supabase is working but credentials are wrong - auth is available
       authAvailable = true;

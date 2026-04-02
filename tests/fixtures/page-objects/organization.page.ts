@@ -81,8 +81,9 @@ export class OrganizationPage {
   }
 
   async openInviteDialog() {
+    await this.inviteButton.waitFor({ state: 'visible', timeout: 10000 });
     await this.inviteButton.click();
-    await this.inviteDialog.waitFor({ state: 'visible' });
+    await this.inviteDialog.waitFor({ state: 'visible', timeout: 15000 });
   }
 
   async sendInvite(email: string, role: string) {

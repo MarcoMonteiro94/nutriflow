@@ -198,7 +198,7 @@ test.describe('Invite Signup - Per Role', () => {
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
     // Wait for error message to appear
-    const errorMessage = page.locator('[class*="destructive"]');
+    const errorMessage = page.locator('[data-testid="auth-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must stay on login page
@@ -300,7 +300,7 @@ test.describe('Invite Signup — UX Verification', () => {
     await page.getByRole('button', { name: /criar conta/i }).first().click();
 
     // Wait for error message to appear (invite-required)
-    const errorMessage = page.locator('[class*="destructive"]');
+    const errorMessage = page.locator('[data-testid="auth-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
     // Must stay on login page
