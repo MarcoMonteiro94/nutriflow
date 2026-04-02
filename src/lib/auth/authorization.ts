@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import type { OrgRole } from "@/types/database";
 
 export type Permission =
@@ -253,11 +254,24 @@ export function isSuperAdmin(userRole: UserRole | null): boolean {
 }
 
 /**
- * Get the default redirect path based on role
+ * Require the current user to be a super admin.
+ * Redirects to /auth/login if not authenticated or not a super admin.
+ * Use this as a guard before any service client usage in admin routes.
  */
-export function getDefaultRedirectPath(role: OrgRole | null): string {
+export async function requireSuperAdmin(): Promise<UserRole> {
+  const role = await getUserRole();
+  if (!role?.isSuperAdmin) redirect("/auth/login");
+  return role;
+}
+
+/**
+ * Get the default redirect path based on role
+ * @param afterInviteAccept - If true, returns the path for first visit after accepting invite
+ */
+export function getDefaultRedirectPath(role: OrgRole | null, afterInviteAccept?: boolean): string {
   switch (role) {
     case "admin":
+      return afterInviteAccept ? "/organization/members" : "/dashboard";
     case "nutri":
       return "/dashboard";
     case "receptionist":
