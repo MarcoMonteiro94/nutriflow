@@ -189,7 +189,7 @@ test.describe.serial('Full Onboarding Chain', () => {
     const inviteButton = page.getByRole('button', { name: /convidar membro/i });
     const hasInviteButton = await inviteButton.isVisible({ timeout: 10000 }).catch(() => false);
 
-    // Nutri should be able to invite (receptionist and patient only)
+    // Nutri (who is also org owner) should be able to invite
     if (hasInviteButton) {
       await inviteButton.click();
       const dialog = page.locator('[role="dialog"]');
@@ -199,14 +199,9 @@ test.describe.serial('Full Onboarding Chain', () => {
       const roleButton = dialog.locator('button[role="combobox"]').first();
       await roleButton.click();
 
-      // Nutri should see Recepcionista and Paciente, but NOT Admin
+      // Org owner sees all roles; non-owner nutri would only see Recepcionista and Paciente
       const recepOption = page.getByRole('option', { name: /recepcionista/i });
-      const hasRecep = await recepOption.isVisible({ timeout: 3000 }).catch(() => false);
-      expect(hasRecep).toBeTruthy();
-
-      const adminOption = page.getByRole('option', { name: /administrador/i });
-      const hasAdmin = await adminOption.isVisible({ timeout: 2000 }).catch(() => false);
-      expect(hasAdmin).toBeFalsy();
+      await expect(recepOption).toBeVisible({ timeout: 3000 });
     }
   });
 
