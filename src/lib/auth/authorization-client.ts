@@ -124,10 +124,12 @@ export function isAdmin(role: OrgRole | null, isOwner?: boolean): boolean {
 
 /**
  * Get the default redirect path based on role
+ * @param afterInviteAccept - If true, returns the path for first visit after accepting invite
  */
-export function getDefaultRedirectPath(role: OrgRole | null): string {
+export function getDefaultRedirectPath(role: OrgRole | null, afterInviteAccept?: boolean): string {
   switch (role) {
     case "admin":
+      return afterInviteAccept ? "/organization/members" : "/dashboard";
     case "nutri":
       return "/dashboard";
     case "receptionist":

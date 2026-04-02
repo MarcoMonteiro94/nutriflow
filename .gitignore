@@ -64,3 +64,13 @@ QUESTIONS.md
 .worktrees/
 .security-key
 logs/security/
+
+# Claude Code
+.claude/
+
+# Agent tooling
+.agents/
+.compozy/
+
+# Temp files
+.tmp/

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import type { OrgRole } from "@/types/database";
+import { getDefaultRedirectPath } from "@/lib/auth/authorization-client";
 import { AcceptInviteButton } from "./accept-invite-button";
 
 interface AutoAcceptInviteProps {
@@ -11,20 +13,10 @@ interface AutoAcceptInviteProps {
   role: OrgRole;
 }
 
-function getRedirectPath(role: OrgRole): string {
-  switch (role) {
-    case "receptionist":
-      return "/schedule";
-    case "patient":
-      return "/patient/dashboard";
-    default:
-      return "/dashboard";
-  }
-}
-
 export function AutoAcceptInvite({ token, role }: AutoAcceptInviteProps) {
   const router = useRouter();
-  const [failed, setFailed] = useState(false);
+  const [status, setStatus] = useState<"loading" | "success" | "failed">("loading");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,14 +32,27 @@ export function AutoAcceptInvite({ token, role }: AutoAcceptInviteProps) {
         if (cancelled) return;
 
         if (!response.ok) {
-          setFailed(true);
+          const data = await response.json().catch(() => ({}));
+          setErrorMessage(data.error || "Erro ao aceitar convite");
+          setStatus("failed");
           return;
         }
 
-        router.push(getRedirectPath(role));
-        router.refresh();
+        setStatus("success");
+        toast.success("Convite aceito com sucesso!");
+
+        // Brief delay to show success state before redirect
+        setTimeout(() => {
+          if (!cancelled) {
+            router.push(getDefaultRedirectPath(role, true));
+            router.refresh();
+          }
+        }, 800);
       } catch {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) {
+          setErrorMessage("Erro ao aceitar convite. Tente novamente.");
+          setStatus("failed");
+        }
       }
     }
 
@@ -55,8 +60,26 @@ export function AutoAcceptInvite({ token, role }: AutoAcceptInviteProps) {
     return () => { cancelled = true; };
   }, [token, role, router]);
 
-  if (failed) {
-    return <AcceptInviteButton token={token} role={role} />;
+  if (status === "failed") {
+    return (
+      <div className="space-y-3">
+        {errorMessage && (
+          <div className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive text-center">
+            {errorMessage}
+          </div>
+        )}
+        <AcceptInviteButton token={token} role={role} />
+      </div>
+    );
+  }
+
+  if (status === "success") {
+    return (
+      <div className="flex flex-col items-center gap-3 py-4">
+        <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+        <p className="text-sm text-muted-foreground">Convite aceito! Redirecionando...</p>
+      </div>
+    );
   }
 
   return (

@@ -1,4 +1,5 @@
 import { PatientLayout } from "@/components/layout/patient-layout";
+import { OnboardingBanner } from "@/components/onboarding-banner";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { createClient } from "@/lib/supabase/server";
 import { RoleProvider } from "@/contexts/role-context";
@@ -62,6 +63,7 @@ export default async function PatientRootLayout({
       }
     >
       <PatientLayout isAuthenticated={isAuthenticated} hasChallenges={hasChallenges} hasAnamnesis={hasAnamnesis}>
+        {isAuthenticated && user && <OnboardingBanner userId={user.id} role="patient" />}
         {children}
       </PatientLayout>
       <PWAInstallPrompt />

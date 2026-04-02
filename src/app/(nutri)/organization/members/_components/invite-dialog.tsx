@@ -22,8 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserPlus } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { nanoid } from "nanoid";
 import type { OrgRole } from "@/types/database";
 import { getInvitableRoles, roleLabels, canInviteMembers } from "@/lib/auth/authorization-client";
 
@@ -73,81 +71,29 @@ export function InviteDialog({ organizationId, currentUserRole, isOwner }: Invit
       return;
     }
 
-    const supabase = createClient();
+    try {
+      const response = await fetch("/api/organization/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId, email, role }),
+      });
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setError("Usuário não autenticado");
-      setIsLoading(false);
-      return;
-    }
-
-    // Check if email is already invited
-    const { data: existingInvite } = await supabase
-      .from("organization_invites")
-      .select("id")
-      .eq("organization_id", organizationId)
-      .eq("email", email.toLowerCase())
-      .is("accepted_at", null)
-      .single();
-
-    if (existingInvite) {
-      setError("Este email já possui um convite pendente");
-      setIsLoading(false);
-      return;
-    }
-
-    // Check if user is already a member
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", email.toLowerCase())
-      .single();
-
-    if (existingProfile) {
-      const { data: existingMember } = await supabase
-        .from("organization_members")
-        .select("id")
-        .eq("organization_id", organizationId)
-        .eq("user_id", existingProfile.id)
-        .single();
-
-      if (existingMember) {
-        setError("Este usuário já é membro da organização");
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Erro ao enviar convite");
         setIsLoading(false);
         return;
       }
-    }
 
-    const token = nanoid(32);
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
-
-    const { error: createError } = await supabase
-      .from("organization_invites")
-      .insert({
-        organization_id: organizationId,
-        email: email.toLowerCase(),
-        role,
-        invited_by: user.id,
-        token,
-        expires_at: expiresAt.toISOString(),
-      });
-
-    if (createError) {
-      setError(createError.message);
+      setEmail("");
+      setRole(invitableRoles[0] || "");
+      setOpen(false);
       setIsLoading(false);
-      return;
+      router.refresh();
+    } catch {
+      setError("Erro de conexão. Tente novamente.");
+      setIsLoading(false);
     }
-
-    setEmail("");
-    setRole(invitableRoles[0] || "");
-    setOpen(false);
-    setIsLoading(false);
-    router.refresh();
   }
 
   return (

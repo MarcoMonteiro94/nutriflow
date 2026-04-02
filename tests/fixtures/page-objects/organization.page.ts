@@ -81,8 +81,9 @@ export class OrganizationPage {
   }
 
   async openInviteDialog() {
+    await this.inviteButton.waitFor({ state: 'visible', timeout: 10000 });
     await this.inviteButton.click();
-    await this.inviteDialog.waitFor({ state: 'visible' });
+    await this.inviteDialog.waitFor({ state: 'visible', timeout: 15000 });
   }
 
   async sendInvite(email: string, role: string) {
@@ -117,6 +118,8 @@ export class InvitePage {
   readonly loginButton: Locator;
   readonly signupButton: Locator;
   readonly invalidMessage: Locator;
+  readonly expiredMessage: Locator;
+  readonly emailMismatchMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -127,7 +130,9 @@ export class InvitePage {
     this.acceptButton = page.getByRole('button', { name: /aceitar/i });
     this.loginButton = page.getByRole('button', { name: /fazer login/i });
     this.signupButton = page.getByRole('button', { name: /criar conta/i });
-    this.invalidMessage = page.getByText(/inválido|expirado/i);
+    this.invalidMessage = page.getByRole('heading', { name: /convite inválido/i });
+    this.expiredMessage = page.getByRole('heading', { name: /convite expirado/i });
+    this.emailMismatchMessage = page.getByText(/email correto/i);
   }
 
   async goto(token: string) {

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { loginAs } from '../fixtures/auth.fixture';
+import { cleanupNoOrgUser } from '../fixtures/cleanup';
 
 /**
  * Organization creation tests — verify the create org form behavior
@@ -7,10 +8,14 @@ import { loginAs } from '../fixtures/auth.fixture';
  *
  * Requires seed data: npx tsx scripts/seed-test-data.ts
  *
- * Note: The "create with valid data" test modifies database state.
- * Re-run the seed script before subsequent test runs.
+ * Tests run serially because they share the noOrg user state,
+ * and the last test creates an organization that must be cleaned up.
  */
-test.describe('Organization Creation', () => {
+test.describe.serial('Organization Creation', () => {
+  test.afterAll(async () => {
+    await cleanupNoOrgUser();
+  });
+
   test('form should display required fields (name, slug)', async ({ page }) => {
     await loginAs(page, 'noOrg');
     await page.waitForURL(/\/organization\/create/, { timeout: 15000 });
