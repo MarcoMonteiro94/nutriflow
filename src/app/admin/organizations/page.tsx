@@ -10,6 +10,7 @@ import {
   Users,
   UserCheck,
   Calendar,
+  Power,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -201,6 +212,10 @@ export default function AdminOrganizationsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Deactivation confirmation dialog state
+  const [confirmOrg, setConfirmOrg] = useState<OrganizationWithStats | null>(null);
+  const [toggling, setToggling] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchOrganizations = useCallback(
@@ -247,6 +262,31 @@ export default function AdminOrganizationsPage() {
 
   function handleCreateSuccess() {
     fetchOrganizations(search, statusFilter);
+  }
+
+  async function handleToggleActive() {
+    if (!confirmOrg) return;
+    setToggling(true);
+
+    try {
+      const res = await fetch(`/api/admin/organizations/${confirmOrg.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !confirmOrg.is_active }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        setError(json?.error ?? "Erro ao atualizar clínica");
+      } else {
+        fetchOrganizations(search, statusFilter);
+      }
+    } catch {
+      setError("Erro de conexão. Tente novamente.");
+    } finally {
+      setToggling(false);
+      setConfirmOrg(null);
+    }
   }
 
   return (
@@ -347,72 +387,132 @@ export default function AdminOrganizationsPage() {
       ) : (
         <div data-testid="org-list" className="space-y-4">
           {orgs.map((org) => (
-            <Link
+            <Card
               key={org.id}
-              href={`/admin/organizations/${org.id}`}
-              className="block"
+              data-testid="org-card"
+              className="rounded-2xl shadow-soft transition-colors hover:bg-muted/50"
             >
-              <Card
-                data-testid="org-card"
-                className="rounded-2xl shadow-soft transition-colors hover:bg-muted/50"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      {/* Name + Status */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-base">{org.name}</h3>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            org.is_active
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                              : "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
-                          }
-                        >
-                          {org.is_active ? "Ativa" : "Inativa"}
-                        </Badge>
-                      </div>
-
-                      {/* Slug */}
-                      <p className="text-sm text-muted-foreground font-mono">
-                        /{org.slug}
-                      </p>
-
-                      {/* Owner */}
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">
-                          {org.owner.full_name}
-                        </span>{" "}
-                        &middot; {org.owner.email}
-                      </p>
-
-                      {/* Stats */}
-                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 pt-1 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <Users className="h-3.5 w-3.5" />
-                          {org.memberCount}{" "}
-                          {org.memberCount === 1 ? "membro" : "membros"}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <UserCheck className="h-3.5 w-3.5" />
-                          {org.patientCount}{" "}
-                          {org.patientCount === 1 ? "paciente" : "pacientes"}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {formatDate(org.created_at)}
-                        </span>
-                      </div>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <Link
+                    href={`/admin/organizations/${org.id}`}
+                    className="flex-1 space-y-2"
+                  >
+                    {/* Name + Status */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-base">{org.name}</h3>
+                      <Badge
+                        data-testid="org-status-badge"
+                        variant="secondary"
+                        className={
+                          org.is_active
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                            : "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
+                        }
+                      >
+                        {org.is_active ? "Ativa" : "Inativa"}
+                      </Badge>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />
+
+                    {/* Slug */}
+                    <p className="text-sm text-muted-foreground font-mono">
+                      /{org.slug}
+                    </p>
+
+                    {/* Owner */}
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        {org.owner.full_name}
+                      </span>{" "}
+                      &middot; {org.owner.email}
+                    </p>
+
+                    {/* Stats */}
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 pt-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5" />
+                        {org.memberCount}{" "}
+                        {org.memberCount === 1 ? "membro" : "membros"}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <UserCheck className="h-3.5 w-3.5" />
+                        {org.patientCount}{" "}
+                        {org.patientCount === 1 ? "paciente" : "pacientes"}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDate(org.created_at)}
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-2 shrink-0 mt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      data-testid="org-toggle-active"
+                      className="h-8 w-8"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setConfirmOrg(org);
+                      }}
+                      title={org.is_active ? "Desativar clínica" : "Ativar clínica"}
+                    >
+                      <Power
+                        className={`h-4 w-4 ${
+                          org.is_active
+                            ? "text-emerald-600"
+                            : "text-rose-500"
+                        }`}
+                      />
+                    </Button>
+                    <Link href={`/admin/organizations/${org.id}`}>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
+
+      {/* Confirmation dialog for activate/deactivate */}
+      <AlertDialog
+        open={!!confirmOrg}
+        onOpenChange={(open) => !open && setConfirmOrg(null)}
+      >
+        <AlertDialogContent data-testid="org-toggle-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmOrg?.is_active ? "Desativar clínica" : "Reativar clínica"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmOrg?.is_active
+                ? `Tem certeza que deseja desativar "${confirmOrg?.name}"? Os membros não poderão acessar a clínica enquanto estiver inativa.`
+                : `Tem certeza que deseja reativar "${confirmOrg?.name}"? Os membros poderão acessar a clínica novamente.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={toggling}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="org-toggle-confirm"
+              disabled={toggling}
+              onClick={handleToggleActive}
+              className={
+                confirmOrg?.is_active
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {toggling
+                ? "Processando..."
+                : confirmOrg?.is_active
+                  ? "Desativar"
+                  : "Reativar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

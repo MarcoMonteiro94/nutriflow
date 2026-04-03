@@ -10,6 +10,7 @@ import {
   Copy,
   Check,
   UserPlus,
+  Power,
 } from "lucide-react";
 
 import {
@@ -33,6 +34,16 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // ---------------------------------------------------------------------------
@@ -204,6 +215,10 @@ export default function OrganizationDetailPage({
   // Copy state
   const [copied, setCopied] = useState(false);
 
+  // Deactivation state
+  const [confirmToggle, setConfirmToggle] = useState(false);
+  const [toggling, setToggling] = useState(false);
+
   const fetchMembers = useCallback(async () => {
     const res = await fetch(`/api/admin/organizations/${id}/members`);
     if (!res.ok) throw new Error("Erro ao buscar membros");
@@ -288,6 +303,32 @@ export default function OrganizationDetailPage({
     setCopied(false);
   }
 
+  async function handleToggleActive() {
+    if (!org) return;
+    setToggling(true);
+
+    try {
+      const res = await fetch(`/api/admin/organizations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !org.is_active }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        setError(json?.error ?? "Erro ao atualizar clínica");
+      } else {
+        const json = await res.json();
+        setOrg({ ...org, is_active: json.data.is_active });
+      }
+    } catch {
+      setError("Erro ao atualizar clínica");
+    } finally {
+      setToggling(false);
+      setConfirmToggle(false);
+    }
+  }
+
   // ---- Loading state ----
   if (loading) {
     return <DetailSkeleton />;
@@ -343,19 +384,30 @@ export default function OrganizationDetailPage({
           </div>
         </div>
 
-        <Dialog
-          open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetDialog();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button data-testid="invite-admin-button" className="rounded-full">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Convidar Admin
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            data-testid="org-detail-toggle-active"
+            className="rounded-full"
+            onClick={() => setConfirmToggle(true)}
+          >
+            <Power className={`mr-2 h-4 w-4 ${org.is_active ? "text-emerald-600" : "text-rose-500"}`} />
+            {org.is_active ? "Desativar" : "Reativar"}
+          </Button>
+
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetDialog();
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button data-testid="invite-admin-button" className="rounded-full">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Convidar Admin
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Convidar Admin</DialogTitle>
@@ -440,6 +492,7 @@ export default function OrganizationDetailPage({
             )}
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Org info card */}
@@ -540,6 +593,41 @@ export default function OrganizationDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Confirmation dialog for activate/deactivate */}
+      <AlertDialog open={confirmToggle} onOpenChange={setConfirmToggle}>
+        <AlertDialogContent data-testid="org-detail-toggle-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {org.is_active ? "Desativar clínica" : "Reativar clínica"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {org.is_active
+                ? `Tem certeza que deseja desativar "${org.name}"? Os membros não poderão acessar a clínica enquanto estiver inativa.`
+                : `Tem certeza que deseja reativar "${org.name}"? Os membros poderão acessar a clínica novamente.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={toggling}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="org-detail-toggle-confirm"
+              disabled={toggling}
+              onClick={handleToggleActive}
+              className={
+                org.is_active
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {toggling
+                ? "Processando..."
+                : org.is_active
+                  ? "Desativar"
+                  : "Reativar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
