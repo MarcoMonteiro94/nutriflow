@@ -1124,6 +1124,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_active: boolean
           logo_url: string | null
           name: string
           owner_id: string
@@ -1134,6 +1135,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean
           logo_url?: string | null
           name: string
           owner_id: string
@@ -1144,6 +1146,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean
           logo_url?: string | null
           name?: string
           owner_id?: string
@@ -1318,6 +1321,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_active: boolean
           is_super_admin: boolean
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
@@ -1327,6 +1331,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_active?: boolean
           is_super_admin?: boolean
           role: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -1336,6 +1341,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_active?: boolean
           is_super_admin?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -1361,6 +1367,7 @@ export type Database = {
         Returns: {
           created_at: string
           id: string
+          is_active: boolean
           logo_url: string | null
           name: string
           owner_id: string

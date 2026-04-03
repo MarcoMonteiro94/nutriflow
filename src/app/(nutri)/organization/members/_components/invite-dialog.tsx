@@ -135,7 +135,7 @@ export function InviteDialog({ organizationId, currentUserRole, isOwner }: Invit
             <div className="space-y-2">
               <Label htmlFor="role">Função *</Label>
               <Select value={role} onValueChange={(value) => setRole(value as OrgRole)}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="invite-role-select">
                   <SelectValue placeholder="Selecione a função" />
                 </SelectTrigger>
                 <SelectContent>

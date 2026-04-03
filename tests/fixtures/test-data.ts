@@ -38,6 +38,11 @@ export const testUsers = {
     password: 'TestPassword123!',
     fullName: 'Test Paciente',
   },
+  superAdmin: {
+    email: 'test-superadmin@example.com',
+    password: 'TestPassword123!',
+    fullName: 'Test Super Admin',
+  },
 };
 
 export const testPatients = {

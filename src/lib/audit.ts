@@ -12,7 +12,12 @@ export type AuditAction =
   | "member.remove"
   | "anamnesis.analyze"
   | "token.create"
-  | "token.access";
+  | "token.access"
+  | "org.create"
+  | "org.deactivate"
+  | "org.reactivate"
+  | "user.deactivate"
+  | "user.reactivate";
 
 interface AuditLogParams {
   action: AuditAction;
