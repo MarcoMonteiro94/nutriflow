@@ -6,6 +6,7 @@ import { OrganizationPage } from '../fixtures/page-objects/organization.page';
 /**
  * Full onboarding chain E2E test — essential steps only.
  * Per-role signup flows are covered in invite-signup-roles.spec.ts.
+ * Super Admin steps are covered in admin-dashboard/admin-organizations specs.
  */
 
 test.describe.serial('Full Onboarding Chain', () => {
