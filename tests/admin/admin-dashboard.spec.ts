@@ -47,11 +47,12 @@ test.describe('Admin Dashboard', () => {
       return;
     }
 
-    // Verify all 4 stats cards are visible
-    await expect(page.locator('text=Clínicas')).toBeVisible();
-    await expect(page.locator('text=Usuários')).toBeVisible();
-    await expect(page.locator('text=Pacientes')).toBeVisible();
-    await expect(page.locator('text=Convites Pendentes')).toBeVisible();
+    // Verify all 4 stats cards are visible (use main area to avoid sidebar matches)
+    const main = page.getByRole('main');
+    await expect(main.locator('text=Clínicas')).toBeVisible();
+    await expect(main.locator('text=Usuários')).toBeVisible();
+    await expect(main.locator('text=Pacientes')).toBeVisible();
+    await expect(main.locator('text=Convites Pendentes')).toBeVisible();
 
     // Each card should have a numeric value (at least 0)
     const statsCards = page.locator('[data-slot="card"]');
@@ -86,8 +87,8 @@ test.describe('Admin Dashboard', () => {
     await expect(sidebar.locator('text=Usuários')).toBeVisible();
     await expect(sidebar.locator('text=Logs')).toBeVisible();
 
-    // Verify "Super Admin" badge
-    await expect(sidebar.locator('text=Super Admin')).toBeVisible();
+    // Verify "Super Admin" badge (exact match to avoid matching user name)
+    await expect(sidebar.getByText('Super Admin', { exact: true })).toBeVisible();
 
     // Verify "Painel Admin" subtitle
     await expect(sidebar.locator('text=Painel Admin')).toBeVisible();

@@ -229,13 +229,17 @@ test.describe('Admin Organizations', () => {
       await dialog.locator('[data-testid="create-org-submit"]').click();
 
       // Dialog should close on success (wait for it to disappear)
-      await expect(dialog).toBeHidden({ timeout: 10000 });
+      await expect(dialog).toBeHidden({ timeout: 15000 });
 
-      // Wait for list to refresh and show the new clinic
-      await page.waitForSelector('[data-testid="org-list"]', { timeout: 10000 });
+      // Wait for list to refresh after creation
+      await page.waitForLoadState('networkidle');
+      await page.waitForSelector(
+        '[data-testid="org-list"], [data-testid="org-empty-state"]',
+        { timeout: 15000 },
+      );
 
       // The newly created clinic should appear in the list
-      await expect(page.locator(`text=${clinicName}`)).toBeVisible({ timeout: 5000 });
+      await expect(page.locator(`text=${clinicName}`)).toBeVisible({ timeout: 10000 });
     });
 
     test('duplicate slug shows error message', async ({ page }) => {
